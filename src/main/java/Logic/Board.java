@@ -1,19 +1,22 @@
 package Logic;
+
 public class Board {
-    
+
+    private int size; // Board size (e.g., 5 for a 5x5 board)
+
     // Constructor to initialize the board with a specified size (e.g., 3x3, 5x5)
     // Initializes the board as an empty grid with the required dimensions.
     public Board(int size) {
-        // Initialize the board of the given size
+        this.size = size;  // Initialize the board of the given size
     }
-    
+
     // Function to place a piece on the board at a specific location
     // Checks if the move is valid (e.g., if the space is empty and the position is within bounds).
     public boolean placePiece(int x, int y, Piece piece) {
         // Place a piece on the board and return true if the move is valid
         return false; // Placeholder
     }
-    
+
     // Function to move a piece (or a stack of pieces) from one position to another
     // Includes logic to check if the move is valid, based on Tak rules (e.g., movement direction, number of pieces).
     public boolean movePiece(int fromX, int fromY, int toX, int toY, int numberOfPieces) {
@@ -80,5 +83,10 @@ public class Board {
     // Outputs the board in a human-readable format, showing piece locations and types.
     public void printBoard() {
         // Print the board in a human-readable format
+    }
+
+    // Function to get the size of the board (e.g., 5 for a 5x5 board)
+    public int getSize() {
+        return this.size;
     }
 }

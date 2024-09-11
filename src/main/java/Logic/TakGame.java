@@ -34,7 +34,12 @@ public class TakGame {
     // Function to handle player turns
     // Switches the current player after each move
     public void switchTurns() {
-        // Logic to switch turns between player 1 and player 2
+        // Toggle between Player 1 and Player 2
+        if (this.currentPlayer == this.player1) {
+            this.currentPlayer = this.player2;  // Switch to Player 2
+        } else {
+            this.currentPlayer = this.player1;  // Switch back to Player 1
+        }
     }
 
     // Function to perform a move by the current player
@@ -69,5 +74,17 @@ public class TakGame {
     // Function to print the current state of the board (for debugging or display purposes)
     public void printBoard() {
         this.board.printBoard();
+    }
+    public Player getPlayer1() {
+        return player1;
+    }
+
+    public Player getPlayer2() {
+        return player2;
+    }
+
+    // Function to get the current game board
+    public Board getBoard() {
+        return this.board;
     }
 }
