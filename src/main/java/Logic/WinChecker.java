@@ -113,7 +113,7 @@ public class WinChecker {
         if (startPiece == null || startPiece.getOwner() != player || !startPiece.canBePartOfRoad()) {
             return false;
         }
-        boolean isHorizontal = startY == 0; 
+        boolean isHorizontal = startY == 0 || startY == board.getSize() - 1;
         Stack<int[]> stack = new Stack<>();
         HashSet<String> visited = new HashSet<>();
         stack.push(new int[] { startX, startY });
@@ -125,12 +125,11 @@ public class WinChecker {
             if (hasReachedOppositeSide(x, y, board.getSize(), isHorizontal)) {
                 return true;
             }
-            for (int[] neighbor : getNeighbors(x, y, board)) {
+                for (int[] neighbor : getNeighbors(x, y, board)) {
                 int nx = neighbor[0];
                 int ny = neighbor[1];
                 Piece neighborPiece = board.getPieceAt(nx, ny);
-    
-                if (neighborPiece != null && neighborPiece.getOwner() == player && neighborPiece.canBePartOfRoad()) {
+                    if (neighborPiece != null && neighborPiece.getOwner() == player && neighborPiece.canBePartOfRoad()) {
                     String neighborKey = nx + "," + ny;
                     if (!visited.contains(neighborKey)) {
                         stack.push(new int[] { nx, ny });
@@ -140,7 +139,7 @@ public class WinChecker {
             }
         }
         return false;
-    }
+    } 
 
 
     /**
@@ -155,10 +154,8 @@ public class WinChecker {
      */
     private boolean hasReachedOppositeSide(int x, int y, int boardSize, boolean isHorizontal) {
         if (isHorizontal) {
-            // Horizontal road: Check if the piece has reached the rightmost column
             return y == boardSize - 1;
         } else {
-            // Vertical road: Check if the piece has reached the bottommost row
             return x == boardSize - 1;
         }
     }
@@ -180,4 +177,5 @@ public class WinChecker {
         if (y < board.getSize() - 1) neighbors.add(new int[] { x, y + 1 });
         return neighbors;
     }
+    
 }

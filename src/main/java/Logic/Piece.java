@@ -46,4 +46,9 @@ public class Piece {
     public boolean canBePartOfRoad() {
         return this.pieceType == PieceType.FLAT_STONE || this.pieceType == PieceType.CAPSTONE;
     }
+    
+    // Setter for piece type
+    public void setPieceType(PieceType pieceType) {
+        this.pieceType = pieceType;
+    }
 }

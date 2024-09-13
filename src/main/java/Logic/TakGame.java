@@ -1,5 +1,4 @@
 package Logic;
-
 public class TakGame {
 
     // The game board on which the pieces are placed and moved
@@ -49,11 +48,23 @@ public class TakGame {
         return false; // Placeholder
     }
 
-    // Function to check if the game has ended (win or draw)
-    public boolean isGameOver() {
-        // Check for a win or draw using the WinChecker class
-        return false; // Placeholder
+    public boolean isGameOver(TakGame game) {
+        Board board = game.getBoard();
+        Player currentPlayer = game.getCurrentPlayer();
+        WinChecker winChecker = new WinChecker();
+        if (winChecker.checkForRoadWin(currentPlayer, board)) {
+            System.out.println(currentPlayer.getName() + " wins by road!");
+            return true;
+        }
+        if (winChecker.checkForFlatWin(game)) {
+            System.out.println("Flat win condition met. The game is over.");
+            return true;
+        }
+        return false;
     }
+    
+    
+    
 
     // Function to reset the game
     // This can be used to restart the game
