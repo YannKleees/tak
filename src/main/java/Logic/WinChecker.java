@@ -17,16 +17,12 @@ public class WinChecker {
      */
     public boolean checkForRoadWin(Player player, Board board) {
         int size = board.getSize();
-
-        // Check for horizontal road
         for (int y = 0; y < size; y++) {
             boolean[][] visited = new boolean[size][size];
             if (dfsRoad(player, board, 0, y, visited, true)) {
                 return true;
             }
         }
-
-        // Check for vertical road
         for (int x = 0; x < size; x++) {
             boolean[][] visited = new boolean[size][size];
             if (dfsRoad(player, board, x, 0, visited, false)) {
@@ -64,8 +60,6 @@ public class WinChecker {
         if (!isHorizontal && y == size - 1) {
             return true;
         }
-
-        // Explore neighbors
         int[][] directions = { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } };
         for (int[] dir : directions) {
             int nx = x + dir[0];
@@ -97,7 +91,7 @@ public class WinChecker {
             } else if (player2FlatStones > player1FlatStones) {
                 return player2;
             } else {
-                return null; // Draw
+                return null;
             }
         }
         return null;
