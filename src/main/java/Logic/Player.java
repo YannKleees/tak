@@ -1,54 +1,92 @@
 package Logic;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
+/**
+ * The Player class represents a player in the game.
+ * It tracks the player's color and the number of remaining pieces.
+ */
 public class Player {
 
-    // The player's name or identifier
-    private String name;
-
-    // List of pieces owned by the player
-    private List<Piece> pieces;
-
-    // Constructor to initialize the player with a name
-    public Player(String name) {
-        this.name = name;
-        this.pieces = new ArrayList<>();
+    /**
+     * Enum to represent player colors.
+     */
+    public enum Color {
+        BLACK,
+        WHITE
     }
 
-    // Getter function to retrieve the player's name
-    public String getName() {
-        return this.name;
+    private Color color; // The player's color.
+    private Map<Piece.PieceType, Integer> remainingPieces; // Remaining pieces of each type.
+
+    /**
+     * Constructor to initialize the player with a color and piece counts.
+     *
+     * @param color          The player's color.
+     * @param flatStones     The number of flat stones.
+     * @param standingStones The number of standing stones.
+     * @param capstones      The number of capstones.
+     */
+    public Player(Color color, int flatStones, int standingStones, int capstones) {
+        this.color = color;
+        this.remainingPieces = new HashMap<>();
+        remainingPieces.put(Piece.PieceType.FLAT_STONE, flatStones);
+        remainingPieces.put(Piece.PieceType.STANDING_STONE, standingStones);
+        remainingPieces.put(Piece.PieceType.CAPSTONE, capstones);
     }
 
-    // Function to add a piece to the player's collection of pieces
-    public void addPiece(Piece piece) {
-        this.pieces.add(piece);
+    /**
+     * Gets the player's color.
+     *
+     * @return The player's color.
+     */
+    public Color getColor() {
+        return this.color;
     }
 
-    // Function to remove a piece from the player's collection of pieces
-    public void removePiece(Piece piece) {
-        this.pieces.remove(piece);
+    /**
+     * Checks if the player has any remaining pieces of a specific type.
+     *
+     * @param pieceType The type of piece.
+     * @return true if the player has remaining pieces of the given type, false otherwise.
+     */
+    public boolean hasPiecesLeft(Piece.PieceType pieceType) {
+        return remainingPieces.getOrDefault(pieceType, 0) > 0;
     }
 
-    // Function to get the player's list of pieces
-    public List<Piece> getPieces() {
-        return this.pieces;
+    /**
+     * Decrements the count of a specific piece type after placement.
+     *
+     * @param pieceType The type of piece placed.
+     */
+    public void decrementPiece(Piece.PieceType pieceType) {
+        int count = remainingPieces.getOrDefault(pieceType, 0);
+        if (count > 0) {
+            remainingPieces.put(pieceType, count - 1);
+        }
     }
 
-    // Function to check if the player has any pieces left
-    public boolean hasPiecesLeft() {
-        return !this.pieces.isEmpty();
+    /**
+     * Gets the number of remaining pieces of a specific type.
+     *
+     * @param pieceType The type of piece.
+     * @return The number of remaining pieces.
+     */
+    public int getRemainingPieces(Piece.PieceType pieceType) {
+        return remainingPieces.getOrDefault(pieceType, 0);
     }
 
-    // Function to count the number of pieces the player has
-    public int countPieces() {
-        return this.pieces.size();
-    }
-
-    // Function to reset the player's pieces (for starting a new game)
-    public void resetPieces() {
-        this.pieces.clear();
+    /**
+     * Resets the player's pieces (for starting a new game).
+     *
+     * @param flatStones     The number of flat stones.
+     * @param standingStones The number of standing stones.
+     * @param capstones      The number of capstones.
+     */
+    public void resetPieces(int flatStones, int standingStones, int capstones) {
+        remainingPieces.put(Piece.PieceType.FLAT_STONE, flatStones);
+        remainingPieces.put(Piece.PieceType.STANDING_STONE, standingStones);
+        remainingPieces.put(Piece.PieceType.CAPSTONE, capstones);
     }
 }

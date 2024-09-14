@@ -1,58 +1,79 @@
 package Logic;
 
+import java.util.List;
+
+/**
+ * The Move class represents a move made by a player.
+ * It includes information about the move's starting and ending positions,
+ * the direction, number of pieces being moved, and drop counts.
+ */
 public class Move {
 
-    // Starting and ending coordinates of the move
-    private int startX;
-    private int startY;
-    private int endX;
-    private int endY;
+    private int startX;                 // Starting X coordinate.
+    private int startY;                 // Starting Y coordinate.
+    private Direction direction;        // Direction of movement.
+    private int numberOfPieces;         // Number of pieces being moved.
+    private List<Integer> dropCounts;   // Number of pieces to drop at each space.
 
-    // Number of pieces being moved in this move (for stack movements)
-    private int numberOfPieces;
-
-    // Boolean to check if the move involves a capstone
-    private boolean isCapstoneMove;
-
-    // Constructor to initialize the move, taking into account whether the move involves a capstone
-    public Move(int startX, int startY, int endX, int endY, int numberOfPieces, boolean isCapstoneMove) {
+    /**
+     * Constructor to initialize a move.
+     *
+     * @param startX         The starting X coordinate.
+     * @param startY         The starting Y coordinate.
+     * @param direction      The direction of movement.
+     * @param numberOfPieces The number of pieces being moved.
+     * @param dropCounts     The list of drop counts.
+     */
+    public Move(int startX, int startY, Direction direction, int numberOfPieces, List<Integer> dropCounts) {
         this.startX = startX;
         this.startY = startY;
-        this.endX = endX;
-        this.endY = endY;
+        this.direction = direction;
         this.numberOfPieces = numberOfPieces;
-        this.isCapstoneMove = isCapstoneMove;
+        this.dropCounts = dropCounts;
     }
 
-    // Function to get the starting X position
+    /**
+     * Gets the starting X coordinate.
+     *
+     * @return The starting X coordinate.
+     */
     public int getStartX() {
         return this.startX;
     }
 
-    // Function to get the starting Y position
+    /**
+     * Gets the starting Y coordinate.
+     *
+     * @return The starting Y coordinate.
+     */
     public int getStartY() {
         return this.startY;
     }
 
-    // Function to get the ending X position
-    public int getEndX() {
-        return this.endX;
+    /**
+     * Gets the direction of the move.
+     *
+     * @return The direction of the move.
+     */
+    public Direction getDirection() {
+        return this.direction;
     }
 
-    // Function to get the ending Y position
-    public int getEndY() {
-        return this.endY;
-    }
-
-    // Function to get the number of pieces being moved
+    /**
+     * Gets the number of pieces being moved.
+     *
+     * @return The number of pieces being moved.
+     */
     public int getNumberOfPieces() {
         return this.numberOfPieces;
     }
 
-    // Function to check if this move involves a capstone
-    public boolean isCapstoneMove() {
-        return this.isCapstoneMove;
+    /**
+     * Gets the list of drop counts.
+     *
+     * @return The list of drop counts.
+     */
+    public List<Integer> getDropCounts() {
+        return this.dropCounts;
     }
-
-    // Additional logic for validating the move based on the game rules could be included here
 }
