@@ -22,13 +22,12 @@ public class TakGame {
      */
     public TakGame(int boardSize) {
         this.board = new Board(boardSize);
-        // Initialize players with default piece counts
         int flatStones = calculateFlatStones(boardSize);
         int capstones = calculateCapstones(boardSize);
 
         this.player1 = new Player(Player.Color.BLACK, flatStones, 0, capstones);
         this.player2 = new Player(Player.Color.WHITE, flatStones, 0, capstones);
-        this.currentPlayer = player1; // Black starts by default
+        this.currentPlayer = player1;
         this.winChecker = new WinChecker();
         this.gameEnded = false;
     }
@@ -52,7 +51,7 @@ public class TakGame {
             case 8:
                 return 50;
             default:
-                return 21; // Default to size 5
+                return 21;
         }
     }
 
@@ -93,16 +92,11 @@ public class TakGame {
         if (gameEnded) {
             throw new GameOverException("Game has ended.");
         }
-
         int fromX = move.getStartX();
         int fromY = move.getStartY();
-
-        // Validate move
         if (!board.isValidMove(fromX, fromY, fromX, fromY, move.getNumberOfPieces(), currentPlayer)) {
             throw new InvalidMoveException("Invalid move.");
         }
-
-        // Attempt to move the piece
         board.movePiece(fromX, fromY, move, currentPlayer);
         checkWinConditions();
         if (!gameEnded) {
@@ -212,7 +206,6 @@ public class TakGame {
         board.resetBoard();
         currentPlayer = player1;
         gameEnded = false;
-        // Reset players' pieces
         int flatStones = calculateFlatStones(board.getSize());
         int capstones = calculateCapstones(board.getSize());
         player1 = new Player(Player.Color.BLACK, flatStones, 0, capstones);
