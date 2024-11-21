@@ -60,7 +60,7 @@ public class MinimaxAlgorithm implements Serializable {
 
         for (int depth = 1; depth <= maxDepth; depth++) {
             try {
-                Logger.log("MinimaxAlgorithm", "Starting search at depth: " + depth);
+                //Logger.log("MinimaxAlgorithm", "Starting search at depth: " + depth);
                 Action currentBestAction = null;
                 double currentBestValue = Double.NEGATIVE_INFINITY;
                 List<String> possibleActionStrings = ActionGenerator.generatePossibleActions(board, player, currentMoveCount);
@@ -73,7 +73,7 @@ public class MinimaxAlgorithm implements Serializable {
 
                 for (Action action : possibleActions) {
                     if (System.currentTimeMillis() - startTime > timeLimitMillis) {
-                        Logger.log("MinimaxAlgorithm", "Time limit exceeded at depth: " + depth);
+                        //Logger.log("MinimaxAlgorithm", "Time limit exceeded at depth: " + depth);
                         throw new InterruptedException("Time limit exceeded during move evaluation.");
                     }
 
@@ -82,14 +82,14 @@ public class MinimaxAlgorithm implements Serializable {
                         action.execute(boardAfterAction);
                         double moveValue = minimax(boardAfterAction, depth - 1, false, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, player, currentMoveCount + 1);
 
-                        Logger.log("MinimaxAlgorithm", "Depth " + depth + " | Evaluated move: " + action + " | Score: " + moveValue);
+                        //Logger.log("MinimaxAlgorithm", "Depth " + depth + " | Evaluated move: " + action + " | Score: " + moveValue);
 
                         if (moveValue > currentBestValue) {
                             currentBestValue = moveValue;
                             currentBestAction = action;
                         }
                     } catch (InvalidMoveException e) {
-                        Logger.log("MinimaxAlgorithm", "Invalid move encountered: " + action);
+                        //Logger.log("MinimaxAlgorithm", "Invalid move encountered: " + action);
                         continue;
                     }
                 }
@@ -97,19 +97,19 @@ public class MinimaxAlgorithm implements Serializable {
                 if (currentBestAction != null) {
                     bestAction = currentBestAction;
                     bestValue = currentBestValue;
-                    Logger.log("MinimaxAlgorithm", "Depth " + depth + " | Best move so far: " + bestAction + " | Score: " + bestValue);
+                    //Logger.log("MinimaxAlgorithm", "Depth " + depth + " | Best move so far: " + bestAction + " | Score: " + bestValue);
                 }
 
                 if (System.currentTimeMillis() - startTime > timeLimitMillis * 0.9) {
-                    Logger.log("MinimaxAlgorithm", "Ending search early at depth: " + depth + " due to time constraints.");
+                    //Logger.log("MinimaxAlgorithm", "Ending search early at depth: " + depth + " due to time constraints.");
                     break;
                 }
 
             } catch (InterruptedException e) {
-                Logger.log("MinimaxAlgorithm", "Search interrupted at depth: " + depth);
+                //Logger.log("MinimaxAlgorithm", "Search interrupted at depth: " + depth);
                 break;
             }
-            Logger.log("MinimaxAlgorithm", "Final best move: " + bestAction + " | Score: " + bestValue);
+            //Logger.log("MinimaxAlgorithm", "Final best move: " + bestAction + " | Score: " + bestValue);
         }
 
         return bestAction;
@@ -184,11 +184,11 @@ public class MinimaxAlgorithm implements Serializable {
                 try {
                     action.execute(boardAfterAction);
                     double eval = minimax(boardAfterAction, depth - 1, true, alpha, beta, player, moveCount + 1);
-                    Logger.log("MinimaxAlgorithm", "Depth " + (maxDepth - depth) + " | Move: " + action + " | Score " + eval);
+                    //Logger.log("MinimaxAlgorithm", "Depth " + (maxDepth - depth) + " | Move: " + action + " | Score " + eval);
                     minEval = Math.min(minEval, eval);
                     beta = Math.min(beta, eval);
                     if (beta <= alpha) {
-                        Logger.log("MinimaxAlgorithm", "Depth " + (maxDepth - depth) + " | Pruning occurs (alpha: " + alpha + ", beta: " + beta + ")");
+                        //Logger.log("MinimaxAlgorithm", "Depth " + (maxDepth - depth) + " | Pruning occurs (alpha: " + alpha + ", beta: " + beta + ")");
                         break;
                     }
                 } catch (InvalidMoveException e) {

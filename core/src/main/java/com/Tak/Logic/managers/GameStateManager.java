@@ -40,7 +40,7 @@ public class GameStateManager {
             if (winChecker.checkForRoadWin(player, board)) {
                 isGameOver = true;
                 winner = player;
-                Logger.log("GameStateManager", "Player " + player.getColor() + " has achieved a road win.");
+                //Logger.log("GameStateManager", "Player " + player.getColor() + " has achieved a road win.");
                 return true;
             }
         }
@@ -51,11 +51,11 @@ public class GameStateManager {
             if (topPlayer != null) {
                 isGameOver = true;
                 winner = topPlayer;
-                Logger.log("GameStateManager", "Board is full. Player " + topPlayer.getColor() + " wins by majority of flat stones.");
+                //Logger.log("GameStateManager", "Board is full. Player " + topPlayer.getColor() + " wins by majority of flat stones.");
             } else {
                 isGameOver = true;
                 winner = null; // Tie
-                Logger.log("GameStateManager", "Board is full. The game is a tie.");
+                //Logger.log("GameStateManager", "Board is full. The game is a tie.");
             }
             return true;
         }

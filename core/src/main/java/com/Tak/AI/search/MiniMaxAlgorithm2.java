@@ -57,7 +57,7 @@ public class MiniMaxAlgorithm2 implements Serializable {
         double bestValue = Double.NEGATIVE_INFINITY;
         startTime = System.currentTimeMillis();
     
-        Logger.log("MinimaxAlgorithm", "Starting search from the root (depth 0)");
+        //Logger.log("MinimaxAlgorithm", "Starting search from the root (depth 0)");
     
         // Generate all possible moves from the current state at depth 0
         List<String> possibleActionStrings = ActionGenerator.generatePossibleActions(board, player, currentMoveCount);
@@ -69,7 +69,7 @@ public class MiniMaxAlgorithm2 implements Serializable {
     
         for (Action action : possibleActions) {
             if (System.currentTimeMillis() - startTime > timeLimitMillis) {
-                Logger.log("MinimaxAlgorithm", "Time limit exceeded before evaluating all moves at depth 0");
+                //Logger.log("MinimaxAlgorithm", "Time limit exceeded before evaluating all moves at depth 0");
                 timeLimitExceeded = true;
                 break;
             }
@@ -79,17 +79,17 @@ public class MiniMaxAlgorithm2 implements Serializable {
                 action.execute(boardAfterAction);
                 double moveValue = minimax(boardAfterAction, maxDepth - 1, false, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, player, currentMoveCount + 1);
     
-                Logger.log("MinimaxAlgorithm", "Depth 0 | Evaluated move: " + action + " | Score: " + moveValue);
+                //Logger.log("MinimaxAlgorithm", "Depth 0 | Evaluated move: " + action + " | Score: " + moveValue);
     
                 if (moveValue > bestValue || bestAction == null) {
                     bestValue = moveValue;
                     bestAction = action;
                 }
             } catch (InvalidMoveException e) {
-                Logger.log("MinimaxAlgorithm", "Invalid move encountered at depth 0: " + action);
+                //Logger.log("MinimaxAlgorithm", "Invalid move encountered at depth 0: " + action);
                 continue;
             } catch (InterruptedException e) {
-                Logger.log("MinimaxAlgorithm", "Time limit exceeded during minimax.");
+                //Logger.log("MinimaxAlgorithm", "Time limit exceeded during minimax.");
                 timeLimitExceeded = true;
                 break;
             }
@@ -97,7 +97,7 @@ public class MiniMaxAlgorithm2 implements Serializable {
     
         if (bestAction == null) {
             // If no best action was found, select a fallback move
-            Logger.log("MinimaxAlgorithm", "No valid moves found within time limit. Selecting a random move.");
+            //Logger.log("MinimaxAlgorithm", "No valid moves found within time limit. Selecting a random move.");
             if (!possibleActions.isEmpty()) {
                 bestAction = possibleActions.get(0); // Choose the first available move
             } else {
@@ -105,7 +105,7 @@ public class MiniMaxAlgorithm2 implements Serializable {
             }
         }
     
-        Logger.log("MinimaxAlgorithm", "Final best move at depth 0: " + bestAction + " | Score: " + bestValue);
+        //Logger.log("MinimaxAlgorithm", "Final best move at depth 0: " + bestAction + " | Score: " + bestValue);
         return bestAction;
     }    
 
