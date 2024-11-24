@@ -10,7 +10,7 @@ import java.util.List;
 /*public class BranchingExperiment {
     private final Board board;
     private final Player greenPlayer;
-    private final Player bluePlayer;
+    private final Players bluePlayer;
     private final int maxDepth;
 
     public BranchingExperiment(Board board, Player greenPlayer, Player bluePlayer, int maxDepth) {

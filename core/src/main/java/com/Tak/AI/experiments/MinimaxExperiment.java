@@ -12,9 +12,13 @@ public class MinimaxExperiment {
     private final MinimaxAlgorithm minimaxAlgorithm;
     private final EvaluationFunction evaluationFunction;
     private final Player GREENPlayer;
+    private final Player BLUEPlayer;
 
     public MinimaxExperiment() {
         this.GREENPlayer = new MinimaxAgent(Player.Color.GREEN, 21, 1, 1, 3); // Example piece counts
+        this.BLUEPlayer = new MinimaxAgent(Player.Color.BLUE, 21, 1, 1, 3); // Example piece counts
+        this.GREENPlayer.setOpponent(this.BLUEPlayer);
+        this.BLUEPlayer.setOpponent(this.GREENPlayer);
         this.evaluationFunction = new EvaluationFunction();
         this.minimaxAlgorithm = new MinimaxAlgorithm(this.evaluationFunction, 5, this.GREENPlayer);
     }
