@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Class to design and run experiments based on varying the depth of the Minimax tree.
+ * Class to run experiments based on varying the depth of the Minimax tree.
  */
 public class DepthExperiment {
 
