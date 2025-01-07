@@ -45,8 +45,8 @@ public class MainMenuScreen implements Screen {
         skin = createBasicSkin();
 
         // Create the title label
-        titleLabel = new Label("TAK", skin, "title"); // Use the title style for the label
-        titleLabel.setAlignment(Align.center); // Center the text (optional)
+        titleLabel = new Label("TAK", skin, "title");
+        titleLabel.setAlignment(Align.center);
 
         // Create buttons
         startGameButton = new TextButton("Start Game", skin);
@@ -59,8 +59,8 @@ public class MainMenuScreen implements Screen {
         table.center();
 
         // Add the title label to the table
-        table.add(titleLabel).padBottom(30); // Add some padding below the title
-        table.row(); // Move to the next row
+        table.add(titleLabel).padBottom(30);
+        table.row();
 
         // Add buttons to the table
         table.add(startGameButton).width(200).height(60).pad(10);
@@ -94,8 +94,8 @@ public class MainMenuScreen implements Screen {
 
         // Create a larger font for the title
         BitmapFont titleFont = new BitmapFont();
-        titleFont.getData().setScale(3); // Scale the font size to make it larger
-        skin.add("title-font", titleFont); // Add the title font to the skin
+        titleFont.getData().setScale(3);
+        skin.add("title-font", titleFont);
 
         // Create button textures
         Pixmap pixmapUp = new Pixmap(200, 60, Pixmap.Format.RGBA8888);
@@ -126,13 +126,13 @@ public class MainMenuScreen implements Screen {
         // Create a Label style for the title
         Label.LabelStyle titleStyle = new Label.LabelStyle();
         titleStyle.font = skin.getFont("title-font");
-        skin.add("title", titleStyle); // Add the title style to the skin
+        skin.add("title", titleStyle);
 
-        // Window style (used for Dialog)
+        // Window style (for Dialog)
         Window.WindowStyle windowStyle = new Window.WindowStyle();
         windowStyle.background = skin.newDrawable("button-up", Color.DARK_GRAY);
         windowStyle.titleFont = skin.getFont("default-font");
-        skin.add("dialog", windowStyle); // Register the "dialog" style
+        skin.add("dialog", windowStyle);
 
         return skin;
     }
@@ -174,9 +174,9 @@ public class MainMenuScreen implements Screen {
             @Override
             protected void result(Object object) {
                 if (object.equals("human")) {
-                    game.setScreen(new GameScreen(game, false)); // Start the GameScreen without AI
+                    game.setScreen(new GameScreen(game, false));
                 } else if (object.equals("ai")) {
-                    game.setScreen(new GameScreen(game, true)); // Start the GameScreen with AI
+                    game.setScreen(new GameScreen(game, true));
                 }
             }
         };
@@ -203,14 +203,14 @@ public class MainMenuScreen implements Screen {
      */
     private String getRulesText() {
         return "1. Players take turns placing tiles on the board. No standing tiles or cap (hat) tiles can be placed during the first round.\n"
-             + "2. Players can stack flat tiles or standing tiles on top of flat tiles. Cap tiles cannot be stacked on top of other tiles.\n"
-             + "3. Cap tiles can flatten standing tiles, turning them into flat tiles.\n"
-             + "4. Movement is orthogonal (along rows or columns). Only the top tile of a stack can be moved. Multiple tiles can be moved, but at least one must be placed on each square along the path.\n"
-             + "5. Victory Conditions:\n"
-             + "   - Road Victory: Create a continuous orthogonal line of flat or cap tiles connecting one side of the board to the opposite side.\n"
-             + "   - Flat Victory: If the board is full and no road victory is achieved, the player with the most visible flat tiles wins.\n"
-             + "6. Each turn, players must either place a tile or move a tile/stack. Only cap tiles can flatten standing tiles and become part of a road.\n"
-             + "7. The game ends when one of the victory conditions is met.";
+            + "2. Players can stack flat tiles or standing tiles on top of flat tiles. Cap tiles cannot be stacked on top of other tiles.\n"
+            + "3. Cap tiles can flatten standing tiles, turning them into flat tiles.\n"
+            + "4. Movement is orthogonal (along rows or columns). Only the top tile of a stack can be moved.\n"
+            + "5. Victory Conditions:\n"
+            + "   - Road Victory: Create a continuous orthogonal line of flat or cap tiles connecting one side of the board to the opposite side.\n"
+            + "   - Flat Victory: If the board is full and no road victory is achieved, the player with the most visible flat tiles wins.\n"
+            + "6. Each turn, players must either place a tile or move a tile/stack. Only cap tiles can flatten standing tiles.\n"
+            + "7. The game ends when one of the victory conditions is met.";
     }
 
     @Override

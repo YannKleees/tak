@@ -7,6 +7,7 @@ import com.Tak.AI.search.MinimaxAlgorithm;
 import com.Tak.Logic.exceptions.GameOverException;
 import com.Tak.Logic.exceptions.InvalidMoveException;
 import com.Tak.Logic.models.Board;
+import com.Tak.Logic.models.Piece;
 import com.Tak.Logic.models.Piece.PieceType;
 import com.Tak.Logic.models.Player;
 import com.Tak.Logic.models.TakGame;
@@ -51,19 +52,46 @@ public class MinimaxAgent extends Player implements Serializable {
      */
     @Override
     public void makeMove(TakGame game) throws InvalidMoveException, GameOverException {
+        // If it's the second overall move (moveCount == 1) and this AI is GREEN,
+        // forcibly place a BLUE stone, ignoring normal Minimax for just this one move.
+        if (game.getMoveCount() == 1 && this.getColor() == Player.Color.GREEN) {
+            // 1) Figure out which of game.getPlayer1() or game.getPlayer2() is actually the BLUE player.
+            Player bluePlayer = (game.getPlayer1().getColor() == Player.Color.BLUE)
+                ? game.getPlayer1() : game.getPlayer2();
+
+            // 2) Choose the forced coordinates for your AI's first placement.
+            //    (Here we just pick (2, 2) as an example.)
+            int forcedX = 2;
+            int forcedY = 2;
+
+            // 3) Call placePiece(...) with the forcedX/forcedY, a FLAT_STONE,
+            //    and force the owner to be that bluePlayer.
+            game.placePiece(forcedX, forcedY, Piece.PieceType.FLAT_STONE, bluePlayer);
+
+            // Return early to skip the normal Minimax logic just for this move.
+            return;
+        }
+
+        // =====================================================
+        // Otherwise, use normal Minimax logic for all other moves
+        // =====================================================
         Board board = game.getBoard();
         Action bestMove = minimaxAlgorithm.findBestMove(board, this, game.getMoveCount());
-
         if (bestMove != null) {
+            // Just execute the board changes
             bestMove.execute(board);
-            Logger.debug("MinimaxAgent", this.getColor() + " executed move: " + bestMove.toString());
             game.incrementMoveCount();
             game.checkWinConditions();
             game.switchPlayer(); // Add this line
+
+            Logger.debug("MinimaxAgent", this.getColor() + " executed move: " + bestMove.toString());
+            // Do not call game.switchPlayer(), incrementMoveCount(), etc.
+            // Let TakGame handle those in placePiece / moveStack.
         } else {
-            throw new InvalidMoveException("No valid moves available.");
+            throw new InvalidMoveException("No valid moves available for the AI.");
         }
     }
+
 
 
     /**

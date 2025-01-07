@@ -163,7 +163,7 @@ public class UIManager {
         newGameButton = new TextButton("New Game", skin);
         exitButton = new TextButton("Exit", skin);
 
-        // Create small black and white circles for player icons
+        // Create small blue and green circles for player icons
         Texture playerBlueTexture = createCircleTexture(Color.BLUE);
         Texture playerGreenTexture = createCircleTexture(Color.GREEN);
         Image playerBlueImage = new Image(new TextureRegionDrawable(new TextureRegion(playerBlueTexture)));
@@ -203,12 +203,12 @@ public class UIManager {
         leftPanel.add(currentPlayerLabel).padTop(10).row();
 
         // Move List
-        leftPanel.add(movesScrollPane).height(300).width(300).expandY().fillY().row(); // Increased height and width
+        leftPanel.add(movesScrollPane).height(300).width(300).expandY().fillY().row();
 
         normalStoneCountLabel = new Label("0", skin);
         standingStoneCountLabel = new Label("0", skin);
         capstoneCountLabel = new Label("0", skin);
-        
+
         Table hotbarPanel = new Table();
         hotbarPanel.defaults().pad(10); // Padding between hotbar items
 
@@ -226,13 +226,13 @@ public class UIManager {
         hotbarPanel.add(normalStoneImage).size(50, 50);
         hotbarPanel.add(normalStoneLabel).padLeft(5);
         hotbarPanel.add(normalStoneCountLabel).padLeft(10);
-        hotbarPanel.add(standingStoneImage).size(50, 50).padLeft(20); 
+        hotbarPanel.add(standingStoneImage).size(50, 50).padLeft(20);
         hotbarPanel.add(standingStoneLabel).padLeft(5);
         hotbarPanel.add(standingStoneCountLabel).padLeft(10);
         hotbarPanel.add(capstoneImage).size(50, 50).padLeft(20);
         hotbarPanel.add(capstoneLabel).padLeft(5);
         hotbarPanel.add(capstoneCountLabel).padLeft(10);
-        
+
         // Create the main UI table
         Table uiTable = new Table();
         uiTable.setFillParent(true);
@@ -360,46 +360,35 @@ public class UIManager {
                         int[] dropCounts;
 
                         if (input.isEmpty()) {
-                            // Handle Empty Input: Default to moving one piece
+                            // Handle empty input => Default: Move 1 piece
                             dropCounts = new int[]{1};
-                            Gdx.app.log("UIManager", "Empty input detected. Defaulting to move 1 piece.");
+                            Gdx.app.log("UIManager", "Empty input => defaulting to move 1 piece.");
                         } else {
-                            // Handle Multiple Piece Moves
+                            // Parse multiple piece moves
                             String[] tokens = input.split(",");
                             dropCounts = new int[tokens.length];
                             for (int i = 0; i < tokens.length; i++) {
                                 if (tokens[i].trim().isEmpty()) {
-                                    throw new NumberFormatException("Empty move count detected between commas.");
+                                    throw new NumberFormatException("Empty move count between commas.");
                                 }
                                 dropCounts[i] = Integer.parseInt(tokens[i].trim());
                                 if (dropCounts[i] <= 0) {
-                                    throw new NumberFormatException("Move counts must be positive integers.");
+                                    throw new NumberFormatException("Move counts must be positive.");
                                 }
                             }
                             Gdx.app.log("UIManager", "Parsed drop counts: " + java.util.Arrays.toString(dropCounts));
                         }
 
-                        // Execute the callback with the parsed drop counts
                         callback.onDropCountsEntered(dropCounts);
 
                     } catch (NumberFormatException e) {
-                        // Handle invalid number format
                         showErrorDialog("Invalid input for drop counts. Please enter positive integers separated by commas.");
                     } catch (Exception e) {
-                        // Handle any unexpected exceptions
-                        showErrorDialog("An unexpected error occurred: " + e.getMessage());
-                                                e.printStackTrace();
-                                            }
-                                        }
-                                    }
-                        
-    public void showErrorDialog(String errorMessage) {
-        Dialog dialog = new Dialog("Error", skin, "dialog");
-        dialog.text(errorMessage);
-        dialog.button("OK");
-        dialog.show(stage);
-    }
-
+                        showErrorDialog("Unexpected error: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }
+            }
         };
         dialog.getContentTable().add(new Label("Enter drop counts separated by commas (leave blank to move 1 piece):", skin));
         dialog.getContentTable().row();
@@ -409,15 +398,21 @@ public class UIManager {
         dialog.show(stage);
     }
 
+    public void showErrorDialog(String errorMessage) {
+        Dialog dialog = new Dialog("Error", skin, "dialog");
+        dialog.text(errorMessage);
+        dialog.button("OK");
+        dialog.show(stage);
+    }
+
     /**
      * Updates the hotbar colors and piece count labels based on the current game state.
      */
     public void updateHotbarColors() {
-        Color currentColor = takGame.getCurrentPlayer().getColor() == Player.Color.GREEN ? Color.GREEN : Color.BLUE;
-
+        // Determine who actually owns the pieces being placed right now.
+        // For the first two moves, it's the opponent.  After that, it's the current player.
         Player targetPlayer;
         if (takGame.getMoveCount() < 2) {
-            // First two moves: players place opponent's pieces
             targetPlayer = takGame.getOpponentPlayer();
             // Hide standing stone and capstone during first two moves
             standingStoneImage.setVisible(false);
@@ -425,7 +420,6 @@ public class UIManager {
             capstoneImage.setVisible(false);
             capstoneCountLabel.setVisible(false);
         } else {
-            // After first two moves: players place their own pieces
             targetPlayer = takGame.getCurrentPlayer();
             // Show standing stone and capstone
             standingStoneImage.setVisible(true);
@@ -434,24 +428,27 @@ public class UIManager {
             capstoneCountLabel.setVisible(true);
         }
 
-        // Update normal stone color
-        normalStoneImage.setDrawable(new TextureRegionDrawable(createColoredPlaceholder("normal", currentColor)));
+        // Compute the color for the hotbar placeholders
+        Color pieceColor = (targetPlayer.getColor() == Player.Color.GREEN) ? Color.GREEN : Color.BLUE;
+
+        // Now update the placeholder images to reflect the target player's color
+        normalStoneImage.setDrawable(new TextureRegionDrawable(createColoredPlaceholder("normal", pieceColor)));
         normalStoneImage.invalidate();
 
-        // Update standing stone and capstone colors only if they are visible
+        // If moveCount >= 2, standing & capstone are visible => set their color
         if (takGame.getMoveCount() >= 2) {
-            standingStoneImage.setDrawable(new TextureRegionDrawable(createColoredPlaceholder("standing", currentColor)));
+            standingStoneImage.setDrawable(new TextureRegionDrawable(createColoredPlaceholder("standing", pieceColor)));
             standingStoneImage.invalidate();
         }
-        // Update capstone color to always be ...
-        capstoneImage.setDrawable(new TextureRegionDrawable(createColoredPlaceholder("capstone", currentColor)));
+        capstoneImage.setDrawable(new TextureRegionDrawable(createColoredPlaceholder("capstone", pieceColor)));
         capstoneImage.invalidate();
 
-        // Update the piece count labels
+        // Finally, display the target player's remaining piece counts
         normalStoneCountLabel.setText("Left: " + targetPlayer.getRemainingPieces(Piece.PieceType.FLAT_STONE));
         standingStoneCountLabel.setText("Left: " + targetPlayer.getRemainingPieces(Piece.PieceType.STANDING_STONE));
         capstoneCountLabel.setText("Left: " + targetPlayer.getRemainingPieces(Piece.PieceType.CAPSTONE));
     }
+
 
     /**
      * Updates the player scores displayed on the UI.
@@ -564,7 +561,7 @@ public class UIManager {
         pixmap.fill();
 
         pixmap.setColor(color);
-        pixmap.fillCircle(size / 2, size / 2, size / 2 - 2); // Circle with padding
+        pixmap.fillCircle(size / 2, size / 2, size / 2 - 2);
 
         Texture texture = new Texture(pixmap);
         pixmap.dispose();
@@ -585,7 +582,7 @@ public class UIManager {
         pixmap.fill();
 
         pixmap.setColor(color);
-        pixmap.fillRectangle(8, 16, width - 16, height - 32); // Rectangle with padding
+        pixmap.fillRectangle(8, 16, width - 16, height - 32);
 
         Texture texture = new Texture(pixmap);
         pixmap.dispose();
@@ -605,7 +602,6 @@ public class UIManager {
         pixmap.fill();
 
         pixmap.setColor(color);
-        // Draw a simple triangle to represent the capstone
         pixmap.fillTriangle(size / 2, 2, 2, size - 2, size - 2, size - 2);
 
         Texture texture = new Texture(pixmap);

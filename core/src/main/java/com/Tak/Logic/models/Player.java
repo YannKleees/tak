@@ -21,14 +21,14 @@ public abstract class Player implements Serializable {
     private Player opponent;
     private int stones;        // Combined count for flat and standing stones
     private int capstones;
-    protected int score; // Changed to protected to allow subclasses to access
+    protected int score;       // Changed to protected to allow subclasses to access
 
     /**
      * Constructor to initialize a player.
      *
-     * @param color           The color of the player (BLACK or WHITE).
-     * @param stones          Total number of stones (flat and standing combined).
-     * @param capstones       Number of capstones.
+     * @param color     The color of the player (BLUE or GREEN).
+     * @param stones    Total number of stones (flat and standing combined).
+     * @param capstones Number of capstones.
      */
     public Player(Color color, int stones, int capstones) {
         this.color = color;
@@ -54,11 +54,11 @@ public abstract class Player implements Serializable {
     public Player getOpponent() {
         return this.opponent;
     }
-    
+
     public void setScore(int score) {
         this.score = score;
     }
-    
+
     /**
      * Decrements the count of a specific piece type.
      *
@@ -110,7 +110,7 @@ public abstract class Player implements Serializable {
     public boolean hasPieces(Piece.PieceType pieceType) {
         return hasPiecesLeft(pieceType);
     }
-    
+
     public boolean hasPiecesLeft(Piece.PieceType pieceType) {
         switch (pieceType) {
             case FLAT_STONE:
@@ -122,7 +122,6 @@ public abstract class Player implements Serializable {
                 return false;
         }
     }
-    
 
     /**
      * Gets the number of remaining pieces of a specific type.
@@ -145,7 +144,7 @@ public abstract class Player implements Serializable {
     /**
      * Resets the player's pieces to the specified counts.
      *
-     * @param stones     Total number of stones (flat and standing combined).
+     * @param stones    Total number of stones (flat and standing combined).
      * @param capstones Number of capstones.
      */
     public void resetPieces(int stones, int capstones) {
@@ -230,5 +229,8 @@ public abstract class Player implements Serializable {
         return Objects.hash(color);
     }
 
+    /**
+     * Returns the total number of pieces (stones + capstones) left for this player.
+     */
     public abstract int getTotalPiecesLeft();
 }

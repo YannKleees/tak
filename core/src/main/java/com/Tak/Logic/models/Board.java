@@ -1,3 +1,4 @@
+// File: core/src/main/java/com/Tak/Logic/models/Board.java
 package com.Tak.Logic.models;
 
 import com.Tak.Logic.exceptions.InvalidMoveException;
@@ -13,7 +14,7 @@ import java.util.Map;
  */
 public class Board {
     private final int size;
-    private final int carryLimit; // Renamed from maxStackHeight to clarify its purpose
+    private final int carryLimit; // The maximum number of pieces that can be carried in a move
     protected final PieceStack[][] board;
     private List<Player> players;
     private int moveCount;
@@ -132,15 +133,15 @@ public class Board {
         if (!isWithinBounds(x, y)) {
             throw new InvalidMoveException("Board position out of bounds.");
         }
-    
+
         PieceStack stack = board[x][y];
         if (stack.isEmpty()) {
             stack.addPiece(piece);
         } else {
-            throw new InvalidMoveException("Cannot place " + piece.getPieceType() + " on occupied cell at (" + x + ", " + y + ").");
+            throw new InvalidMoveException("Cannot place " + piece.getPieceType()
+                + " on occupied cell at (" + x + ", " + y + ").");
         }
     }
-    
 
     /**
      * Removes a number of pieces from the top of the stack at the given position.
@@ -184,7 +185,6 @@ public class Board {
             }
         }
         moveCount = 0;
-        //Logger.log("Board", "Board has been reset.");
     }
 
     /**
@@ -213,7 +213,7 @@ public class Board {
                 copiedPlayer.setOpponent(copiedOpponent);
             }
         }
-        // Now copy the board and use the playerMap to set piece owners
+        // Now copy the board stacks and reassign owners using playerMap
         for (int x = 0; x < this.size; x++) {
             for (int y = 0; y < this.size; y++) {
                 PieceStack originalStack = this.board[x][y];
@@ -236,7 +236,7 @@ public class Board {
                 return player;
             }
         }
-        return null; // Or throw an exception if player not found
+        return null;
     }
 
     /**
@@ -269,7 +269,7 @@ public class Board {
             }
         }
         rotated.moveCount = this.moveCount;
-        rotated.players = new ArrayList<>(playerMap.values()); // Assign copied players
+        rotated.players = new ArrayList<>(playerMap.values());
         return rotated;
     }
 
@@ -313,63 +313,7 @@ public class Board {
     }
 
     /**
-     * Returns the number of rows on the board.
-     *
-     * @return The number of rows.
-     */
-    public int getRows() {
-        return size;
-    }
-
-    /**
-     * Returns the number of columns on the board.
-     *
-     * @return The number of columns.
-     */
-    public int getCols() {
-        return size;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (!(obj instanceof Board)) return false;
-        Board other = (Board) obj;
-        if (this.size != other.size) return false;
-        for (int x = 0; x < size; x++) {
-            for (int y = 0; y < size; y++) {
-                if (!this.board[x][y].equals(other.board[x][y])) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = Integer.hashCode(size);
-        for (int x = 0; x < size; x++) {
-            for (int y = 0; y < size; y++) {
-                result = 31 * result + board[x][y].hashCode();
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Helper method to get a 1D index from 2D coordinates.
-     *
-     * @param x The x-coordinate.
-     * @param y The y-coordinate.
-     * @return The 1D index.
-     */
-    private int getIndex(int x, int y) {
-        return x * size + y;
-    }
-
-    /**
-     * Returns the size of the board.
+     * Returns the size of the board (both width and height are the same).
      *
      * @return The board size.
      */
@@ -417,13 +361,13 @@ public class Board {
     public boolean canPlacePiece(int x, int y) {
         return isWithinBounds(x, y) && isCellEmpty(x, y);
     }
-    
+
     public boolean isCellEmpty(int x, int y) {
         return board[x][y].isEmpty();
     }
-    
+
     /**
-     * Creates a deep copy of the current Board and rotates it clockwise by specified times.
+     * Creates a deep copy of the current Board and rotates it clockwise the specified number of times.
      *
      * @param times The number of times to rotate 90 degrees clockwise.
      * @return A new Board instance representing the rotated board.
@@ -435,23 +379,45 @@ public class Board {
     }
 
     public void printBoard() {
-        // Loop through each row and column of the board
-    for (int y = 0; y < size; y++) {
-        StringBuilder row = new StringBuilder();
-        
+        for (int y = 0; y < size; y++) {
+            StringBuilder row = new StringBuilder();
+            for (int x = 0; x < size; x++) {
+                PieceStack stack = board[x][y];
+                if (stack.isEmpty()) {
+                    row.append("[ ] "); // Empty space for an empty stack
+                } else {
+                    Piece topPiece = stack.getTopPiece();
+                    row.append("[").append(topPiece.toString()).append("] ");
+                }
+            }
+            System.out.println(row.toString());
+        }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Board)) return false;
+        Board other = (Board) obj;
+        if (this.size != other.size) return false;
         for (int x = 0; x < size; x++) {
-            PieceStack stack = board[x][y];
-            // Print the top piece or an empty space if the stack is empty
-            if (stack.isEmpty()) {
-                row.append("[ ] "); // Empty space for an empty stack
-            } else {
-                Piece topPiece = stack.getTopPiece();
-                // Use the toString() method from the Piece class to show type and ownership
-                row.append("[").append(topPiece.toString()).append("] ");
+            for (int y = 0; y < size; y++) {
+                if (!this.board[x][y].equals(other.board[x][y])) {
+                    return false;
+                }
             }
         }
-        // Print the row for each y-coordinate
-        System.out.println(row.toString());
+        return true;
     }
+
+    @Override
+    public int hashCode() {
+        int result = Integer.hashCode(size);
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                result = 31 * result + board[x][y].hashCode();
+            }
+        }
+        return result;
     }
 }

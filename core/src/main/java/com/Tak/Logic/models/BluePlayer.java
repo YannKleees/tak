@@ -1,3 +1,4 @@
+// File: core/src/main/java/com/Tak/Logic/models/BluePlayer.java
 package com.Tak.Logic.models;
 
 import com.Tak.Logic.exceptions.GameOverException;
@@ -10,8 +11,10 @@ public class BluePlayer extends Player {
 
     @Override
     public Player copy() {
-        BluePlayer copy = new BluePlayer(this.getRemainingPieces(Piece.PieceType.FLAT_STONE),
-            this.getRemainingPieces(Piece.PieceType.CAPSTONE));
+        BluePlayer copy = new BluePlayer(
+            this.getRemainingPieces(Piece.PieceType.FLAT_STONE),
+            this.getRemainingPieces(Piece.PieceType.CAPSTONE)
+        );
         copy.setScore(this.getScore());
         return copy;
     }
@@ -23,7 +26,7 @@ public class BluePlayer extends Player {
 
     @Override
     public int getTotalPiecesLeft() {
-        return this.getRemainingPieces(Piece.PieceType.FLAT_STONE) + this.getRemainingPieces(Piece.PieceType.CAPSTONE);
+        return this.getRemainingPieces(Piece.PieceType.FLAT_STONE)
+            + this.getRemainingPieces(Piece.PieceType.CAPSTONE);
     }
 }
-

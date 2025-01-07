@@ -1,4 +1,4 @@
-// gui/src/main/java/com/Tak/GUI/TakGameMain.java
+// File: gui/src/main/java/com/Tak/GUI/TakGameMain.java
 package com.Tak.GUI;
 
 import com.Tak.Logic.utils.Logger;

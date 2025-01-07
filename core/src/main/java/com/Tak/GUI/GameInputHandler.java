@@ -18,7 +18,6 @@ import com.badlogic.gdx.Gdx;
 import com.Tak.Logic.models.Board;
 import java.util.List;
 
-
 /**
  * The GameInputHandler class handles user input for placing and moving pieces on the board.
  */
@@ -27,7 +26,7 @@ public class GameInputHandler extends InputAdapter {
     private TakGame takGame;
     private GameRenderer renderer;
     private UIManager uiManager;
-    private UICallback uiCallback; // Interface for callbacks to UIManager or GameScreen
+    private UICallback uiCallback;
 
     private enum SelectionState {
         SELECTING_SOURCE,
@@ -38,7 +37,7 @@ public class GameInputHandler extends InputAdapter {
     private int sourceX, sourceY;
 
     /**
-     * Interface to handle UI callbacks, promoting loose coupling.
+     * Interface to handle UI callbacks.
      */
     public interface UICallback {
         void showErrorDialog(String message);
@@ -48,19 +47,13 @@ public class GameInputHandler extends InputAdapter {
         void updateCurrentPlayerLabel();
         void updateHotbarColors();
         void showDropCountsPrompt(int sourceX, int sourceY, Direction direction, UIManager.DropCountsCallback callback);
-        Piece.PieceType getSelectedPieceType(); // Added method
-        void deselectPiece(); // Added method
-        boolean isPieceSelected(); // Added method
+        Piece.PieceType getSelectedPieceType();
+        void deselectPiece();
+        boolean isPieceSelected();
     }
 
     /**
      * Constructor to initialize the GameInputHandler.
-     *
-     * @param camera      The PerspectiveCamera used for ray picking.
-     * @param takGame     The current TakGame instance.
-     * @param renderer    The GameRenderer instance.
-     * @param uiManager   The UIManager instance.
-     * @param uiCallback  The UICallback implementation for UI interactions.
      */
     public GameInputHandler(PerspectiveCamera camera, TakGame takGame, GameRenderer renderer, UIManager uiManager, UICallback uiCallback) {
         this.camera = camera;
@@ -78,16 +71,16 @@ public class GameInputHandler extends InputAdapter {
         Ray pickRay = camera.getPickRay(screenX, screenY);
         Vector3 intersection = new Vector3();
 
-        // Define the plane of the board (Y-up)
+        // Plane of the board
         Plane boardPlane = new Plane(new Vector3(0, 1, 0), new Vector3(0, 0, 0));
 
         if (Intersector.intersectRayPlane(pickRay, boardPlane, intersection)) {
-            // Adjust for board's position
-            Vector3 boardPosition = new Vector3();
-            renderer.getBoardInstance().transform.getTranslation(boardPosition);
+            // Board's position
+            Vector3 boardPos = new Vector3();
+            renderer.getBoardInstance().transform.getTranslation(boardPos);
 
-            float localX = intersection.x - (boardPosition.x - (takGame.getBoardSize() * renderer.getTileSize()) / 2f);
-            float localY = intersection.z - (boardPosition.z - (takGame.getBoardSize() * renderer.getTileSize()) / 2f);
+            float localX = intersection.x - (boardPos.x - (takGame.getBoardSize() * renderer.getTileSize()) / 2f);
+            float localY = intersection.z - (boardPos.z - (takGame.getBoardSize() * renderer.getTileSize()) / 2f);
 
             int x = (int) Math.floor(localX);
             int y = (int) Math.floor(localY);
@@ -96,46 +89,47 @@ public class GameInputHandler extends InputAdapter {
 
             if (x >= 0 && x < takGame.getBoardSize() && y >= 0 && y < takGame.getBoardSize()) {
                 if (uiCallback.isPieceSelected()) {
-                    // Handle placing a new piece
-                    try {
-                        Piece.PieceType selectedPiece = uiCallback.getSelectedPieceType();
-                        try {
-                            takGame.placePiece(x, y, selectedPiece);
-                        } catch (GameOverException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        }
+                    // =======================
+                    //   Placing a NEW piece
+                    // =======================
 
-                        // Update the rendering
+                    // 1) Capture the current player/color BEFORE placePiece().
+                    Player oldPlayer = takGame.getCurrentPlayer();
+                    Piece.PieceType selectedPiece = uiCallback.getSelectedPieceType();
+
+                    try {
+                        takGame.placePiece(x, y, selectedPiece);
+
                         renderer.updatePieceInstances();
 
-                        // Update the moves list
-                        String moveDescription = "Player " + takGame.getCurrentPlayer().getColor() + " placed " + selectedPiece + " at (" + x + ", " + y + ")";
+                        // 2) Build moveDescription using the oldPlayer
+                        String moveDescription = "Player " + oldPlayer.getColor()
+                            + " placed " + selectedPiece + " at (" + x + ", " + y + ")";
                         uiCallback.addMoveToList(moveDescription);
 
-                        // Update player scores
                         uiCallback.updatePlayerScores();
-
-                        // Deselect the piece
                         uiCallback.deselectPiece();
                         renderer.removeHoverOutline();
 
-                        // Update current player label
                         uiCallback.updateCurrentPlayerLabel();
                         uiCallback.updateHotbarColors();
 
-                        // Check for game end
                         if (takGame.isGameEnded()) {
                             uiCallback.showGameOverDialog(takGame.getWinner());
                         }
+
                     } catch (InvalidMoveException e) {
-                        // Handle invalid move
                         uiCallback.showErrorDialog("Invalid Move: " + e.getMessage());
+                    } catch (GameOverException e) {
+                        uiCallback.showGameOverDialog(takGame.getWinner());
                     }
+
                 } else {
-                    // Handle moving stacks
+                    // =================================
+                    //   Attempting to MOVE an existing stack
+                    // =================================
+
                     if (selectionState == SelectionState.SELECTING_SOURCE) {
-                        // Check if there's a stack and the top piece belongs to the current player
                         List<Piece> stack = takGame.getBoard().getBoardPosition(x, y);
                         if (!stack.isEmpty() && stack.get(stack.size() - 1).getOwner() == takGame.getCurrentPlayer()) {
                             sourceX = x;
@@ -143,14 +137,13 @@ public class GameInputHandler extends InputAdapter {
                             selectionState = SelectionState.SELECTING_DIRECTION;
                             renderer.highlightSquare(x, y);
                         } else {
-                            uiCallback.showErrorDialog("Select a stack where your piece is on top.");
+                            uiCallback.showErrorDialog("Select a stack with your piece on top.");
                         }
                     } else if (selectionState == SelectionState.SELECTING_DIRECTION) {
-                        // Calculate the difference between source and destination
                         int dx = x - sourceX;
                         int dy = y - sourceY;
-                    
-                        final Direction direction; // Declare as final
+                        final Direction direction;
+
                         if (dx == 0 && dy > 0) {
                             direction = Direction.UP;
                         } else if (dx == 0 && dy < 0) {
@@ -163,70 +156,63 @@ public class GameInputHandler extends InputAdapter {
                             uiCallback.showErrorDialog("Invalid direction. Moves must be in a straight line.");
                             return true;
                         }
-                    
-                        // Check stack size and decide whether to prompt or move directly
+
                         List<Piece> stackPieces = takGame.getBoard().getBoardPosition(sourceX, sourceY);
                         if (stackPieces.size() == 1) {
-                            // Move directly without prompting
+                            // Move directly if only one piece
+
+                            // Capture current player BEFORE moveStack().
+                            Player oldPlayer = takGame.getCurrentPlayer();
+
                             try {
-                                int[] dropCounts = {1};
-                                takGame.moveStack(sourceX, sourceY, direction, dropCounts);
-                    
-                                // Update the rendering
+                                takGame.moveStack(sourceX, sourceY, direction, new int[]{1});
                                 renderer.updatePieceInstances();
-                    
-                                // Update the moves list
-                                String moveDescription = "Player " + takGame.getCurrentPlayer().getColor() + " moved 1 piece from (" + sourceX + ", " + sourceY + ") to direction " + direction;
+
+                                String moveDescription = "Player " + oldPlayer.getColor()
+                                    + " moved 1 piece from (" + sourceX + ", " + sourceY + ") " + direction;
                                 uiCallback.addMoveToList(moveDescription);
-                    
-                                // Update UI elements
+
                                 uiCallback.updateCurrentPlayerLabel();
                                 uiCallback.updateHotbarColors();
-                    
-                                // Check for game end
+
                                 if (takGame.isGameEnded()) {
                                     uiCallback.showGameOverDialog(takGame.getWinner());
                                 }
                             } catch (InvalidMoveException e) {
-                                // Handle invalid move
                                 uiCallback.showErrorDialog("Invalid Move: " + e.getMessage());
                             } catch (GameOverException e) {
-                                // Handle game over
                                 uiCallback.showGameOverDialog(takGame.getWinner());
                             }
-                    
-                            // Reset selection state
+
                             selectionState = SelectionState.SELECTING_SOURCE;
                             renderer.removeHighlight();
+
                         } else {
-                            // Prompt for drop counts via UIManager
+                            // Prompt user for drop counts
                             uiCallback.showDropCountsPrompt(sourceX, sourceY, direction, (dropCounts) -> {
+
+                                // Capture current player in the callback
+                                Player oldPlayer = takGame.getCurrentPlayer();
+
                                 try {
                                     takGame.moveStack(sourceX, sourceY, direction, dropCounts);
-                    
-                                    // Update the rendering
                                     renderer.updatePieceInstances();
-                    
-                                    // Update the moves list
-                                    String moveDescription = "Player " + takGame.getCurrentPlayer().getColor() + " moved stack from (" + sourceX + ", " + sourceY + ") in direction " + direction;
+
+                                    String moveDescription = "Player " + oldPlayer.getColor()
+                                        + " moved stack from (" + sourceX + ", " + sourceY + ") " + direction;
                                     uiCallback.addMoveToList(moveDescription);
-                    
-                                    // Update UI elements
+
                                     uiCallback.updateCurrentPlayerLabel();
                                     uiCallback.updateHotbarColors();
-                    
-                                    // Check for game end
+
                                     if (takGame.isGameEnded()) {
                                         uiCallback.showGameOverDialog(takGame.getWinner());
                                     }
                                 } catch (InvalidMoveException e) {
-                                    // Handle invalid move
                                     uiCallback.showErrorDialog("Invalid Move: " + e.getMessage());
                                 } catch (GameOverException e) {
-                                    // Handle game over
                                     uiCallback.showGameOverDialog(takGame.getWinner());
                                 } finally {
-                                    // Reset selection state
                                     selectionState = SelectionState.SELECTING_SOURCE;
                                     renderer.removeHighlight();
                                 }
@@ -244,6 +230,8 @@ public class GameInputHandler extends InputAdapter {
         return true;
     }
 
+
+
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
         if (!uiCallback.isPieceSelected()) {
@@ -251,33 +239,23 @@ public class GameInputHandler extends InputAdapter {
             return false;
         }
 
-        // Convert screen coordinates to world coordinates
         Ray pickRay = camera.getPickRay(screenX, screenY);
         Vector3 intersection = new Vector3();
-
-        // Define the plane of the board
         Plane boardPlane = new Plane(new Vector3(0, 1, 0), new Vector3(0, 0, 0));
 
         if (Intersector.intersectRayPlane(pickRay, boardPlane, intersection)) {
-            // Adjust for board's position
-            Vector3 boardPosition = new Vector3();
-            renderer.getBoardInstance().transform.getTranslation(boardPosition);
+            Vector3 boardPos = new Vector3();
+            renderer.getBoardInstance().transform.getTranslation(boardPos);
 
-            float localX = intersection.x - (boardPosition.x - (takGame.getBoardSize() * renderer.getTileSize()) / 2f);
-            float localY = intersection.z - (boardPosition.z - (takGame.getBoardSize() * renderer.getTileSize()) / 2f);
+            float localX = intersection.x - (boardPos.x - (takGame.getBoardSize() * renderer.getTileSize()) / 2f);
+            float localY = intersection.z - (boardPos.z - (takGame.getBoardSize() * renderer.getTileSize()) / 2f);
 
             int x = (int) Math.floor(localX);
             int y = (int) Math.floor(localY);
 
-            Gdx.app.log("GameInputHandler", "Hovering over: (" + x + ", " + y + ")");
-
             if (x >= 0 && x < takGame.getBoardSize() && y >= 0 && y < takGame.getBoardSize()) {
-                // Remove existing hover outline before creating a new one
                 renderer.removeHoverOutline();
-
-                // Create the hover outline
                 renderer.createHoverOutline(x, y);
-                Gdx.app.log("GameInputHandler", "Created hover outline at: (" + x + ", " + y + ")");
             } else {
                 renderer.removeHoverOutline();
             }

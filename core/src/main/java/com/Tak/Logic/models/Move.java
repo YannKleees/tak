@@ -1,15 +1,14 @@
+// File: core/src/main/java/com/Tak/Logic/models/Move.java
 package com.Tak.Logic.models;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-import com.Tak.Logic.validators.MoveExecutor;
-import com.Tak.Logic.validators.MoveValidator;
 import com.Tak.AI.actions.Action;
 import com.Tak.Logic.exceptions.InvalidMoveException;
 import com.Tak.Logic.models.Player.Color;
 import com.Tak.Logic.utils.Logger;
+import com.Tak.Logic.validators.MoveExecutor;
 
 /**
  * The Move class represents a movement action in Tak.
@@ -19,11 +18,11 @@ import com.Tak.Logic.utils.Logger;
  */
 public class Move extends Action {
 
-    private int startX;                 // Starting X coordinate.
-    private int startY;                 // Starting Y coordinate.
-    private Direction direction;        // Direction of movement.
-    private int numberOfPieces;         // Number of pieces being moved.
-    private List<Integer> dropCounts;   // Number of pieces to drop at each space.
+    private int startX;                 // Starting X coordinate
+    private int startY;                 // Starting Y coordinate
+    private Direction direction;        // Direction of movement
+    private int numberOfPieces;         // Number of pieces being moved
+    private List<Integer> dropCounts;   // Number of pieces to drop at each space
 
     // State to store for undo functionality
     private List<Piece> movedPieces;    // Pieces that were moved during the execution
@@ -39,7 +38,6 @@ public class Move extends Action {
         this.numberOfPieces = numberOfPieces;
         this.dropCounts = dropCounts;
 
-        // Initialize lists for undo functionality
         this.movedPieces = new ArrayList<>();
         this.positionsX = new ArrayList<>();
         this.positionsY = new ArrayList<>();
@@ -78,7 +76,6 @@ public class Move extends Action {
     @Override
     public void undo(Board board) {
         // Reverse the move by moving pieces back to their original positions
-        // Iterate in reverse order
         for (int i = dropCounts.size() - 1; i >= 0; i--) {
             int x = positionsX.get(i + 1); // Destination positions start from index 1
             int y = positionsY.get(i + 1);
@@ -90,7 +87,6 @@ public class Move extends Action {
                 return;
             }
 
-            // Remove the pieces that were dropped
             List<Piece> removedPieces;
             try {
                 removedPieces = destinationStack.removePieces(piecesToRemove);
@@ -99,12 +95,12 @@ public class Move extends Action {
                 return;
             }
 
-            // Add them back to the source stack
             int sourceX = positionsX.get(0);
             int sourceY = positionsY.get(0);
             PieceStack sourceStack = board.getBoardStack(sourceX, sourceY);
             if (sourceStack == null) {
-                Logger.log("Move", "Cannot undo move: source stack at (" + sourceX + ", " + sourceY + ") does not exist.");
+                Logger.log("Move", "Cannot undo move: source stack at ("
+                    + sourceX + ", " + sourceY + ") does not exist.");
                 return;
             }
 
@@ -112,7 +108,8 @@ public class Move extends Action {
                 sourceStack.addPiece(piece);
             }
 
-            Logger.log("Move", "Undid move: Moved " + piecesToRemove + " piece(s) back to (" + sourceX + ", " + sourceY + ").");
+            Logger.log("Move", "Undid move: Moved " + piecesToRemove
+                + " piece(s) back to (" + sourceX + ", " + sourceY + ").");
         }
     }
 
@@ -125,14 +122,11 @@ public class Move extends Action {
         return this.player;
     }
 
-    /**
-     * Provides a string representation of the move.
-     *
-     * @return A string detailing the move.
-     */
     @Override
     public String toString() {
-        return "Move: " + numberOfPieces + " piece(s) from (" + startX + ", " + startY + ") to " + direction + " with drop counts " + dropCounts;
+        return "Move: " + numberOfPieces + " piece(s) from ("
+            + startX + ", " + startY + ") to " + direction
+            + " with drop counts " + dropCounts;
     }
 
     // Getters for properties

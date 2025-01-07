@@ -1,14 +1,13 @@
 // File: core/src/main/java/com/Tak/Logic/models/TakGame.java
 package com.Tak.Logic.models;
 
-import com.Tak.AI.players.QPlayer;
+import com.Tak.AI.players.MinimaxAgent;
 import com.Tak.Logic.exceptions.GameOverException;
 import com.Tak.Logic.exceptions.InvalidMoveException;
 import com.Tak.Logic.players.HumanPlayer;
 import com.Tak.Logic.utils.Logger;
 import com.Tak.Logic.validators.MoveExecutor;
 import com.Tak.Logic.validators.MoveValidator;
-import com.Tak.Logic.validators.WinChecker;
 import com.Tak.Logic.managers.GameStateManager;
 
 import java.io.Serializable;
@@ -30,7 +29,6 @@ public class TakGame implements Serializable {
     private boolean isGameEnded;
     private Player winner;
 
-    private transient WinChecker winChecker; // Marked as transient if not serializable
     private transient GameStateManager gameStateManager; // Marked as transient if not serializable
 
     /**
@@ -44,14 +42,13 @@ public class TakGame implements Serializable {
     public TakGame(int boardSize, boolean useAI, int aiPlayersCount) {
         board = new Board(boardSize, boardSize);
         players = new ArrayList<>();
-        board.setPlayers(players); // Set the Board's players list
+        board.setPlayers(players);
         currentPlayerIndex = 0;
         moveCount = 0;
         isGameEnded = false;
         winner = null;
 
-        initializePlayers(useAI, aiPlayersCount); // Initialize players
-        winChecker = new WinChecker();
+        initializePlayers(useAI, aiPlayersCount);
         gameStateManager = new GameStateManager(board, players);
     }
 
@@ -65,7 +62,7 @@ public class TakGame implements Serializable {
     public TakGame(int boardSize, List<Player> players) {
         board = new Board(boardSize, boardSize);
         this.players = players;
-        board.setPlayers(players); // Set the Board's players list
+        board.setPlayers(players);
         currentPlayerIndex = 0;
         moveCount = 0;
         isGameEnded = false;
@@ -80,7 +77,6 @@ public class TakGame implements Serializable {
 
         Logger.log("TakGame", "Initialized TakGame with custom players.");
 
-        winChecker = new WinChecker();
         gameStateManager = new GameStateManager(board, players);
     }
 
@@ -97,12 +93,12 @@ public class TakGame implements Serializable {
      * Initializes players based on whether AI is used and the number of AI players.
      *
      * @param useAI           Whether to include AI players.
-     * @param aiPlayersCount  Number of AI players to include.
+     * @param aiPlayersCount  Number of AI players to include (0, 1, or 2).
      */
     private void initializePlayers(boolean useAI, int aiPlayersCount) {
         if (!useAI || aiPlayersCount == 0) {
-            // Add two HumanPlayers
-            Player player1 = new HumanPlayer(Player.Color.BLUE, 15, 6, 1); // Human Player BLUE
+            // No AI => Add two HumanPlayers
+            Player player1 = new HumanPlayer(Player.Color.BLUE, 15, 6, 1);  // Human Player BLUE
             Player player2 = new HumanPlayer(Player.Color.GREEN, 15, 6, 1); // Human Player GREEN
             player1.setOpponent(player2);
             player2.setOpponent(player1);
@@ -110,23 +106,28 @@ public class TakGame implements Serializable {
             players.add(player2);
             Logger.log("TakGame", "Added two HumanPlayers: BLUE and GREEN.");
         } else {
-            // Add AIPlayers based on aiPlayersCount
+            // If AI is used, decide how many AI players
             if (aiPlayersCount == 1) {
-                Player player1 = new HumanPlayer(Player.Color.BLUE, 15, 6, 1); // Human Player BLUE
-                QPlayer aiPlayer = new QPlayer(Player.Color.GREEN, 15, 6, 1, true); // AI Player GREEN
+                // One Human, One AI
+                Player player1 = new HumanPlayer(Player.Color.BLUE, 15, 6, 1);
+                Player aiPlayer = new MinimaxAgent(Player.Color.GREEN, 15, 6, 1, 2);
+                // '2' is an example maxDepth; adjust as desired
+
                 player1.setOpponent(aiPlayer);
                 aiPlayer.setOpponent(player1);
                 players.add(player1);
                 players.add(aiPlayer);
-                Logger.log("TakGame", "Added HumanPlayer BLUE and AIPlayer GREEN.");
+                Logger.log("TakGame", "Added HumanPlayer BLUE and MinimaxAgent GREEN.");
             } else if (aiPlayersCount == 2) {
-                QPlayer aiPlayer1 = new QPlayer(Player.Color.BLUE, 15, 6, 1, true); // AI Player BLUE
-                QPlayer aiPlayer2 = new QPlayer(Player.Color.GREEN, 15, 6, 1, true); // AI Player GREEN
+                // Two AI players
+                Player aiPlayer1 = new MinimaxAgent(Player.Color.BLUE, 15, 6, 1, 2);
+                Player aiPlayer2 = new MinimaxAgent(Player.Color.GREEN, 15, 6, 1, 2);
+
                 aiPlayer1.setOpponent(aiPlayer2);
                 aiPlayer2.setOpponent(aiPlayer1);
                 players.add(aiPlayer1);
                 players.add(aiPlayer2);
-                Logger.log("TakGame", "Added two AIPlayers: BLUE and GREEN.");
+                Logger.log("TakGame", "Added two MinimaxAgent AIPlayers: BLUE and GREEN.");
             } else {
                 throw new IllegalArgumentException("aiPlayersCount must be 0, 1, or 2.");
             }
@@ -148,7 +149,7 @@ public class TakGame implements Serializable {
         // Ensure no duplicate players are added
         if (!players.contains(player)) {
             players.add(player);
-            // Update opponents if necessary
+            // Update opponents if necessary (only meaningful if exactly two players total)
             if (players.size() == 2) {
                 players.get(0).setOpponent(players.get(1));
                 players.get(1).setOpponent(players.get(0));
@@ -158,7 +159,7 @@ public class TakGame implements Serializable {
     }
 
     /**
-     * Retrieves the opponent player.
+     * Retrieves the opponent player of the current player.
      *
      * @return The opponent Player.
      */
@@ -177,13 +178,16 @@ public class TakGame implements Serializable {
      * @throws InvalidMoveException If the move is invalid.
      * @throws GameOverException    If the game has already ended.
      */
-    public synchronized void moveStack(int fromX, int fromY, Direction direction, int[] dropCounts) throws InvalidMoveException, GameOverException {
+    public synchronized void moveStack(int fromX, int fromY, Direction direction, int[] dropCounts)
+        throws InvalidMoveException, GameOverException {
         if (isGameEnded) {
             throw new GameOverException("The game has already ended.");
         }
 
         Player currentPlayer = getCurrentPlayer();
-        Logger.log("TakGame", currentPlayer.getColor() + " is moving stack from (" + fromX + ", " + fromY + ") " + direction + " with drop counts " + Arrays.toString(dropCounts));
+        Logger.log("TakGame", currentPlayer.getColor() + " is moving stack from ("
+            + fromX + ", " + fromY + ") " + direction + " with drop counts " + Arrays.toString(dropCounts));
+
         int numberOfPieces = 0;
         for (int count : dropCounts) {
             numberOfPieces += count;
@@ -198,14 +202,15 @@ public class TakGame implements Serializable {
         }
 
         Move move = new Move(fromX, fromY, direction, numberOfPieces, dropCountsList);
-        move.setPlayer(currentPlayer); // Assign the current player to the move
+        move.setPlayer(currentPlayer);
 
         // Validate the move before executing
         MoveValidator validator = new MoveValidator(board, currentPlayer);
         if (validator.isValidMove(fromX, fromY, move)) {
             MoveExecutor executor = new MoveExecutor(board, currentPlayer);
             executor.executeMove(fromX, fromY, move);
-            Logger.log("TakGame", currentPlayer.getColor() + " moved stack from (" + fromX + ", " + fromY + ") " + direction);
+            Logger.log("TakGame", currentPlayer.getColor() + " moved stack from ("
+                + fromX + ", " + fromY + ") " + direction);
         } else {
             throw new InvalidMoveException("Move validation failed.");
         }
@@ -218,7 +223,9 @@ public class TakGame implements Serializable {
 
     /**
      * Places a piece on the board.
-     * This method should be used by both human and AI players to ensure centralized move handling.
+     * For the very first move, if Blue is current player, place a Green flat stone.
+     * For the second move, if Green is current player, place a Blue flat stone.
+     * After those two moves, players place pieces of their own color as normal.
      *
      * @param x         The X coordinate.
      * @param y         The Y coordinate.
@@ -226,13 +233,35 @@ public class TakGame implements Serializable {
      * @throws InvalidMoveException If the placement is invalid.
      * @throws GameOverException    If the game has already ended.
      */
-    public synchronized void placePiece(int x, int y, Piece.PieceType pieceType) throws InvalidMoveException, GameOverException {
-        placePiece(x, y, pieceType, getCurrentPlayer());
+    public synchronized void placePiece(int x, int y, Piece.PieceType pieceType)
+        throws InvalidMoveException, GameOverException {
+
+        if (isGameEnded) {
+            throw new GameOverException("The game has already ended.");
+        }
+
+        Player currentPlayer = getCurrentPlayer();
+        Player pieceOwner = currentPlayer; // By default, the piece belongs to the current player
+
+        // First move logic
+        if (moveCount == 0 && currentPlayer.getColor() == Player.Color.BLUE) {
+            // Blue places a Green flat stone
+            pieceType = Piece.PieceType.FLAT_STONE;
+            pieceOwner = currentPlayer.getOpponent();
+        }
+        // Second move logic
+        else if (moveCount == 1 && currentPlayer.getColor() == Player.Color.GREEN) {
+            // Green places a Blue flat stone
+            pieceType = Piece.PieceType.FLAT_STONE;
+            pieceOwner = currentPlayer.getOpponent();
+        }
+
+        placePiece(x, y, pieceType, pieceOwner);
     }
 
     /**
      * Places a piece on the board with a specified owner.
-     * This method should be used by both human and AI players to ensure centralized move handling.
+     * This method should be used internally after determining the correct owner and pieceType.
      *
      * @param x          The X coordinate.
      * @param y          The Y coordinate.
@@ -241,20 +270,28 @@ public class TakGame implements Serializable {
      * @throws InvalidMoveException If the placement is invalid.
      * @throws GameOverException    If the game has already ended.
      */
-    public synchronized void placePiece(int x, int y, Piece.PieceType pieceType, Player pieceOwner) throws InvalidMoveException, GameOverException {
+    public synchronized void placePiece(int x, int y, Piece.PieceType pieceType, Player pieceOwner)
+        throws InvalidMoveException, GameOverException {
         if (isGameEnded) {
             throw new GameOverException("The game has already ended.");
         }
 
         Player currentPlayer = getCurrentPlayer();
-        Logger.log("TakGame", currentPlayer.getColor() + " is placing a " + pieceType + " at (" + x + ", " + y + ") on behalf of " + pieceOwner.getColor());
+        Logger.log("TakGame", currentPlayer.getColor() + " is placing a " + pieceType
+            + " at (" + x + ", " + y + ") on behalf of " + pieceOwner.getColor());
+
         Piece piece = new Piece(pieceType, pieceOwner);
         board.placePiece(x, y, piece);
+
         pieceOwner.decrementPiece(pieceType);
         Logger.log("TakGame", currentPlayer.getColor() + " placed a " + pieceType + " at (" + x + ", " + y + ")");
+
+
+
         incrementMoveCount();
         checkWinConditions();
         switchPlayer();
+
     }
 
     /**
@@ -290,13 +327,15 @@ public class TakGame implements Serializable {
         if (gameStateManager.isGameOver()) {
             isGameEnded = true;
             winner = gameStateManager.getWinner();
+
             if (winner != null) {
-                Logger.log("TakGame", "Player " + winner.getColor() + " wins the game!");
+                // If it’s a road victory, just give the road‐victor 1 point:
+                winner.setScore(1);
             } else {
-                Logger.log("TakGame", "The game ended in a tie.");
+                // It's a tie
             }
-            return;
         }
+
         // No win conditions met yet
         Logger.log("TakGame", "No win conditions met yet.");
     }
@@ -316,12 +355,10 @@ public class TakGame implements Serializable {
         gameStateManager.resetGame();
 
         for (Player player : players) {
-            player.resetPieces(21, 1); // Standard Counts
+            // Standard Tak piece counts: 21 stones (flat + standing) in total and 1 capstone
+            player.resetPieces(21, 1);
             if (resetScores) {
                 player.resetScore();
-                if (player instanceof QPlayer) {
-                    ((QPlayer) player).resetAI();
-                }
             }
         }
         Logger.log("TakGame", "Game has been reset. Move count: " + moveCount + ", Game ended: " + isGameEnded);
@@ -414,16 +451,17 @@ public class TakGame implements Serializable {
     // Serialization methods to handle transient fields
     private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
         out.defaultWriteObject();
-        // No need to serialize transient fields
     }
 
     private void readObject(java.io.ObjectInputStream in) throws ClassNotFoundException, java.io.IOException {
         in.defaultReadObject();
         // Re-initialize transient fields
-        winChecker = new WinChecker();
         gameStateManager = new GameStateManager(board, players);
     }
 
+    /**
+     * Logs the final board state for debugging/analysis purposes.
+     */
     public void logFinalBoardState() {
         StringBuilder boardState = new StringBuilder();
         boardState.append("Final Board State:\n");
@@ -442,7 +480,4 @@ public class TakGame implements Serializable {
 
         Logger.log("Game", boardState.toString());
     }
-
-    
-    
 }
