@@ -3,6 +3,7 @@ package com.Tak.AI.players;
 import com.Tak.AI.actions.Action;
 import com.Tak.AI.evaluation.EvaluationFunction;
 import com.Tak.AI.evaluation.IEvaluationFunction;
+import com.Tak.AI.neuralnet.NeuralNetworkEvaluator;
 import com.Tak.AI.search.MiniMaxAlgorithm;
 import com.Tak.Logic.exceptions.GameOverException;
 import com.Tak.Logic.exceptions.InvalidMoveException;
@@ -33,18 +34,19 @@ public class MinimaxAgent extends Player implements Serializable {
      *
      * @param color            The color of the player.
      * @param flatStones       Number of flat stones.
-     * @param standingStones   (unused in your current code but left for future expansions)
+     * @param standingStones   Number of standing stones.
      * @param capstones        Number of capstones.
      * @param maxDepth         The maximum depth for the Minimax search.
      * @param useMoveOrdering  Flag to enable or disable move ordering.
+     * @param evaluator        The evaluation function to use (e.g., NeuralNetworkEvaluator).
      */
     public MinimaxAgent(Color color, int flatStones, int standingStones,
-                        int capstones, int maxDepth, boolean useMoveOrdering) {
+                        int capstones, int maxDepth, boolean useMoveOrdering,
+                        IEvaluationFunction evaluator) {
         super(color, flatStones, capstones);
 
-        // Initialize with your current heuristic-based evaluation
-        // but we could also pass in a different IEvaluationFunction
-        this.evaluationFunction = new EvaluationFunction();
+        // Initialize with the provided evaluation function
+        this.evaluationFunction = evaluator;
         this.maxDepth = maxDepth;
         this.minimaxAlgorithm = new MiniMaxAlgorithm(
             this.evaluationFunction,
@@ -56,15 +58,55 @@ public class MinimaxAgent extends Player implements Serializable {
 
     /**
      * Alternative constructor with move ordering enabled by default.
+     *
+     * @param color            The color of the player.
+     * @param flatStones       Number of flat stones.
+     * @param standingStones   Number of standing stones.
+     * @param capstones        Number of capstones.
+     * @param maxDepth         The maximum depth for the Minimax search.
+     * @param evaluator        The evaluation function to use.
+     */
+    public MinimaxAgent(Color color, int flatStones, int standingStones,
+                        int capstones, int maxDepth,
+                        IEvaluationFunction evaluator) {
+        this(color, flatStones, standingStones, capstones, maxDepth, true, evaluator);
+    }
+
+    /**
+     * Original constructor retained for backward compatibility.
+     * Uses a default EvaluationFunction (heuristic-based).
+     *
+     * @param color           The color of the player.
+     * @param flatStones      Number of flat stones.
+     * @param standingStones  Number of standing stones.
+     * @param capstones       Number of capstones.
+     * @param maxDepth        The maximum depth for the Minimax search.
+     * @param useMoveOrdering Flag to enable or disable move ordering.
+     */
+    public MinimaxAgent(Color color, int flatStones, int standingStones,
+                        int capstones, int maxDepth, boolean useMoveOrdering) {
+        this(color, flatStones, standingStones, capstones, maxDepth, useMoveOrdering,
+             new EvaluationFunction());
+    }
+
+    /**
+     * Alternative constructor with move ordering enabled by default.
+     * Uses a default EvaluationFunction (heuristic-based).
+     *
+     * @param color           The color of the player.
+     * @param flatStones      Number of flat stones.
+     * @param standingStones  Number of standing stones.
+     * @param capstones       Number of capstones.
+     * @param maxDepth        The maximum depth for the Minimax search.
      */
     public MinimaxAgent(Color color, int flatStones, int standingStones,
                         int capstones, int maxDepth) {
-        this(color, flatStones, standingStones, capstones, maxDepth, true);
+        this(color, flatStones, standingStones, capstones, maxDepth, true,
+             new EvaluationFunction());
     }
 
     /**
      * Executes the AI player's move.
-     * Added logic to force the worst move if it's the AI's first move (game.getMoveCount() < 2).
      */
     @Override
     public void makeMove(TakGame game) throws InvalidMoveException, GameOverException {
@@ -84,15 +126,15 @@ public class MinimaxAgent extends Player implements Serializable {
             }
         } else {
             // Normal Minimax logic for subsequent moves
-            Action bestMove = minimaxAlgorithm.findBestMove(board, this, game.getMoveCount());
-            if (bestMove != null) {
-                bestMove.execute(board);
-                game.incrementMoveCount();
-                game.checkWinConditions();
-                game.switchPlayer();
-            } else {
-                throw new InvalidMoveException("No valid moves available.");
-            }
+        Action bestMove = minimaxAlgorithm.findBestMove(board, this, game.getMoveCount());
+        if (bestMove != null) {
+            bestMove.execute(board);
+            game.incrementMoveCount();
+            game.checkWinConditions();
+            game.switchPlayer();
+        } else {
+            throw new InvalidMoveException("No valid moves available.");
+        }
         }
     }
 
@@ -136,7 +178,8 @@ public class MinimaxAgent extends Player implements Serializable {
                 this.getRemainingPieces(PieceType.STANDING_STONE),
                 this.getRemainingPieces(PieceType.CAPSTONE),
                 this.maxDepth,
-                this.minimaxAlgorithm.useMoveOrdering
+                this.minimaxAlgorithm.isUseMoveOrdering(),
+                this.evaluationFunction
         );
     }
 

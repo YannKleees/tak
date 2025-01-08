@@ -3,18 +3,10 @@ package com.Tak.AI.neuralnet;
 import java.io.Serializable;
 
 /**
- * A "facade" class that ties together configuration, forward, and backprop
- * to present a single interface for training and evaluating the network.
- * 
- * <p><strong>Recommended Usage:</strong>
- * <ul>
- *   <li>Construct this with a {@link NeuralNetworkConfig} indicating layer sizes & activation.</li>
- *   <li>Call {@code forward(...)} to get output predictions from given input vectors.</li>
- *   <li>Call {@code backpropagate(...)} to adjust weights after receiving a target label.</li>
- * </ul>
+ * <p>Represents a simple feedforward neural network with one hidden layer.</p>
  *
- * <p>You can store the <em>intermediate</em> hidden/output activations by using
- * {@link #forwardWithIntermediate(double[])} if you want them for subsequent backprop calls.
+ * <p><strong>SRP:</strong> Focuses solely on the structure and operations of the neural network,
+ * including forward passes and backpropagation.</p>
  */
 public class NeuralNetwork implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -22,10 +14,12 @@ public class NeuralNetwork implements Serializable {
     private NeuralNetworkConfig config;
     private double[][] weightsInputHidden;
     private double[][] weightsHiddenOutput;
+    private double[] biasHidden;
+    private double[] biasOutput;
 
     /**
-     * Constructs a NeuralNetwork with the specified config,
-     * and initializes the weights randomly by default.
+     * <p>Constructs a NeuralNetwork with the specified config,
+     * and initializes the weights and biases randomly by default.</p>
      *
      * @param config A NeuralNetworkConfig object containing structure & activation details.
      */
@@ -35,7 +29,7 @@ public class NeuralNetwork implements Serializable {
     }
 
     /**
-     * Initializes the weight matrices using WeightInitializer.
+     * <p>Initializes the weight matrices and biases using {@link WeightInitializer}.</p>
      */
     private void initializeWeights() {
         this.weightsInputHidden = WeightInitializer.initializeRandom(
@@ -44,63 +38,98 @@ public class NeuralNetwork implements Serializable {
         this.weightsHiddenOutput = WeightInitializer.initializeRandom(
                 config.getHiddenSize(), config.getOutputSize()
         );
+        this.biasHidden = WeightInitializer.initializeBias(config.getHiddenSize());
+        this.biasOutput = WeightInitializer.initializeBias(config.getOutputSize());
     }
 
     /**
-     * Performs a forward pass through the neural network (no intermediate details).
+     * <p>Performs a forward pass through the neural network.</p>
      *
      * @param inputs An array containing input values.
      * @return The output array from the network (length = outputSize).
-     *
-     * <p><strong>Implementation Note:</strong>
-     * If you are going to backprop right after this, consider using 
-     * {@link #forwardWithIntermediate(double[])} to avoid computing the sums/activations twice.
      */
     public double[] forward(double[] inputs) {
-        //TODO Possibly store hiddenActivations if you want to do backprop in same call
         return ForwardPropagator.forward(
                 inputs,
                 weightsInputHidden,
                 weightsHiddenOutput,
+                biasHidden,
+                biasOutput,
                 config.getActivationFunction()
         );
     }
 
     /**
-     * Performs backpropagation and updates the network weights.
+     * <p>Performs backpropagation and updates the network weights and biases.</p>
      *
      * @param inputs       The input array.
      * @param targets      The target output array (desired).
      * @param learningRate The learning rate for weight updates.
-     *
-     * <p><strong>Implementation Outline (TODO):</strong>
-     * <ol>
-     *   <li>Obtain hidden & output activations (via {@link #forwardWithIntermediate(double[])}) to avoid recomputation.</li>
-     *   <li>Call {@link BackPropagator#backpropagate(...)} with the saved activations.</li>
-     *   <li>Use the updated weights afterward for subsequent forward passes.</li>
-     * </ol>
      */
     public void backpropagate(double[] inputs, double[] targets, double learningRate) {
-        //TODO
-    }
+        // 1) Get output by forward pass
+        double[] outputs = forward(inputs);
 
-    /**
-     * Example method returning both hidden and output activations for backprop.
-     * The user/trainer can store them, then pass to a specialized backprop method.
-     *
-     * @param inputs The input array to feed forward.
-     * @return An instance of {@link ForwardResults} containing arrays for hidden & output.
-     */
-    public ForwardResults forwardWithIntermediate(double[] inputs) {
-        //TODO Actually compute hidden-layer sums/activations and output-layer sums/activations.
-        // Return them in ForwardResults, so backprop can skip re-computing forward pass.
-        return new ForwardResults(
-            new double[ config.getHiddenSize() ], 
-            new double[ config.getOutputSize() ]
+        // 2) Compute hidden activations again for backprop (or we could do a forwardWithIntermediate)
+        double[] hiddenActivations = new double[config.getHiddenSize()];
+        for (int h = 0; h < config.getHiddenSize(); h++) {
+            double sum = 0.0;
+            for (int i = 0; i < config.getInputSize(); i++) {
+                sum += inputs[i] * weightsInputHidden[i][h];
+            }
+            sum += biasHidden[h];
+            hiddenActivations[h] = ForwardPropagator.applyActivation(sum, config.getActivationFunction());
+        }
+
+        // 3) Call BackPropagator with biases
+        BackPropagator.backpropagate(
+            inputs,
+            targets,
+            learningRate,
+            weightsInputHidden,
+            weightsHiddenOutput,
+            biasHidden,
+            biasOutput,
+            hiddenActivations,
+            outputs,
+            config.getActivationFunction()
         );
     }
 
-    // --------------------- Getters / Setters / Accessors ---------------------
+    /**
+     * <p>Returns both hidden and output activations for debugging or a specialized backprop routine.</p>
+     *
+     * @param inputs The input array to feed forward.
+     * @return A {@link ForwardPropagator.ForwardResults} containing arrays for hidden & output.
+     */
+    public ForwardPropagator.ForwardResults forwardWithIntermediate(double[] inputs) {
+        // Manually compute hidden & output
+        int hiddenSize = config.getHiddenSize();
+        double[] hiddenActivations = new double[hiddenSize];
+        for (int h = 0; h < hiddenSize; h++) {
+            double sum = 0.0;
+            for (int i = 0; i < config.getInputSize(); i++) {
+                sum += inputs[i] * weightsInputHidden[i][h];
+            }
+            sum += biasHidden[h];
+            hiddenActivations[h] = ForwardPropagator.applyActivation(sum, config.getActivationFunction());
+        }
+
+        int outputSize = config.getOutputSize();
+        double[] outputActivations = new double[outputSize];
+        for (int o = 0; o < outputSize; o++) {
+            double sum = 0.0;
+            for (int h2 = 0; h2 < hiddenSize; h2++) {
+                sum += hiddenActivations[h2] * weightsHiddenOutput[h2][o];
+            }
+            sum += biasOutput[o];
+            outputActivations[o] = ForwardPropagator.applyActivation(sum, config.getActivationFunction());
+        }
+
+        return new ForwardPropagator.ForwardResults(hiddenActivations, outputActivations);
+    }
+
+    // --------------------- Getters / Setters ---------------------
 
     public NeuralNetworkConfig getConfig() {
         return config;
@@ -114,30 +143,39 @@ public class NeuralNetwork implements Serializable {
         return weightsHiddenOutput;
     }
 
+    public double[] getBiasHidden() {
+        return biasHidden;
+    }
+
+    public double[] getBiasOutput() {
+        return biasOutput;
+    }
+
     public void setWeightsInputHidden(double[][] newWeights) {
-        //TODO Optionally validate shape
+        if (newWeights.length != config.getInputSize() || newWeights[0].length != config.getHiddenSize()) {
+            throw new IllegalArgumentException("Invalid shape for weightsInputHidden.");
+        }
         this.weightsInputHidden = newWeights;
     }
 
     public void setWeightsHiddenOutput(double[][] newWeights) {
-        //TODO Optionally validate shape
+        if (newWeights.length != config.getHiddenSize() || newWeights[0].length != config.getOutputSize()) {
+            throw new IllegalArgumentException("Invalid shape for weightsHiddenOutput.");
+        }
         this.weightsHiddenOutput = newWeights;
     }
 
-    /**
-     * Holds hidden + output activations from a forward pass,
-     * so you can pass them directly to a backprop method.
-     */
-    public static class ForwardResults {
-        private double[] hiddenActivations;
-        private double[] outputActivations;
-
-        public ForwardResults(double[] hiddenActivations, double[] outputActivations) {
-            this.hiddenActivations = hiddenActivations;
-            this.outputActivations = outputActivations;
+    public void setBiasHidden(double[] newBias) {
+        if (newBias.length != config.getHiddenSize()) {
+            throw new IllegalArgumentException("Invalid biasHidden dimension.");
         }
+        this.biasHidden = newBias;
+    }
 
-        public double[] getHiddenActivations() { return hiddenActivations; }
-        public double[] getOutputActivations() { return outputActivations; }
+    public void setBiasOutput(double[] newBias) {
+        if (newBias.length != config.getOutputSize()) {
+            throw new IllegalArgumentException("Invalid biasOutput dimension.");
+        }
+        this.biasOutput = newBias;
     }
 }

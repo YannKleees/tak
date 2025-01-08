@@ -15,7 +15,7 @@ import java.util.Map;
 
 /**
  * Implements the Minimax algorithm with Alpha-Beta Pruning for decision-making in the TAK game.
- * Now referencing IEvaluationFunction instead of a concrete class.
+ * References IEvaluationFunction for flexible evaluation strategies.
  */
 public class MiniMaxAlgorithm implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -37,6 +37,11 @@ public class MiniMaxAlgorithm implements Serializable {
     /**
      * Constructs a MiniMaxAlgorithm with the specified evaluation function,
      * maximum depth, AI player, and move ordering option.
+     *
+     * @param evalFunction     The evaluation function to use (e.g., NeuralNetworkEvaluator).
+     * @param maxDepth         The maximum search depth.
+     * @param aiPlayer         The AI player making the moves.
+     * @param useMoveOrdering  Flag to enable or disable move ordering.
      */
     public MiniMaxAlgorithm(IEvaluationFunction evalFunction,
                              int maxDepth,
@@ -61,7 +66,21 @@ public class MiniMaxAlgorithm implements Serializable {
     }
 
     /**
+     * Checks if move ordering is enabled.
+     *
+     * @return True if move ordering is enabled, false otherwise.
+     */
+    public boolean isUseMoveOrdering() {
+        return this.useMoveOrdering;
+    }
+
+    /**
      * Finds the best move for the AI player using Minimax with Alpha-Beta Pruning.
+     *
+     * @param board           The current game board.
+     * @param player          The AI player.
+     * @param currentMoveCount The current move count in the game.
+     * @return The best Action determined by the Minimax algorithm.
      */
     public Action findBestMove(Board board, Player player, int currentMoveCount) {
         Action bestAction = null;
@@ -123,6 +142,16 @@ public class MiniMaxAlgorithm implements Serializable {
 
     /**
      * The core Minimax recursive function with Alpha-Beta Pruning.
+     *
+     * @param board        The current game board.
+     * @param depth        The remaining depth to search.
+     * @param isMaximizing Flag indicating if the current layer is maximizing or minimizing.
+     * @param alpha        The alpha value for pruning.
+     * @param beta         The beta value for pruning.
+     * @param player       The AI player.
+     * @param moveCount    The current move count in the game.
+     * @return The evaluation score of the board.
+     * @throws InterruptedException If the time limit is exceeded.
      */
     private double minimax(Board board,
                            int depth,
@@ -204,6 +233,10 @@ public class MiniMaxAlgorithm implements Serializable {
 
     /**
      * Converts raw action strings into Action objects.
+     *
+     * @param actionStrings The list of action strings.
+     * @param player        The player performing the actions.
+     * @return A list of Action objects.
      */
     public List<Action> parseActionStrings(List<String> actionStrings, Player player) {
         List<Action> actions = new ArrayList<>();
@@ -212,14 +245,14 @@ public class MiniMaxAlgorithm implements Serializable {
                 Action action = Action.fromString(actionStr, player.getColor());
                 actions.add(action);
             } catch (InvalidMoveException e) {
-                // Skip invalid
+                // Skip invalid actions
             }
         }
         return actions;
     }
 
     public void clearTranspositionTable() {
-        transpositionTable.clear();
+        // Currently not implemented
     }
 
     public int getNodesEvaluated() {

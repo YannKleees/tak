@@ -29,25 +29,19 @@ public class NeuralNetworkEvaluator implements IEvaluationFunction, Serializable
     /**
      * Evaluates the given board state for the specified player using the neural network.
      *
-     * @param board  The current game board.
+     * @param board  The current Tak game board.
      * @param player The player for whom the evaluation is being performed.
      * @return A numerical score from the perspective of 'player'.
-     *
-     * <p><strong>Implementation Approach (TODO):</strong>
-     * <ol>
-     *   <li>Call {@link BoardToInputsConverter#convert(Board, Player)} to get the input array.</li>
-     *   <li>Call {@link NeuralNetwork#forward(double[])} with those inputs.</li>
-     *   <li>Interpret the output (if multiple neurons, decide how to combine them).
-     *       E.g., if <code>outputSize == 1</code>, just return <code>outputs[0]</code>.</li>
-     *   <li>Ensure the sign or magnitude matches your intended scale 
-     *       (e.g., a bigger positive value means a better board for that player).</li>
-     * </ol>
      */
     @Override
     public double evaluate(Board board, Player player) {
+        // Convert the board state to an input array
         double[] inputs = BoardToInputsConverter.convert(board, player);
+
+        // Run the network's forward pass
         double[] outputs = network.forward(inputs);
-        //TODO If outputSize > 1, consider using outputs[0] - outputs[1], or other logic
+
+        // If multiple outputs, interpret them. Here we just assume output[0] is the final score
         return (outputs.length > 0) ? outputs[0] : 0.0;
     }
 
@@ -59,7 +53,7 @@ public class NeuralNetworkEvaluator implements IEvaluationFunction, Serializable
      * @return The recommended search depth for Minimax or other search algorithms.
      */
     public int depthFromBoardSize(int size) {
-        //TODO Possibly base it on size (larger board => smaller depth or some heuristic).
+        // TODO: Possibly base it on size (larger board => smaller depth or some heuristic).
         return 3; // placeholder
     }
 }

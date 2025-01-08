@@ -435,23 +435,56 @@ public class Board {
     }
 
     public void printBoard() {
+        int totalPieces = 0; // Counter for total pieces on the board
+        int bluePieces = 0;  // Counter for Blue's pieces
+        int greenPieces = 0; // Counter for Green's pieces
+    
+        // ANSI color codes
+        final String RESET = "\u001B[0m";
+        final String BLUE = "\u001B[34m";
+        final String GREEN = "\u001B[32m";
+    
+        System.out.println("Current Board State:");
+        System.out.println("---------------------");
+    
         // Loop through each row and column of the board
-    for (int y = 0; y < size; y++) {
-        StringBuilder row = new StringBuilder();
-        
-        for (int x = 0; x < size; x++) {
-            PieceStack stack = board[x][y];
-            // Print the top piece or an empty space if the stack is empty
-            if (stack.isEmpty()) {
-                row.append("[ ] "); // Empty space for an empty stack
-            } else {
-                Piece topPiece = stack.getTopPiece();
-                // Use the toString() method from the Piece class to show type and ownership
-                row.append("[").append(topPiece.toString()).append("] ");
+        for (int y = 0; y < size; y++) {
+            StringBuilder row = new StringBuilder();
+            
+            for (int x = 0; x < size; x++) {
+                PieceStack stack = board[x][y];
+                // Check if the stack is empty
+                if (stack.isEmpty()) {
+                    row.append("[ ] "); // Empty space for an empty stack
+                } else {
+                    Piece topPiece = stack.getTopPiece();
+                    int stackHeight = stack.size(); // Get the number of pieces in the stack
+                    totalPieces += stackHeight; // Increment total pieces counter
+                    
+                    // Increment per-player counters based on ownership
+                    String colorCode = "";
+                    if (topPiece.getOwner().getColor() == Player.Color.BLUE) {
+                        bluePieces += stackHeight;
+                        colorCode = BLUE;
+                    } else if (topPiece.getOwner().getColor() == Player.Color.GREEN) {
+                        greenPieces += stackHeight;
+                        colorCode = GREEN;
+                    }
+                    
+                    // Format: [TopPiece:Height] with color
+                    row.append("[").append(colorCode).append(topPiece.toString())
+                       .append(":").append(stackHeight).append(RESET).append("] ");
+                }
             }
+            // Print the row for each y-coordinate
+            System.out.println(row.toString());
         }
-        // Print the row for each y-coordinate
-        System.out.println(row.toString());
+        
+        System.out.println("---------------------");
+        // After printing the board, display the total number of pieces and per-player counts
+        System.out.println("Total Pieces on Board: " + totalPieces);
+        System.out.println("Blue Pieces: " + bluePieces);
+        System.out.println("Green Pieces: " + greenPieces);
+    } 
     }
-    }
-}
+
