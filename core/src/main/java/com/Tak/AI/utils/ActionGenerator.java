@@ -109,8 +109,22 @@ public class ActionGenerator {
 
                     for (int numPieces = 1; numPieces <= Math.min(carryLimit, stackSize); numPieces++) {
                         for (Direction direction : Direction.values()) {
-                            List<List<Integer>> dropSequences = generateDropSequences(numPieces);
+                            // Calculate available squares in the chosen direction
+                            int availableSquares = calculateAvailableSquares(board, x, y, direction);
+                            if (availableSquares <= 0) {
+                                continue; // No squares available in this direction
+                            }
+
+                            // The number of squares you can drop onto cannot exceed the available squares
+                            int maxDrops = Math.min(numPieces, availableSquares);
+                            List<List<Integer>> dropSequences = generateDropSequences(maxDrops);
+
                             for (List<Integer> drops : dropSequences) {
+                                // Ensure the sum of drops equals numPieces and does not exceed available squares
+                                if (drops.size() > availableSquares) {
+                                    continue;
+                                }
+
                                 StringBuilder actionBuilder = new StringBuilder();
                                 actionBuilder.append("MOVE ")
                                             .append(x).append(" ")
@@ -127,8 +141,11 @@ public class ActionGenerator {
                                     Action action = Action.fromString(actionStr, player.getColor());
                                     Board boardCopy = board.copy();
                                     action.execute(boardCopy);
-                                    // Move is valid; add to the list
-                                    moveActions.add(actionStr);
+                                    // After move execution, verify stack sizes and move validity
+                                    if (areAllStacksValid(boardCopy) && isMoveWithinLimits(boardCopy, x, y, direction, drops)) {
+                                        // Move is valid; add to the list
+                                        moveActions.add(actionStr);
+                                    }
                                 } catch (InvalidMoveException e) {
                                     // Move is invalid; do not add to the list
                                     continue;
@@ -141,6 +158,76 @@ public class ActionGenerator {
         }
 
         return moveActions;
+    }
+
+    /**
+     * Calculates the number of available squares in the given direction from (x, y).
+     *
+     * @param board     The game board.
+     * @param x         The current x-coordinate.
+     * @param y         The current y-coordinate.
+     * @param direction The direction to move.
+     * @return The number of available squares in that direction.
+     */
+    private static int calculateAvailableSquares(Board board, int x, int y, Direction direction) {
+        int size = board.getSize();
+        int deltaX = direction.getDeltaX();
+        int deltaY = direction.getDeltaY();
+        int count = 0;
+        int currentX = x + deltaX;
+        int currentY = y + deltaY;
+
+        while (board.isWithinBounds(currentX, currentY)) {
+            count++;
+            currentX += deltaX;
+            currentY += deltaY;
+        }
+        return count;
+    }
+
+    /**
+     * Checks if executing the move would result in all stacks being within the valid size limit.
+     *
+     * @param boardCopy The board after the move is executed.
+     * @param fromX     The starting x-coordinate.
+     * @param fromY     The starting y-coordinate.
+     * @param direction The direction of movement.
+     * @param drops     The drop counts along the path.
+     * @return True if all resulting stacks are within limits, false otherwise.
+     */
+    private static boolean isMoveWithinLimits(Board boardCopy, int fromX, int fromY, Direction direction, List<Integer> drops) {
+        int x = fromX;
+        int y = fromY;
+        for (int drop : drops) {
+            x += direction.getDeltaX();
+            y += direction.getDeltaY();
+            if (!boardCopy.isWithinBounds(x, y)) {
+                return false;
+            }
+            PieceStack stack = boardCopy.getBoardStack(x, y);
+            if (stack.size() > 5) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Checks whether all stacks on the board are within the valid size limit (<=5).
+     *
+     * @param boardCopy The board after the move is executed.
+     * @return True if all stacks are valid, false otherwise.
+     */
+    private static boolean areAllStacksValid(Board boardCopy) {
+        for (int x = 0; x < boardCopy.getSize(); x++) {
+            for (int y = 0; y < boardCopy.getSize(); y++) {
+                PieceStack stack = boardCopy.getBoardStack(x, y);
+                if (stack.size() > 5) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     /**
@@ -161,6 +248,11 @@ public class ActionGenerator {
             y += direction.getDeltaY();
 
             if (!board.isWithinBounds(x, y)) {
+                return false;
+            }
+
+            PieceStack stack = board.getBoardStack(x, y);
+            if (stack.size() + drop > 5) {
                 return false;
             }
         }
