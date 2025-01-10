@@ -1,4 +1,3 @@
-// File: core/src/main/java/com/Tak/GUI/GameScreen.java
 package com.Tak.GUI;
 
 import com.Tak.AI.players.MinimaxAgent;
@@ -35,11 +34,11 @@ import java.util.List;
 /**
  * The GameScreen class handles the main game screen, coordinating between the renderer, UI, and input handler.
  */
-
 public class GameScreen implements Screen, GameInputHandler.UICallback {
+
     private TakGameMain game;
-    public int boardSize = 5;
-    public TakGame takGame;
+    public int boardSize = 5;        // Default if we build a new TakGame
+    public TakGame takGame;          // The actual game logic
 
     public PerspectiveCamera camera;
     public CameraInputController camController;
@@ -51,162 +50,150 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
     private boolean isAIMoving = false;
     private TextButton rulesButton;
     private ShapeRenderer shapeRenderer;
-    public int moveCount = 0;
+    public int moveCount = 0;        // Not used much, but preserved
     private boolean useAI;
-    private GameMode gameMode; // Added game mode
+    private GameMode gameMode;       // Only if we used the old constructor with a GameMode
 
-    private Player aiPlayer; // **Added AI player reference**
+    private Player aiPlayer;         // Reference if we do a Human vs AI scenario
 
     /**
-     * Constructor to initialize the GameScreen.
-     *
-     * @param game      The main game instance.
-     * @param gameMode  The selected game mode (Human vs AI or Human vs Human).
+     * Constructor #1:
+     * Creates the GameScreen based on a chosen GameMode (e.g., Human vs AI, Human vs Human).
+     * This internally builds a new TakGame (with default boardSize=5).
      */
     public GameScreen(TakGameMain game, GameMode gameMode) {
         this.game = game;
         this.gameMode = gameMode;
         this.useAI = (gameMode == GameMode.HUMAN_VS_AI);
-        create();
-    }   
+        create();  // builds takGame internally
+    }
 
     /**
-     * Initializes the game components, camera, renderer, UI, and input handler.
+     * Constructor #2 (NEW):
+     * Accepts an existing TakGame, so you can skip building another one internally.
+     * (e.g., for AI vs AI, or a custom board size, piece counts, etc.)
+     */
+    public GameScreen(TakGameMain game, TakGame existingGame) {
+        this.game = game;
+        this.takGame = existingGame;
+        this.boardSize = existingGame.getBoardSize(); // override local boardSize
+        this.useAI = false; // or detect if there's an AI in takGame
+        createFromExistingGame();    // sets up camera, UI, input, etc.
+    }
+
+    /**
+     * If we are building our own TakGame internally, we call this method from the first constructor.
      */
     public void create() {
-        // Initialize the game logic based on game mode
+        // Initialize the game logic based on gameMode
         List<Player> players = new ArrayList<>();
 
         if (useAI) {
-            // **Human vs. AI Mode**
-            Player humanPlayer = new com.Tak.Logic.players.HumanPlayer(Player.Color.BLUE, 21, 1, 1); // Human Player BLUE
-            aiPlayer = new MinimaxAgent(Player.Color.GREEN, 21, 1, 1, 3); // AI Player GREEN with depth 3
+            // Human vs. AI Mode
+            Player humanPlayer = new com.Tak.Logic.players.HumanPlayer(Player.Color.BLUE, 21, 1, 1);
+            aiPlayer = new MinimaxAgent(Player.Color.GREEN, 21, 1, 1, 3); // Example AI
 
-            // Set opponents
             humanPlayer.setOpponent(aiPlayer);
             aiPlayer.setOpponent(humanPlayer);
 
             players.add(humanPlayer);
             players.add(aiPlayer);
-
             Logger.log("GameScreen", "Initialized Human vs AI: BLUE (Human) vs GREEN (AI)");
         } else {
-            // **Human vs. Human Mode**
-            Player player1 = new com.Tak.Logic.players.HumanPlayer(Player.Color.BLUE, 21, 1, 1); // Human Player BLUE
-            Player player2 = new com.Tak.Logic.players.HumanPlayer(Player.Color.GREEN, 21, 1, 1); // Human Player GREEN
+            // Human vs. Human Mode
+            Player player1 = new com.Tak.Logic.players.HumanPlayer(Player.Color.BLUE, 21, 1, 1);
+            Player player2 = new com.Tak.Logic.players.HumanPlayer(Player.Color.GREEN, 21, 1, 1);
 
-            // Set opponents
             player1.setOpponent(player2);
             player2.setOpponent(player1);
 
             players.add(player1);
             players.add(player2);
-
             Logger.log("GameScreen", "Initialized Human vs Human: BLUE vs GREEN");
         }
 
+        // Build a new TakGame with local boardSize (default 5)
         takGame = new TakGame(boardSize, players);
 
+        // Finish setup
+        initCommonParts();
+    }
+
+    /**
+     * If a TakGame is externally provided (the second constructor),
+     * we skip building players and just init camera, UI, input, etc.
+     */
+    private void createFromExistingGame() {
+        initCommonParts();
+    }
+
+    /**
+     * Common code that sets up the camera, renderer, UI, input, etc.
+     */
+    private void initCommonParts() {
         // Set up the camera
         camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        camera.position.set(boardSize * 2f, boardSize * 2f, boardSize * 2f); // Position the camera
-        camera.lookAt(boardSize / 2f, 0, boardSize / 2f); // Look at the center of the board
+        camera.position.set(boardSize * 2f, boardSize * 2f, boardSize * 2f);
+        camera.lookAt(boardSize / 2f, 0, boardSize / 2f);
         camera.near = 0.1f;
         camera.far = 100f;
         camera.update();
 
-        // Initialize the camera controller
+        // Camera controller
         camController = new CameraInputController(camera);
-        camController.rotateButton = Input.Buttons.RIGHT; // Use right mouse button for rotation
-        camController.translateButton = Input.Buttons.MIDDLE; // For panning
-        camController.scrollFactor = -0.1f; // Zoom in/out with mouse wheel
+        camController.rotateButton = Input.Buttons.RIGHT;
+        camController.translateButton = Input.Buttons.MIDDLE;
+        camController.scrollFactor = -0.1f;
 
-        // Initialize Renderer
+        // GameRenderer
         renderer = new GameRenderer(camera, boardSize, takGame);
         renderer.updatePieceInstances();
 
-        // Initialize ShapeRenderer
         shapeRenderer = new ShapeRenderer();
 
-        // Initialize UI Manager
+        // UI Manager
         uiManager = new UIManager(takGame, this);
         uiManager.getStage().setViewport(new ScreenViewport());
 
-        // Initialize Input Handler with UICallback implementation
+        // Input Handler
         inputHandler = new GameInputHandler(camera, takGame, renderer, uiManager, this);
 
-        // Set input processors
+        // Combine inputs
         Gdx.input.setInputProcessor(new InputMultiplexer(uiManager.getStage(), inputHandler, camController));
 
         addRulesButton();
         addBackButton();
-        if (useAI) {
+
+        // Optionally add AI selection if takGame has an AI (or always, your choice)
+        if (detectAnyAI()) {
             addAISelectionDropdown();
         }
 
-        // After setting up UI elements
         uiManager.updateHotbarColors();
     }
 
-    // [Other methods remain unchanged]
-
     /**
-     * Changes the AI behavior based on the selected AI type and depth.
-     *
-     * @param aiType The selected AI type ("RandomAI" or "MinimaxAgent").
-     * @param depth  The selected depth for MinimaxAgent. Ignored for RandomAI.
+     * Utility: check if any player in takGame is Minimax or Random AI.
      */
-    private void changeAIBehavior(String aiType, int depth) {
-        if (!(aiPlayer instanceof MinimaxAgent || aiPlayer instanceof RandomAIPlayer)) {
-            Logger.log("GameScreen", "Current player is not an AI. Cannot change AI behavior.");
-            return; // Skip if the current player isn't an AI
+    private boolean detectAnyAI() {
+        for (Player p : takGame.getPlayers()) {
+            if (p instanceof MinimaxAgent || p instanceof RandomAIPlayer) {
+                return true;
+            }
         }
-
-        Player newAI;
-        if ("RandomAI".equals(aiType)) {
-            newAI = new RandomAIPlayer(Player.Color.GREEN, // Ensure the color matches the AI player
-                                    aiPlayer.getRemainingPieces(Piece.PieceType.FLAT_STONE),
-                                    aiPlayer.getRemainingPieces(Piece.PieceType.STANDING_STONE),
-                                    aiPlayer.getRemainingPieces(Piece.PieceType.CAPSTONE));
-            Logger.log("GameScreen", "Initializing new RandomAIPlayer.");
-        } else { // MinimaxAgent
-            newAI = new MinimaxAgent(Player.Color.GREEN, // Ensure the color matches the AI player
-                                    aiPlayer.getRemainingPieces(Piece.PieceType.FLAT_STONE),
-                                    aiPlayer.getRemainingPieces(Piece.PieceType.STANDING_STONE),
-                                    aiPlayer.getRemainingPieces(Piece.PieceType.CAPSTONE),
-                                    depth); // Use selected depth
-            Logger.log("GameScreen", "Initializing new MinimaxAgent with depth " + depth + ".");
-        }
-
-        // Replace the AI player using TakGame's replacePlayer method
-        takGame.replacePlayer(aiPlayer, newAI);
-        Logger.log("GameScreen", "AI player replaced successfully.");
-
-        // Update the aiPlayer reference to point to the new AI
-        aiPlayer = newAI;
-
-        // Update UI or other components if necessary
-        if ("RandomAI".equals(aiType)) {
-            Gdx.app.log("GameScreen", "AI changed to RandomAI");
-        } else {
-            Gdx.app.log("GameScreen", "AI changed to MinimaxAgent with depth " + depth);
-        }
+        return false;
     }
-
-
 
     /**
      * Adds the Rules button to the UI.
      */
     private void addRulesButton() {
         rulesButton = new TextButton("Rules", uiManager.getSkin());
-
         Table table = new Table();
         table.top().left();
         table.setFillParent(true);
 
         table.add(rulesButton).pad(10);
-
         uiManager.getStage().addActor(table);
 
         rulesButton.addListener(new ClickListener() {
@@ -232,24 +219,23 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new MainMenuScreen(game)); // Navigate back to the main menu
+                game.setScreen(new MainMenuScreen(game)); // Return to main menu
             }
         });
     }
 
     /**
-     * Adds a dropdown for AI selection to dynamically change the AI type.
-     * Also adds a dropdown for MinimaxAgent depth selection.
+     * Adds a dropdown for AI selection to dynamically change the AI type,
+     * plus a dropdown for Minimax depth.
      */
     private void addAISelectionDropdown() {
         SelectBox<String> aiSelectBox = new SelectBox<>(uiManager.getSkin());
         aiSelectBox.setItems("RandomAI", "MinimaxAgent");
-        aiSelectBox.setSelected("MinimaxAgent"); // Default selection
+        aiSelectBox.setSelected("MinimaxAgent");
 
         SelectBox<Integer> depthSelectBox = new SelectBox<>(uiManager.getSkin());
         depthSelectBox.setItems(1, 2, 3, 4);
-        depthSelectBox.setVisible(true); // Initially visible since default is MinimaxAgent
-        depthSelectBox.setSelected(3); // Default depth
+        depthSelectBox.setSelected(3);
 
         Table dropdownTable = new Table();
         dropdownTable.bottom().right();
@@ -267,11 +253,7 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 String selectedAI = aiSelectBox.getSelected();
-                if ("MinimaxAgent".equals(selectedAI)) {
-                    depthSelectBox.setVisible(true);
-                } else {
-                    depthSelectBox.setVisible(false);
-                }
+                depthSelectBox.setVisible("MinimaxAgent".equals(selectedAI));
                 changeAIBehavior(selectedAI, depthSelectBox.getSelected());
             }
         });
@@ -288,75 +270,93 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
         });
     }
 
-
     /**
-     * Displays the game rules in a dialog.
+     * Dynamically replace the AI (if any) with a new AI type.
      */
-    private void showRulesDialog() {
-        Dialog dialog = new Dialog("Rules", uiManager.getSkin(), "dialog");
-        dialog.text(getRulesText());
-        dialog.button("OK");
-        dialog.show(uiManager.getStage());
+    private void changeAIBehavior(String aiType, int depth) {
+        // If we haven't stored aiPlayer yet, let's attempt to find it
+        if (aiPlayer == null) {
+            for (Player p : takGame.getPlayers()) {
+                if (p instanceof MinimaxAgent || p instanceof RandomAIPlayer) {
+                    aiPlayer = p;
+                    break;
+                }
+            }
+        }
+        if (!(aiPlayer instanceof MinimaxAgent || aiPlayer instanceof RandomAIPlayer)) {
+            Logger.log("GameScreen", "No AI found to replace or the current AI isn't recognized.");
+            return;
+        }
+
+        Player newAI;
+        if ("RandomAI".equals(aiType)) {
+            newAI = new RandomAIPlayer(Player.Color.GREEN,
+                aiPlayer.getRemainingPieces(PieceType.FLAT_STONE),
+                aiPlayer.getRemainingPieces(PieceType.STANDING_STONE),
+                aiPlayer.getRemainingPieces(PieceType.CAPSTONE));
+            Logger.log("GameScreen", "Switching AI to RandomAI");
+        } else {
+            newAI = new MinimaxAgent(Player.Color.GREEN,
+                aiPlayer.getRemainingPieces(PieceType.FLAT_STONE),
+                aiPlayer.getRemainingPieces(PieceType.STANDING_STONE),
+                aiPlayer.getRemainingPieces(PieceType.CAPSTONE),
+                depth);
+            Logger.log("GameScreen", "Switching AI to MinimaxAgent with depth = " + depth);
+        }
+
+        takGame.replacePlayer(aiPlayer, newAI);
+        aiPlayer = newAI;
     }
 
     /**
-     * Retrieves the game rules text.
-     *
-     * @return The game rules.
+     * A short rules text for the "Rules" dialog.
      */
     private String getRulesText() {
-        return "1. Players take turns placing tiles on the board. No standing tiles or cap (hat) tiles can be placed during the first round.\n"
-             + "2. Players can stack flat tiles or standing tiles on top of flat tiles. Cap tiles cannot be stacked on top of other tiles.\n"
-             + "3. Cap tiles can flatten standing tiles, turning them into flat tiles.\n"
-             + "4. Movement is orthogonal (along rows or columns). Only the top tile of a stack can be moved. Multiple tiles can be moved, but at least one must be placed on each square along the path.\n"
-             + "5. Victory Conditions:\n"
-             + "   - Road Victory: Create a continuous orthogonal line of flat or cap tiles connecting one side of the board to the opposite side.\n"
-             + "   - Flat Victory: If the board is full and no road victory is achieved, the player with the most visible flat tiles wins.\n"
-             + "6. Each turn, players must either place a tile or move a tile/stack. Only cap tiles can flatten standing tiles and become part of a road.\n"
-             + "7. The game ends when one of the victory conditions is met.";
+        return "1. Players take turns placing tiles on the board. "
+            + "No standing or cap tiles can be placed in the first round.\n"
+            + "2. Movement is orthogonal. Only the top tile of a stack can be moved.\n"
+            + "3. Road victory or flat victory.\n"
+            + "4. Etc...\n";
     }
 
+    /**
+     * The core render method. Updates camera, clears screen, renders board & UI,
+     * and triggers AI moves if needed.
+     */
     @Override
     public void render(float delta) {
-        // Update camera controller
         camController.update();
 
-        // Clear the screen
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
-        // Update the rendering instances in case the AI made a move
         renderer.updatePieceInstances();
-
-        // Render the game
         renderer.render();
 
-        // Update and draw the UI
         uiManager.getStage().act(delta);
         uiManager.getStage().draw();
 
-        // Handle AI move if it's AI's turn and AI is not already moving
-        if (useAI && !takGame.isGameEnded()) {
-            Player currentAI = takGame.getCurrentPlayer();
-            if (currentAI instanceof MinimaxAgent || currentAI instanceof RandomAIPlayer) {
+        // If the game isn't ended, check if it's an AI's turn
+        if (!takGame.isGameEnded()) {
+            Player current = takGame.getCurrentPlayer();
+            if (current instanceof MinimaxAgent || current instanceof RandomAIPlayer) {
                 handleAIMove();
             }
         }
     }
 
-
+    /**
+     * If it's an AI player's turn, schedule a short Task to let them move automatically.
+     */
     private void handleAIMove() {
-        if (isAIMoving) {
-            return; // Prevent multiple AI moves
-        }
+        if (isAIMoving) return;
         isAIMoving = true;
 
-        // Disable input during AI move
+        // Disable input so we don't interfere while the AI chooses
         Gdx.input.setInputProcessor(null);
 
-        // Execute AI move asynchronously
-        Timer.schedule(new Timer.Task(){
+        Timer.schedule(new Timer.Task() {
             @Override
             public void run() {
                 try {
@@ -367,42 +367,36 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
                         ((RandomAIPlayer) currentAI).makeMove(takGame);
                     }
 
-                    // Update the rendering
                     renderer.updatePieceInstances();
-
-                    // Update UI elements
                     uiManager.addMoveToList("AI moved");
                     uiManager.updatePlayerScores();
                     updateCurrentPlayerLabel();
                     updateHotbarColors();
 
-                    // Check for game end
                     if (takGame.isGameEnded()) {
                         showGameOverDialog(takGame.getWinner());
                     }
                 } catch (InvalidMoveException | GameOverException e) {
-                    // Handle exceptions
                     Logger.log("GameScreen", "AI encountered an error: " + e.getMessage());
                 } finally {
-                    // Re-enable input if it's a human player's turn
+                    // If next player isn't an AI, restore input
                     Player nextPlayer = takGame.getCurrentPlayer();
                     if (!(nextPlayer instanceof MinimaxAgent || nextPlayer instanceof RandomAIPlayer)) {
-                        Gdx.input.setInputProcessor(new InputMultiplexer(uiManager.getStage(), inputHandler, camController));
+                        Gdx.input.setInputProcessor(new InputMultiplexer(
+                            uiManager.getStage(), inputHandler, camController));
                     }
                     isAIMoving = false;
                 }
             }
-        }, 0.5f); // 0.5-second delay before AI makes a move
+        }, 0.5f); // 0.5-second delay
     }
 
     @Override
     public void resize(int width, int height) {
-        // Update camera viewport
         camera.viewportWidth = width;
         camera.viewportHeight = height;
         camera.update();
 
-        // Update the stage viewport
         uiManager.getStage().getViewport().update(width, height, true);
     }
 
@@ -434,19 +428,17 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
     }
 
     /**
-     * Toggles the selection of a piece type. Selecting a piece type if not selected,
-     * or deselecting if already selected.
-     *
-     * @param pieceType The piece type to toggle.
+     * Toggles the selection of a piece type.
+     * If it's already selected, deselect it; otherwise select it.
      */
     public void toggleSelection(Piece.PieceType pieceType) {
-        // During first two moves, only flat stones can be selected
+        // Restrict standing/cap in the first two moves
         if (takGame.getMoveCount() < 2 && pieceType != Piece.PieceType.FLAT_STONE) {
             showErrorDialog("Only flat stones can be placed in the first two moves.");
             return;
         }
 
-        // Check if the player has remaining stones of the selected type
+        // Check if the current player has any of that piece left
         int remainingPieces = takGame.getCurrentPlayer().getRemainingPieces(pieceType);
         if (remainingPieces <= 0) {
             showErrorDialog("No remaining " + pieceType.toString().replace("_", " ").toLowerCase() + "s left.");
@@ -454,12 +446,12 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
         }
 
         if (selectedPieceType == pieceType) {
-            // Deselect if already selected
+            // Deselect
             selectedPieceType = null;
             renderer.removeHoverOutline();
             Gdx.app.log("GameScreen", "Deselected " + pieceType);
         } else {
-            // Select the new piece type
+            // Select
             selectedPieceType = pieceType;
             renderer.removeHoverOutline();
             Gdx.app.log("GameScreen", "Selected " + pieceType);
@@ -467,7 +459,7 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
     }
 
     /**
-     * Updates the UI elements after resetting the game.
+     * Updates the UI elements after resetting the game (like clearing the move list).
      */
     public void updateAfterGameReset() {
         renderer.updatePieceInstances();
@@ -479,27 +471,20 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
         renderer.removeHoverOutline();
     }
 
-    /**
-     * Updates the current player label on the UI.
-     */
+    // --------------------------
+    // UICallback implementations
+    // --------------------------
+
     @Override
     public void updateCurrentPlayerLabel() {
         uiManager.currentPlayerLabel.setText("Current Player: " + takGame.getCurrentPlayer().getColor());
     }
 
-    /**
-     * Updates the hotbar colors based on the current game state.
-     */
     @Override
     public void updateHotbarColors() {
         uiManager.updateHotbarColors();
     }
 
-    /**
-     * Shows a game over dialog with the final scores and winner information.
-     *
-     * @param winner The player who won the game.
-     */
     @Override
     public void showGameOverDialog(Player winner) {
         String message;
@@ -519,10 +504,10 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
             @Override
             protected void result(Object object) {
                 if (object.equals("newGame")) {
-                    takGame.resetGame(true); // Reset both board and scores
+                    takGame.resetGame(true); // Reset both board & scores
                     updateAfterGameReset();
                 } else if (object.equals("continue")) {
-                    takGame.resetGame(false); // Reset board but keep scores
+                    takGame.resetGame(false); // Keep scores
                     updateAfterGameReset();
                 } else if (object.equals("exit")) {
                     Gdx.app.exit();
@@ -536,11 +521,6 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
         dialog.show(uiManager.getStage());
     }
 
-    /**
-     * Shows an error dialog with the specified message.
-     *
-     * @param errorMessage The error message to display.
-     */
     @Override
     public void showErrorDialog(String errorMessage) {
         Dialog dialog = new Dialog("Error", uiManager.getSkin(), "dialog");
@@ -557,6 +537,13 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
     @Override
     public void updatePlayerScores() {
         uiManager.updatePlayerScores();
+    }
+
+    private void showRulesDialog() {
+        Dialog dialog = new Dialog("Rules", uiManager.getSkin(), "dialog");
+        dialog.text(getRulesText());
+        dialog.button("OK");
+        dialog.show(uiManager.getStage());
     }
 
     @Override

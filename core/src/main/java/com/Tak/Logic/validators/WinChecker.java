@@ -36,15 +36,15 @@ public class WinChecker {
     }
 
     /**
-     * Determines the player with the most visible flat stones if the board is full.
+     * Determines which player has the most visible flat stones on a full board.
      *
      * @param board   The current game board.
      * @param players The list of players.
-     * @return The player with the most flat stones, or null if it's a tie.
+     * @return The player with the most flat stones, or null if it's a tie or not full.
      */
     public Player getTopPlayer(Board board, List<Player> players) {
         if (!board.isFull()) {
-            return null; // Board is not full yet
+            return null; // Board not full => no flat winner yet
         }
 
         Player topPlayer = null;
@@ -59,6 +59,7 @@ public class WinChecker {
                 topPlayer = player;
                 isTie = false;
             } else if (flats == maxFlats) {
+                // We have at least two players with the same count => tie
                 isTie = true;
             }
         }
@@ -73,11 +74,7 @@ public class WinChecker {
     }
 
     /**
-     * Counts the number of flat stones owned by the player on top of stacks.
-     *
-     * @param player The player.
-     * @param board  The game board.
-     * @return The count of flat stones.
+     * Counts the number of *visible* flat stones (top piece on each stack) owned by the player.
      */
     private int countFlatStones(Player player, Board board) {
         int flatStoneCount = 0;
@@ -85,7 +82,9 @@ public class WinChecker {
         for (int x = 0; x < size; x++) {
             for (int y = 0; y < size; y++) {
                 Piece piece = board.getPieceAt(x, y);
-                if (piece != null && piece.getOwner().equals(player) && piece.getPieceType() == Piece.PieceType.FLAT_STONE) {
+                if (piece != null
+                    && piece.getOwner().equals(player)
+                    && piece.getPieceType() == Piece.PieceType.FLAT_STONE) {
                     flatStoneCount++;
                 }
             }
