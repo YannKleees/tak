@@ -5,12 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>A trainer for the NeuralNetwork, providing methods for
- * single-sample or batch training, also used by SelfPlayMinimaxTrainer.</p>
- *
- * <p><strong>SRP:</strong> Focuses on orchestrating weight updates by calling
- * {@link NeuralNetwork#backpropagate(double[], double[], double)} 
- * for each training example or batch.</p>
+ * <p>A trainer for a multi-layer NeuralNetwork, 
+ * providing single-sample or batch training, plus save/load methods.</p>
  */
 public class NeuralNetworkTrainer implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -18,33 +14,20 @@ public class NeuralNetworkTrainer implements Serializable {
     private NeuralNetwork network;
     private double learningRate;
 
-    /**
-     * <p>Constructs a NeuralNetworkTrainer with the given network and learning rate.</p>
-     *
-     * @param network      The neural network to be trained.
-     * @param learningRate The rate at which weights should be updated during backprop.
-     */
     public NeuralNetworkTrainer(NeuralNetwork network, double learningRate) {
         this.network = network;
         this.learningRate = learningRate;
     }
 
     /**
-     * <p>Trains the network on a single example (inputs -> target).</p>
-     *
-     * @param inputs  The input array representing a single board state or scenario.
-     * @param targets The desired output array (e.g. [1.0] for a winning state).
+     * Trains the network on a single example.
      */
     public void train(double[] inputs, double[] targets) {
         network.backpropagate(inputs, targets, learningRate);
-        // Optionally, track error or logs here
     }
 
     /**
-     * <p>Trains the network on a batch of examples in one pass.</p>
-     *
-     * @param inputBatch  A list of input arrays (multiple states).
-     * @param targetBatch A list of target output arrays (same size as inputBatch).
+     * Trains on a batch of examples.
      */
     public void trainBatch(List<double[]> inputBatch, List<double[]> targetBatch) {
         for (int i = 0; i < inputBatch.size(); i++) {
@@ -53,10 +36,8 @@ public class NeuralNetworkTrainer implements Serializable {
     }
 
     /**
-     * <p>(Optional) Additional convenience method for training data from entire game
-     * if you store them in a wrapper class.</p>
-     *
-     * @param gameData A list of training examples from a single game or multiple games.
+     * <p>**Reintroduced** convenience method to handle a list of
+     * SelfPlayMinimaxTrainer.TrainingExample objects (if your code calls it).</p>
      */
     public void trainAll(List<SelfPlayMinimaxTrainer.TrainingExample> gameData) {
         for (SelfPlayMinimaxTrainer.TrainingExample ex : gameData) {
@@ -65,47 +46,42 @@ public class NeuralNetworkTrainer implements Serializable {
     }
 
     /**
-     * <p>Saves the trained network to a structured text file for later reuse.</p>
+     * Saves the network to a structured text file.
      */
     public void saveNetwork(String filePath) {
+        NeuralNetworkConfig cfg = network.getConfig();
+        double[][][] w = network.getWeights();
+        double[][] b = network.getBiases();
+
         try (PrintWriter writer = new PrintWriter(new FileWriter(filePath))) {
-            NeuralNetworkConfig cfg = network.getConfig();
-            
-            // Write Configuration
+            // [Configuration]
             writer.println("[Configuration]");
             writer.println("inputSize=" + cfg.getInputSize());
-            writer.println("hiddenSize=" + cfg.getHiddenSize());
+            writer.println("numHiddenLayers=" + cfg.getHiddenLayerSizes().length);
+
+            // hiddenSizes
+            for (int i = 0; i < cfg.getHiddenLayerSizes().length; i++) {
+                writer.println("hiddenSize" + i + "=" + cfg.getHiddenLayerSizes()[i]);
+            }
+
             writer.println("outputSize=" + cfg.getOutputSize());
             writer.println("activationFunction=" + cfg.getActivationFunction());
             writer.println();
 
-            // Write Weights Input to Hidden
-            writer.println("[WeightsInputHidden]");
-            double[][] wIH = network.getWeightsInputHidden();
-            for (double[] row : wIH) {
-                writer.println(joinArray(row, " "));
+            // Weights/Biases
+            for (int layerIndex = 0; layerIndex < w.length; layerIndex++) {
+                writer.println("[WeightsLayer" + layerIndex + "]");
+                double[][] layerWeights = w[layerIndex];
+                for (double[] row : layerWeights) {
+                    writer.println(joinArray(row, " "));
+                }
+                writer.println();
+
+                writer.println("[BiasLayer" + layerIndex + "]");
+                double[] layerBias = b[layerIndex];
+                writer.println(joinArray(layerBias, " "));
+                writer.println();
             }
-            writer.println();
-
-            // Write Weights Hidden to Output
-            writer.println("[WeightsHiddenOutput]");
-            double[][] wHO = network.getWeightsHiddenOutput();
-            for (double[] row : wHO) {
-                writer.println(joinArray(row, " "));
-            }
-            writer.println();
-
-            // Write Biases Hidden
-            writer.println("[BiasHidden]");
-            double[] biasHidden = network.getBiasHidden();
-            writer.println(joinArray(biasHidden, " "));
-            writer.println();
-
-            // Write Biases Output
-            writer.println("[BiasOutput]");
-            double[] biasOutput = network.getBiasOutput();
-            writer.println(joinArray(biasOutput, " "));
-            writer.println();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -113,37 +89,49 @@ public class NeuralNetworkTrainer implements Serializable {
     }
 
     /**
-     * <p>Loads a previously saved network from a structured text file.</p>
+     * Loads a network from a structured text file.
      */
     public void loadNetwork(String filePath) {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
-            NeuralNetworkConfig newCfg = null;
-            double[][] wIH = null;
-            double[][] wHO = null;
-            double[] biasHidden = null;
-            double[] biasOutput = null;
+            int inputSize = 0;
+            int numHiddenLayers = 0;
+            List<Integer> hiddenSizes = new ArrayList<>();
+            int outputSize = 0;
+            ActivationFunction actFunc = ActivationFunction.TANH; // default
+
+            double[][][] loadedWeights = null;
+            double[][] loadedBiases = null;
+
+            boolean configRead = false;
+            int layerCount = 0;
+            int currentWeightLayer = -1;
+            int rowRead = 0;
 
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
-                if (line.isEmpty()) continue;
+                if (line.isEmpty()) {
+                    continue;
+                }
 
                 if (line.startsWith("[Configuration]")) {
-                    // Read configuration
-                    int inputSize = 0, hiddenSize = 0, outputSize = 0;
-                    ActivationFunction actFunc = ActivationFunction.TANH; // default
-                    for (int i = 0; i < 4; i++) { // expecting four config lines
-                        line = reader.readLine();
-                        if (line == null) throw new IOException("Incomplete configuration section.");
-                        line = line.trim();
-                        String[] parts = line.split("=");
-                        if (parts.length != 2) throw new IOException("Invalid configuration line: " + line);
+                    while (true) {
+                        reader.mark(10000);
+                        String cLine = reader.readLine();
+                        if (cLine == null || cLine.trim().isEmpty() || cLine.trim().startsWith("[")) {
+                            reader.reset();
+                            break;
+                        }
+                        cLine = cLine.trim();
+                        String[] parts = cLine.split("=");
+                        if (parts.length != 2) throw new IOException("Invalid config line: " + cLine);
+
                         switch (parts[0]) {
                             case "inputSize":
                                 inputSize = Integer.parseInt(parts[1]);
                                 break;
-                            case "hiddenSize":
-                                hiddenSize = Integer.parseInt(parts[1]);
+                            case "numHiddenLayers":
+                                numHiddenLayers = Integer.parseInt(parts[1]);
                                 break;
                             case "outputSize":
                                 outputSize = Integer.parseInt(parts[1]);
@@ -152,95 +140,111 @@ public class NeuralNetworkTrainer implements Serializable {
                                 actFunc = ActivationFunction.valueOf(parts[1]);
                                 break;
                             default:
-                                throw new IOException("Unknown configuration parameter: " + parts[0]);
+                                if (parts[0].startsWith("hiddenSize")) {
+                                    hiddenSizes.add(Integer.parseInt(parts[1]));
+                                } else {
+                                    throw new IOException("Unknown config parameter: " + parts[0]);
+                                }
+                                break;
                         }
                     }
-                    newCfg = new NeuralNetworkConfig(inputSize, hiddenSize, outputSize, actFunc);
-                    network = new NeuralNetwork(newCfg);
-                } else if (line.startsWith("[WeightsInputHidden]")) {
-                    // Read Weights Input to Hidden
-                    wIH = new double[network.getConfig().getInputSize()][network.getConfig().getHiddenSize()];
-                    for (int i = 0; i < network.getConfig().getInputSize(); i++) {
-                        line = reader.readLine();
-                        if (line == null) throw new IOException("Unexpected end of file in WeightsInputHidden.");
-                        String[] tokens = line.trim().split(" ");
-                        if (tokens.length != network.getConfig().getHiddenSize()) {
-                            throw new IOException("Invalid number of weights in WeightsInputHidden row " + i);
+                    layerCount = numHiddenLayers + 1;
+                    loadedWeights = new double[layerCount][][];
+                    loadedBiases = new double[layerCount][];
+                    configRead = true;
+                }
+                else if (line.startsWith("[WeightsLayer")) {
+                    if (!configRead) {
+                        throw new IOException("Encountered WeightsLayer before reading [Configuration].");
+                    }
+                    String idxStr = line.substring("[WeightsLayer".length(), line.indexOf("]"));
+                    currentWeightLayer = Integer.parseInt(idxStr);
+
+                    int rows = 0, cols = 0;
+                    if (currentWeightLayer == 0) {
+                        rows = inputSize;
+                        cols = hiddenSizes.get(0);
+                    } else if (currentWeightLayer == layerCount - 1) {
+                        rows = hiddenSizes.get(hiddenSizes.size() - 1);
+                        cols = outputSize;
+                    } else {
+                        rows = hiddenSizes.get(currentWeightLayer - 1);
+                        cols = hiddenSizes.get(currentWeightLayer);
+                    }
+                    loadedWeights[currentWeightLayer] = new double[rows][cols];
+
+                    rowRead = 0;
+                    while (rowRead < rows) {
+                        reader.mark(5000);
+                        String wLine = reader.readLine();
+                        if (wLine == null || wLine.trim().isEmpty() || wLine.trim().startsWith("[")) {
+                            reader.reset();
+                            break;
                         }
-                        for (int j = 0; j < tokens.length; j++) {
-                            wIH[i][j] = Double.parseDouble(tokens[j]);
+                        String[] tokens = wLine.trim().split(" ");
+                        if (tokens.length != cols) {
+                            throw new IOException("Invalid number of columns for WeightsLayer " + currentWeightLayer);
                         }
-                    }
-                    network.setWeightsInputHidden(wIH);
-                } else if (line.startsWith("[WeightsHiddenOutput]")) {
-                    // Read Weights Hidden to Output
-                    wHO = new double[network.getConfig().getHiddenSize()][network.getConfig().getOutputSize()];
-                    for (int i = 0; i < network.getConfig().getHiddenSize(); i++) {
-                        line = reader.readLine();
-                        if (line == null) throw new IOException("Unexpected end of file in WeightsHiddenOutput.");
-                        String[] tokens = line.trim().split(" ");
-                        if (tokens.length != network.getConfig().getOutputSize()) {
-                            throw new IOException("Invalid number of weights in WeightsHiddenOutput row " + i);
+                        for (int c = 0; c < cols; c++) {
+                            loadedWeights[currentWeightLayer][rowRead][c] = Double.parseDouble(tokens[c]);
                         }
-                        for (int j = 0; j < tokens.length; j++) {
-                            wHO[i][j] = Double.parseDouble(tokens[j]);
-                        }
+                        rowRead++;
                     }
-                    network.setWeightsHiddenOutput(wHO);
-                } else if (line.startsWith("[BiasHidden]")) {
-                    // Read Biases Hidden
-                    line = reader.readLine();
-                    if (line == null) throw new IOException("Unexpected end of file in BiasHidden.");
-                    String[] tokens = line.trim().split(" ");
-                    if (tokens.length != network.getConfig().getHiddenSize()) {
-                        throw new IOException("Invalid number of biases in BiasHidden.");
+                }
+                else if (line.startsWith("[BiasLayer")) {
+                    if (!configRead) {
+                        throw new IOException("Encountered BiasLayer before reading [Configuration].");
                     }
-                    biasHidden = new double[network.getConfig().getHiddenSize()];
-                    for (int i = 0; i < tokens.length; i++) {
-                        biasHidden[i] = Double.parseDouble(tokens[i]);
+                    String idxStr = line.substring("[BiasLayer".length(), line.indexOf("]"));
+                    currentWeightLayer = Integer.parseInt(idxStr);
+
+                    int size = (currentWeightLayer == layerCount - 1)
+                            ? outputSize
+                            : hiddenSizes.get(currentWeightLayer);
+
+                    loadedBiases[currentWeightLayer] = new double[size];
+                    String bLine = reader.readLine();
+                    if (bLine == null) {
+                        throw new IOException("Missing biases line for layer " + currentWeightLayer);
                     }
-                    network.setBiasHidden(biasHidden);
-                } else if (line.startsWith("[BiasOutput]")) {
-                    // Read Biases Output
-                    line = reader.readLine();
-                    if (line == null) throw new IOException("Unexpected end of file in BiasOutput.");
-                    String[] tokens = line.trim().split(" ");
-                    if (tokens.length != network.getConfig().getOutputSize()) {
-                        throw new IOException("Invalid number of biases in BiasOutput.");
+                    String[] tokens = bLine.trim().split(" ");
+                    if (tokens.length != size) {
+                        throw new IOException("Invalid number of biases in layer " + currentWeightLayer);
                     }
-                    biasOutput = new double[network.getConfig().getOutputSize()];
-                    for (int i = 0; i < tokens.length; i++) {
-                        biasOutput[i] = Double.parseDouble(tokens[i]);
+                    for (int i = 0; i < size; i++) {
+                        loadedBiases[currentWeightLayer][i] = Double.parseDouble(tokens[i]);
                     }
-                    network.setBiasOutput(biasOutput);
-                } else {
-                    // Unknown section
-                    throw new IOException("Unknown section header: " + line);
                 }
             }
+
+            // Rebuild network
+            NeuralNetworkConfig newCfg = new NeuralNetworkConfig(
+                    inputSize,
+                    hiddenSizes.stream().mapToInt(Integer::intValue).toArray(),
+                    outputSize,
+                    actFunc
+            );
+            this.network = new NeuralNetwork(newCfg);
+            this.network.setWeights(loadedWeights);
+            this.network.setBiases(loadedBiases);
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    /**
-     * Helper method to join a double array into a single string with a given delimiter.
-     *
-     * @param array     The array to join.
-     * @param delimiter The delimiter between elements.
-     * @return A string representing the joined array.
-     */
     private String joinArray(double[] array, String delimiter) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < array.length; i++) {
             sb.append(array[i]);
-            if (i < array.length - 1) sb.append(delimiter);
+            if (i < array.length - 1) {
+                sb.append(delimiter);
+            }
         }
         return sb.toString();
     }
 
-
+    // ----------- GETTERS / SETTERS -----------
     public NeuralNetwork getNetwork() {
         return network;
     }

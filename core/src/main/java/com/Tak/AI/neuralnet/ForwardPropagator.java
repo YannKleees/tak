@@ -1,66 +1,75 @@
 package com.Tak.AI.neuralnet;
 
 /**
- * <p>Handles the forward pass logic for a feedforward neural network.</p>
- *
- * <p><strong>SRP:</strong> Only focuses on computing hidden layer activations and
- * output layer activations from given inputs & weights, for a single-hidden-layer design.</p>
+ * <p>Handles the forward pass in a multi-layer feedforward neural network.</p>
  */
 public class ForwardPropagator {
 
     /**
-     * <p>Performs a forward pass on a single-layer hidden network.</p>
-     *
-     * @param inputs               The input array.
-     * @param weightsInputHidden   The input-to-hidden weight matrix ([inputSize][hiddenSize]).
-     * @param weightsHiddenOutput  The hidden-to-output weight matrix ([hiddenSize][outputSize]).
-     * @param biasHidden           The bias array for the hidden layer ([hiddenSize]).
-     * @param biasOutput           The bias array for the output layer ([outputSize]).
-     * @param activationFunction   The activation function to apply for hidden and output neurons.
-     * @return The output array from the network (size = number of output neurons).
+     * <p>Holds the outputs of each layer for backprop's benefit.</p>
+     * layerOutputs[0] => output of layer 0 (first hidden)
+     * layerOutputs[last] => final output
      */
-    public static double[] forward(double[] inputs,
-                                   double[][] weightsInputHidden,
-                                   double[][] weightsHiddenOutput,
-                                   double[] biasHidden,
-                                   double[] biasOutput,
-                                   ActivationFunction activationFunction) {
-        // Hidden layer
-        int hiddenSize = weightsInputHidden[0].length;
-        double[] hiddenActivations = new double[hiddenSize];
-
-        for (int h = 0; h < hiddenSize; h++) {
-            double sum = 0.0;
-            for (int i = 0; i < inputs.length; i++) {
-                sum += inputs[i] * weightsInputHidden[i][h];
-            }
-            sum += biasHidden[h];
-            hiddenActivations[h] = applyActivation(sum, activationFunction);
-        }
-
-        // Output layer
-        int outputSize = weightsHiddenOutput[0].length;
-        double[] outputActivations = new double[outputSize];
-
-        for (int o = 0; o < outputSize; o++) {
-            double sum = 0.0;
-            for (int h2 = 0; h2 < hiddenSize; h2++) {
-                sum += hiddenActivations[h2] * weightsHiddenOutput[h2][o];
-            }
-            sum += biasOutput[o];
-            outputActivations[o] = applyActivation(sum, activationFunction);
-        }
-
-        return outputActivations;
+    public static class ForwardCache {
+        public double[][] layerOutputs;
     }
 
-    /**
-     * <p>Applies the chosen activation function to a single value.</p>
-     *
-     * @param value     The input sum to activate (z).
-     * @param function  The chosen ActivationFunction.
-     * @return The activated value f(z).
-     */
+    public static double[] forward(double[] inputs,
+                                   double[][][] weights,
+                                   double[][] biases,
+                                   ActivationFunction activationFunction) {
+        double[] currentActivations = inputs;
+
+        for (int layerIndex = 0; layerIndex < weights.length; layerIndex++) {
+            currentActivations = computeLayerOutput(
+                    currentActivations,
+                    weights[layerIndex],
+                    biases[layerIndex],
+                    activationFunction
+            );
+        }
+        return currentActivations;
+    }
+
+    public static ForwardCache forwardWithCache(double[] inputs,
+                                                double[][][] weights,
+                                                double[][] biases,
+                                                ActivationFunction activationFunction) {
+        ForwardCache cache = new ForwardCache();
+        cache.layerOutputs = new double[weights.length][];
+
+        double[] currentActivations = inputs;
+        for (int layerIndex = 0; layerIndex < weights.length; layerIndex++) {
+            currentActivations = computeLayerOutput(
+                    currentActivations,
+                    weights[layerIndex],
+                    biases[layerIndex],
+                    activationFunction
+            );
+            cache.layerOutputs[layerIndex] = currentActivations;
+        }
+        return cache;
+    }
+
+    private static double[] computeLayerOutput(double[] input,
+                                               double[][] layerWeights,
+                                               double[] layerBias,
+                                               ActivationFunction func) {
+        int inSize = layerWeights.length;
+        int outSize = layerWeights[0].length;
+
+        double[] output = new double[outSize];
+        for (int o = 0; o < outSize; o++) {
+            double sum = 0.0;
+            for (int i = 0; i < inSize; i++) {
+                sum += input[i] * layerWeights[i][o];
+            }
+            sum += layerBias[o];
+            output[o] = applyActivation(sum, func);
+        }
+        return output;
+    }
+
     public static double applyActivation(double value, ActivationFunction function) {
         switch (function) {
             case LINEAR:
@@ -74,24 +83,10 @@ public class ForwardPropagator {
         }
     }
 
-    /**
-     * <p>Optional helper class that holds hidden + output activations if you want them for debugging/backprop.</p>
-     */
-    public static class ForwardResults {
-        private final double[] hiddenActivations;
-        private final double[] outputActivations;
-
-        public ForwardResults(double[] hiddenActivations, double[] outputActivations) {
-            this.hiddenActivations = hiddenActivations;
-            this.outputActivations = outputActivations;
-        }
-
-        public double[] getHiddenActivations() {
-            return hiddenActivations;
-        }
-
-        public double[] getOutputActivations() {
-            return outputActivations;
-        }
+    public static ForwardCache forwardWithIntermediate(double[] inputs,
+                                                       double[][][] weights,
+                                                       double[][] biases,
+                                                       ActivationFunction activationFunction) {
+        return forwardWithCache(inputs, weights, biases, activationFunction);
     }
 }

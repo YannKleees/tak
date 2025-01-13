@@ -3,25 +3,39 @@ package com.Tak.AI.neuralnet;
 import java.io.Serializable;
 
 /**
- * <p>Represents a simple feedforward neural network with one hidden layer.</p>
+ * <p>Represents a feedforward neural network with multiple hidden layers.</p>
  *
- * <p><strong>SRP:</strong> Focuses solely on the structure and operations of the neural network,
- * including forward passes and backpropagation.</p>
+ * <strong>Key Changes:</strong>
+ * - Instead of a single hidden layer, we store an array of weight/bias pairs:
+ *   weights[0] = input-to-first-hidden
+ *   weights[1] = first-hidden-to-second-hidden
+ *   ...
+ *   weights[L] = last-hidden-to-output
+ *
+ * - The forward/backprop logic loops through these layers in sequence.
  */
 public class NeuralNetwork implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private NeuralNetworkConfig config;
-    private double[][] weightsInputHidden;
-    private double[][] weightsHiddenOutput;
-    private double[] biasHidden;
-    private double[] biasOutput;
+    private final NeuralNetworkConfig config;
 
     /**
-     * <p>Constructs a NeuralNetwork with the specified config,
-     * and initializes the weights and biases randomly by default.</p>
+     * weights[layerIndex] is a 2D array: [numNeuronsInPreviousLayer][numNeuronsInThisLayer]
+     * biases[layerIndex] is a 1D array: [numNeuronsInThisLayer]
      *
-     * @param config A NeuralNetworkConfig object containing structure & activation details.
+     * For example, if hiddenLayers = {20, 10}:
+     *   - weights[0]: shape [inputSize, 20]
+     *   - weights[1]: shape [20, 10]
+     *   - weights[2]: shape [10, outputSize] // final layer
+     */
+    private double[][][] weights;
+    private double[][] biases;
+
+    /**
+     * <p>Constructs a multi-layer NeuralNetwork with the specified config,
+     * and initializes all weights/biases randomly.</p>
+     *
+     * @param config The network configuration (layer sizes, activation function, etc.)
      */
     public NeuralNetwork(NeuralNetworkConfig config) {
         this.config = config;
@@ -29,153 +43,94 @@ public class NeuralNetwork implements Serializable {
     }
 
     /**
-     * <p>Initializes the weight matrices and biases using {@link WeightInitializer}.</p>
+     * Allocates and randomly initializes all weight matrices & bias arrays.
      */
     private void initializeWeights() {
-        this.weightsInputHidden = WeightInitializer.initializeRandom(
-                config.getInputSize(), config.getHiddenSize()
-        );
-        this.weightsHiddenOutput = WeightInitializer.initializeRandom(
-                config.getHiddenSize(), config.getOutputSize()
-        );
-        this.biasHidden = WeightInitializer.initializeBias(config.getHiddenSize());
-        this.biasOutput = WeightInitializer.initializeBias(config.getOutputSize());
+        int layerCount = config.getHiddenLayerSizes().length + 1; // hidden layers + output layer
+        weights = new double[layerCount][][];
+        biases = new double[layerCount][];
+
+        // ----- Build layer shapes -----
+        // layer 0: input -> hiddenLayer[0]
+        int previousLayerSize = config.getInputSize();
+        for (int i = 0; i < config.getHiddenLayerSizes().length; i++) {
+            int thisLayerSize = config.getHiddenLayerSizes()[i];
+            weights[i] = WeightInitializer.initializeRandom(previousLayerSize, thisLayerSize);
+            biases[i] = WeightInitializer.initializeBias(thisLayerSize);
+            previousLayerSize = thisLayerSize;
+        }
+        // final layer: last hidden -> output
+        int outputLayerIndex = layerCount - 1;
+        weights[outputLayerIndex] = WeightInitializer.initializeRandom(previousLayerSize, config.getOutputSize());
+        biases[outputLayerIndex] = WeightInitializer.initializeBias(config.getOutputSize());
     }
 
     /**
-     * <p>Performs a forward pass through the neural network.</p>
+     * <p>Performs a forward pass through all hidden layers plus the output layer.</p>
      *
-     * @param inputs An array containing input values.
-     * @return The output array from the network (length = outputSize).
+     * @param inputs The network input array.
+     * @return The output array (size = outputSize).
      */
     public double[] forward(double[] inputs) {
         return ForwardPropagator.forward(
                 inputs,
-                weightsInputHidden,
-                weightsHiddenOutput,
-                biasHidden,
-                biasOutput,
+                weights,
+                biases,
                 config.getActivationFunction()
         );
     }
 
     /**
-     * <p>Performs backpropagation and updates the network weights and biases.</p>
+     * <p>Performs backpropagation and updates the network’s parameters.</p>
      *
      * @param inputs       The input array.
-     * @param targets      The target output array (desired).
+     * @param targets      The desired/target output array.
      * @param learningRate The learning rate for weight updates.
      */
     public void backpropagate(double[] inputs, double[] targets, double learningRate) {
-        // 1) Get output by forward pass
-        double[] outputs = forward(inputs);
+        // We'll do a forward pass that captures all layer activations, so we don't recalc them.
+        ForwardPropagator.ForwardCache cache =
+                ForwardPropagator.forwardWithCache(inputs, weights, biases, config.getActivationFunction());
 
-        // 2) Compute hidden activations again for backprop (or we could do a forwardWithIntermediate)
-        double[] hiddenActivations = new double[config.getHiddenSize()];
-        for (int h = 0; h < config.getHiddenSize(); h++) {
-            double sum = 0.0;
-            for (int i = 0; i < config.getInputSize(); i++) {
-                sum += inputs[i] * weightsInputHidden[i][h];
-            }
-            sum += biasHidden[h];
-            hiddenActivations[h] = ForwardPropagator.applyActivation(sum, config.getActivationFunction());
-        }
-
-        // 3) Call BackPropagator with biases
+        // Then backprop across all layers
         BackPropagator.backpropagate(
-            inputs,
-            targets,
-            learningRate,
-            weightsInputHidden,
-            weightsHiddenOutput,
-            biasHidden,
-            biasOutput,
-            hiddenActivations,
-            outputs,
-            config.getActivationFunction()
+                inputs,
+                targets,
+                learningRate,
+                weights,
+                biases,
+                cache.layerOutputs,
+                config.getActivationFunction()
         );
     }
 
-    /**
-     * <p>Returns both hidden and output activations for debugging or a specialized backprop routine.</p>
-     *
-     * @param inputs The input array to feed forward.
-     * @return A {@link ForwardPropagator.ForwardResults} containing arrays for hidden & output.
-     */
-    public ForwardPropagator.ForwardResults forwardWithIntermediate(double[] inputs) {
-        // Manually compute hidden & output
-        int hiddenSize = config.getHiddenSize();
-        double[] hiddenActivations = new double[hiddenSize];
-        for (int h = 0; h < hiddenSize; h++) {
-            double sum = 0.0;
-            for (int i = 0; i < config.getInputSize(); i++) {
-                sum += inputs[i] * weightsInputHidden[i][h];
-            }
-            sum += biasHidden[h];
-            hiddenActivations[h] = ForwardPropagator.applyActivation(sum, config.getActivationFunction());
-        }
-
-        int outputSize = config.getOutputSize();
-        double[] outputActivations = new double[outputSize];
-        for (int o = 0; o < outputSize; o++) {
-            double sum = 0.0;
-            for (int h2 = 0; h2 < hiddenSize; h2++) {
-                sum += hiddenActivations[h2] * weightsHiddenOutput[h2][o];
-            }
-            sum += biasOutput[o];
-            outputActivations[o] = ForwardPropagator.applyActivation(sum, config.getActivationFunction());
-        }
-
-        return new ForwardPropagator.ForwardResults(hiddenActivations, outputActivations);
-    }
-
-    // --------------------- Getters / Setters ---------------------
+    // ------------------------ GETTERS / SETTERS ---------------------------
 
     public NeuralNetworkConfig getConfig() {
         return config;
     }
 
-    public double[][] getWeightsInputHidden() {
-        return weightsInputHidden;
+    public double[][][] getWeights() {
+        return weights;
     }
 
-    public double[][] getWeightsHiddenOutput() {
-        return weightsHiddenOutput;
+    public double[][] getBiases() {
+        return biases;
     }
 
-    public double[] getBiasHidden() {
-        return biasHidden;
+    /**
+     * <p>Setter for weights (all layers at once). 
+     * Make sure to pass an array that matches the shape needed by the config.</p>
+     */
+    public void setWeights(double[][][] newWeights) {
+        this.weights = newWeights;
     }
 
-    public double[] getBiasOutput() {
-        return biasOutput;
-    }
-
-    public void setWeightsInputHidden(double[][] newWeights) {
-        if (newWeights.length != config.getInputSize() || newWeights[0].length != config.getHiddenSize()) {
-            throw new IllegalArgumentException("Invalid shape for weightsInputHidden.");
-        }
-        this.weightsInputHidden = newWeights;
-    }
-
-    public void setWeightsHiddenOutput(double[][] newWeights) {
-        if (newWeights.length != config.getHiddenSize() || newWeights[0].length != config.getOutputSize()) {
-            throw new IllegalArgumentException("Invalid shape for weightsHiddenOutput.");
-        }
-        this.weightsHiddenOutput = newWeights;
-    }
-
-    public void setBiasHidden(double[] newBias) {
-        if (newBias.length != config.getHiddenSize()) {
-            throw new IllegalArgumentException("Invalid biasHidden dimension.");
-        }
-        this.biasHidden = newBias;
-    }
-
-    public void setBiasOutput(double[] newBias) {
-        if (newBias.length != config.getOutputSize()) {
-            throw new IllegalArgumentException("Invalid biasOutput dimension.");
-        }
-        this.biasOutput = newBias;
+    /**
+     * <p>Setter for biases (all layers at once).
+     * Make sure it matches the shape [layerCount][neuronsInLayer].</p>
+     */
+    public void setBiases(double[][] newBiases) {
+        this.biases = newBiases;
     }
 }
