@@ -436,8 +436,8 @@ public class Board {
 
     public void printBoard() {
         int totalPieces = 0; // Counter for total pieces on the board
-        int bluePieces = 0;  // Counter for Blue's pieces
-        int greenPieces = 0; // Counter for Green's pieces
+        int bluePiecesOnBoard = 0;  // Counter for Blue's pieces on the board
+        int greenPiecesOnBoard = 0; // Counter for Green's pieces on the board
     
         // ANSI color codes
         final String RESET = "\u001B[0m";
@@ -464,10 +464,10 @@ public class Board {
                     // Increment per-player counters based on ownership
                     String colorCode = "";
                     if (topPiece.getOwner().getColor() == Player.Color.BLUE) {
-                        bluePieces += stackHeight;
+                        bluePiecesOnBoard += stackHeight;
                         colorCode = BLUE;
                     } else if (topPiece.getOwner().getColor() == Player.Color.GREEN) {
-                        greenPieces += stackHeight;
+                        greenPiecesOnBoard += stackHeight;
                         colorCode = GREEN;
                     }
                     
@@ -481,10 +481,50 @@ public class Board {
         }
         
         System.out.println("---------------------");
-        // After printing the board, display the total number of pieces and per-player counts
+        // After printing the board, display the total number of pieces and per-player counts on the board
         System.out.println("Total Pieces on Board: " + totalPieces);
-        System.out.println("Blue Pieces: " + bluePieces);
-        System.out.println("Green Pieces: " + greenPieces);
-    } 
+        System.out.println("Blue Pieces on Board: " + bluePiecesOnBoard);
+        System.out.println("Green Pieces on Board: " + greenPiecesOnBoard);
+        
+        // **New Section: Displaying Remaining Pieces for Each Player**
+        System.out.println("\nPieces Remaining for Each Player:");
+        System.out.println("----------------------------------");
+        
+        // Assuming you have access to the players, for example via a list or directly
+        // Replace `players` with the appropriate reference to your player instances
+        // For illustration, let's assume you have two players: bluePlayer and greenPlayer
+        Player bluePlayer = null;
+        Player greenPlayer = null;
+        
+        // Retrieve players based on color
+        for (Player player : players) { // Replace 'players' with your actual players collection
+            if (player.getColor() == Player.Color.BLUE) {
+                bluePlayer = player;
+            } else if (player.getColor() == Player.Color.GREEN) {
+                greenPlayer = player;
+            }
+        }
+        
+        if (bluePlayer != null) {
+            System.out.println(BLUE + "Blue Player:" + RESET);
+            System.out.println("  Flat Stones Left: " + bluePlayer.getRemainingPieces(Piece.PieceType.FLAT_STONE));
+            System.out.println("  Standing Stones Left: " + bluePlayer.getRemainingPieces(Piece.PieceType.STANDING_STONE));
+            System.out.println("  Capstones Left: " + bluePlayer.getRemainingPieces(Piece.PieceType.CAPSTONE));
+        } else {
+            System.out.println("Blue Player not found.");
+        }
+        
+        if (greenPlayer != null) {
+            System.out.println(GREEN + "Green Player:" + RESET);
+            System.out.println("  Flat Stones Left: " + greenPlayer.getRemainingPieces(Piece.PieceType.FLAT_STONE));
+            System.out.println("  Standing Stones Left: " + greenPlayer.getRemainingPieces(Piece.PieceType.STANDING_STONE));
+            System.out.println("  Capstones Left: " + greenPlayer.getRemainingPieces(Piece.PieceType.CAPSTONE));
+        } else {
+            System.out.println("Green Player not found.");
+        }
+        
+        System.out.println("----------------------------------");
+    }
+    
     }
 

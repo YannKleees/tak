@@ -240,20 +240,6 @@ public class NeuralNetworkTrainer implements Serializable {
         return sb.toString();
     }
 
-    /**
-     * Helper method to join a 2D double array into a single string with a given delimiter for each row.
-     *
-     * @param array     The 2D array to join.
-     * @param delimiter The delimiter between elements in each row.
-     * @return A list of strings representing each row of the joined array.
-     */
-    private String joinArray(double[][] array, String delimiter) {
-        StringBuilder sb = new StringBuilder();
-        for (double[] row : array) {
-            sb.append(joinArray(row, delimiter)).append(System.lineSeparator());
-        }
-        return sb.toString();
-    }
 
     public NeuralNetwork getNetwork() {
         return network;
