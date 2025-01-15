@@ -7,16 +7,17 @@ import com.Tak.Logic.models.Piece;
 import com.Tak.Logic.models.PieceStack;
 import com.Tak.Logic.models.Player;
 import com.Tak.Logic.utils.Logger;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * The EvaluationFunction class evaluates the game board from the AI's perspective.
- * It assigns scores based on various strategic factors, adjusting its strategy
- * dynamically based on whether the AI is ahead or behind.
+ * The EvaluationFunction class evaluates the game board from the AI's perspective,
+ * without any color-specific orientation logic (no forced left-right or top-down).
+ * It assigns scores based on strategic factors like road potential, stacking, blocking, etc.
  */
-public class EvaluationFunction implements IEvaluationFunction {
+public class EvaluationFunction implements IEvaluationFunction, Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -32,11 +33,11 @@ public class EvaluationFunction implements IEvaluationFunction {
     }
 
     /**
-     * Evaluates the current board state and returns a score.
+     * Evaluates the current board state and returns a score from the perspective of 'player'.
      *
      * @param board  The current game board.
      * @param player The player for whom the evaluation is being done.
-     * @return A numerical score representing the desirability of the board state.
+     * @return A numerical score representing the desirability of the board state for 'player'.
      */
     @Override
     public double evaluate(Board board, Player player) {
@@ -46,16 +47,17 @@ public class EvaluationFunction implements IEvaluationFunction {
             return evaluationCache.get(stateHash);
         }
 
-        // Check for road win conditions
+        // 1. Check for road wins
         if (roadChecker.checkForRoadWin(player, board)) {
             evaluationCache.put(stateHash, Double.POSITIVE_INFINITY);
             return Double.POSITIVE_INFINITY;
-        } else if (roadChecker.checkForRoadWin(player.getOpponent(), board)) {
+        }
+        else if (roadChecker.checkForRoadWin(player.getOpponent(), board)) {
             evaluationCache.put(stateHash, Double.NEGATIVE_INFINITY);
             return Double.NEGATIVE_INFINITY;
         }
 
-        // Evaluate using heuristic
+        // 2. Evaluate using a heuristic
         double heuristicScore = heuristicEvaluation(board, player);
 
         evaluationCache.put(stateHash, heuristicScore);
@@ -68,71 +70,84 @@ public class EvaluationFunction implements IEvaluationFunction {
      *
      * @param board  The current game board.
      * @param player The player (AI) for whom the evaluation is being done.
-     * @return A numerical score representing the heuristic evaluation.
+     * @return A numerical score representing the heuristic evaluation from that player's POV.
      */
     private double heuristicEvaluation(Board board, Player player) {
         double score = 0.0;
 
-        // Immediate Threat Detection
+        // 1. Immediate Threat Detection
         boolean opponentThreat = roadChecker.isPlayerCloseToWinning(board, player.getOpponent());
         if (opponentThreat) {
-            score -= 1000.0; // Large penalty to prioritize blocking
+            score -= 1000.0; // Large penalty if opponent is close to winning
         }
 
-        // Immediate Winning Opportunity
+        // 2. Immediate Winning Opportunity
         boolean canWinNext = roadChecker.isPlayerCloseToWinning(board, player);
         if (canWinNext) {
-            score += 1000.0; // Large reward to prioritize winning
+            score += 1000.0; // Large reward if we can possibly win soon
         }
 
-        // Base evaluation before dynamic adjustments
+        // Base evaluation at this point
         double baseScore = score;
 
-        // Road Potential Difference
+        // 3. Road Potential Difference
         int playerRoadPotential = roadChecker.calculateRoadPotential(board, player);
         int opponentRoadPotential = roadChecker.calculateRoadPotential(board, player.getOpponent());
         double roadPotentialScore = (playerRoadPotential - opponentRoadPotential) * 100.0;
 
-        // Stacking Mechanics
+        // 4. Stacking Mechanics
         double stackingScore = evaluateStacking(board, player) * 50.0;
 
-        // Blocking Potential
+        // 5. Blocking Potential
         double blockingScore = evaluateBlockingPotential(board, player) * 50.0;
 
-        // Capstone Utilization
+        // 6. Capstone Utilization
         double capstoneScore = evaluateCapstoneUtilization(board, player) * 30.0;
 
-        // Flat Stones Difference
-        int flatStoneDifference = countFlatStones(board, player) - countFlatStones(board, player.getOpponent());
+        // 7. Flat Stones Difference
+        int flatStoneDifference = countFlatStones(board, player)
+            - countFlatStones(board, player.getOpponent());
         double flatStoneScore = flatStoneDifference * 10.0;
 
-        // Total current evaluation
-        double currentEvaluation = baseScore + roadPotentialScore + stackingScore + blockingScore + capstoneScore + flatStoneScore;
+        // Summation before dynamic weighting
+        double currentEvaluation = baseScore
+            + roadPotentialScore
+            + stackingScore
+            + blockingScore
+            + capstoneScore
+            + flatStoneScore;
 
-        // Dynamic weight adjustments based on current evaluation
+        // 8. Dynamic weight adjustments based on whether the AI is behind or ahead
         if (currentEvaluation < 0) {
-            // AI is behind, adopt defensive strategy
+            // AI is behind => more defensive
             blockingScore *= 1.5;
             roadPotentialScore *= 0.8;
-            stackingScore *= 1.0;
+            // stackingScore stays the same
         } else {
-            // AI is ahead, adopt offensive strategy
+            // AI is ahead => more offensive
             roadPotentialScore *= 1.2;
             blockingScore *= 0.8;
-            stackingScore *= 1.0;
+            // stackingScore stays the same
         }
 
-        score = baseScore + roadPotentialScore + stackingScore + blockingScore + capstoneScore + flatStoneScore;
+        // Final total
+        score = baseScore
+            + roadPotentialScore
+            + stackingScore
+            + blockingScore
+            + capstoneScore
+            + flatStoneScore;
 
         return score;
     }
 
     /**
      * Evaluates stacking mechanics to assess control over stacks and mobility.
+     * (No color-coded direction logic is used here).
      *
      * @param board  The game board.
      * @param player The player.
-     * @return A score representing stacking benefits.
+     * @return A score representing stacking benefits for 'player'.
      */
     private double evaluateStacking(Board board, Player player) {
         double stackingScore = 0.0;
@@ -144,11 +159,10 @@ public class EvaluationFunction implements IEvaluationFunction {
                 if (!stack.isEmpty()) {
                     Player stackOwner = stack.getTopPiece().getOwner();
                     if (stackOwner.equals(player)) {
+                        // Add some points for controlling taller stacks
                         stackingScore += stack.size() * 2;
-                        if (canMoveStackTowardsWin(board, x, y, player)) {
-                            stackingScore += 5.0;
-                        }
                     } else if (stackOwner.equals(player.getOpponent())) {
+                        // Slight penalty if opponent controls a tall stack
                         stackingScore -= stack.size();
                     }
                 }
@@ -158,67 +172,11 @@ public class EvaluationFunction implements IEvaluationFunction {
     }
 
     /**
-     * Checks if the stack at (x, y) can be moved towards completing a road.
-     *
-     * @param board  The game board.
-     * @param x      The X coordinate.
-     * @param y      The Y coordinate.
-     * @param player The player.
-     * @return True if the stack can be moved towards a road completion, false otherwise.
-     */
-    private boolean canMoveStackTowardsWin(Board board, int x, int y, Player player) {
-        Direction targetDirection = getPlayerRoadDirection(player);
-        if (targetDirection == null) {
-            return false;
-        }
-        if (isAtEdge(board, x, y, targetDirection)) {
-            return false;
-        }
-        int newX = x + targetDirection.getDeltaX();
-        int newY = y + targetDirection.getDeltaY();
-        return board.isWithinBounds(newX, newY);
-    }
-
-    private Direction getPlayerRoadDirection(Player player) {
-        if (player.getColor() == Player.Color.BLUE) {
-            return Direction.RIGHT; 
-        } else if (player.getColor() == Player.Color.GREEN) {
-            return Direction.DOWN;  
-        }
-        return null;
-    }
-
-    /**
-     * Checks if the position is at the edge in the specified direction.
-     *
-     * @param board     The game board.
-     * @param x         The X coordinate.
-     * @param y         The Y coordinate.
-     * @param direction The direction to check.
-     * @return True if at the edge, false otherwise.
-     */
-    private boolean isAtEdge(Board board, int x, int y, Direction direction) {
-        int size = board.getSize();
-        switch (direction) {
-            case RIGHT:
-                return x == size - 1;
-            case LEFT:
-                return x == 0;
-            case DOWN:
-                return y == size - 1;
-            case UP:
-                return y == 0;
-            default:
-                return false;
-        }
-    }
-
-    /**
      * Evaluates the potential to block the opponent's road-building efforts.
      *
      * @param board  The game board.
-     * @param player The player.
-     * @return A score representing blocking potential.
+     * @param player The player for whom we are calculating blocking potential.
+     * @return A score representing how well 'player' can block the opponent.
      */
     private double evaluateBlockingPotential(Board board, Player player) {
         double blockingScore = 0.0;
@@ -227,6 +185,7 @@ public class EvaluationFunction implements IEvaluationFunction {
 
         for (int y = 0; y < size; y++) {
             for (int x = 0; x < size; x++) {
+                // If adjacent to an opponent's potential road piece, occupying it or controlling it is beneficial
                 if (isAdjacentToOpponentRoad(board, x, y, opponent)) {
                     PieceStack stack = board.getBoardStack(x, y);
                     if (stack.isEmpty()) {
@@ -244,13 +203,7 @@ public class EvaluationFunction implements IEvaluationFunction {
     }
 
     /**
-     * Checks if the position is adjacent to the opponent's road pieces.
-     *
-     * @param board    The game board.
-     * @param x        The X coordinate.
-     * @param y        The Y coordinate.
-     * @param opponent The opponent player.
-     * @return True if adjacent to opponent's road, false otherwise.
+     * Checks if the (x,y) position is adjacent to the opponent's road pieces.
      */
     private boolean isAdjacentToOpponentRoad(Board board, int x, int y, Player opponent) {
         for (Direction dir : Direction.values()) {
@@ -271,10 +224,6 @@ public class EvaluationFunction implements IEvaluationFunction {
 
     /**
      * Evaluates the utilization of capstones on the board.
-     *
-     * @param board  The game board.
-     * @param player The player.
-     * @return A score representing capstone utilization.
      */
     private double evaluateCapstoneUtilization(Board board, Player player) {
         double capstoneScore = 0.0;
@@ -285,7 +234,7 @@ public class EvaluationFunction implements IEvaluationFunction {
                 PieceStack stack = board.getBoardStack(x, y);
                 if (!stack.isEmpty()) {
                     Piece topPiece = stack.getTopPiece();
-                    if (topPiece.getPieceType() == Piece.PieceType.CAPSTONE 
+                    if (topPiece.getPieceType() == Piece.PieceType.CAPSTONE
                         && topPiece.getOwner().equals(player)) {
                         capstoneScore += evaluateCapstonePosition(board, x, y, player);
                     }
@@ -296,13 +245,7 @@ public class EvaluationFunction implements IEvaluationFunction {
     }
 
     /**
-     * Evaluates the impact of a capstone at a given position.
-     *
-     * @param board  The game board.
-     * @param x      The X coordinate.
-     * @param y      The Y coordinate.
-     * @param player The player.
-     * @return A score representing the capstone's impact.
+     * Evaluates the impact of a capstone at a given position (like flattening standing stones, etc.).
      */
     private double evaluateCapstonePosition(Board board, int x, int y, Player player) {
         double impactScore = 0.0;
@@ -315,7 +258,9 @@ public class EvaluationFunction implements IEvaluationFunction {
                 PieceStack adjStack = board.getBoardStack(adjX, adjY);
                 if (!adjStack.isEmpty()) {
                     Piece topPiece = adjStack.getTopPiece();
-                    if (topPiece.getOwner().equals(opponent) && topPiece.getPieceType() == Piece.PieceType.STANDING_STONE) {
+                    // Example: reward if adjacent to an opponent's standing stone (cap can flatten it).
+                    if (topPiece.getOwner().equals(opponent)
+                        && topPiece.getPieceType() == Piece.PieceType.STANDING_STONE) {
                         impactScore += 2.0;
                     }
                 }
@@ -325,11 +270,7 @@ public class EvaluationFunction implements IEvaluationFunction {
     }
 
     /**
-     * Counts the number of flat stones for a player.
-     *
-     * @param board  The current game board.
-     * @param player The player whose flat stones are being counted.
-     * @return The number of flat stones.
+     * Counts how many flat stones 'player' has on top of stacks across the board.
      */
     private int countFlatStones(Board board, Player player) {
         int count = 0;
@@ -339,7 +280,8 @@ public class EvaluationFunction implements IEvaluationFunction {
                 PieceStack stack = board.getBoardStack(x, y);
                 if (!stack.isEmpty()) {
                     Piece topPiece = stack.getTopPiece();
-                    if (topPiece.getOwner().equals(player) && topPiece.getPieceType() == Piece.PieceType.FLAT_STONE) {
+                    if (topPiece.getOwner().equals(player)
+                        && topPiece.getPieceType() == Piece.PieceType.FLAT_STONE) {
                         count++;
                     }
                 }
@@ -349,15 +291,11 @@ public class EvaluationFunction implements IEvaluationFunction {
     }
 
     /**
-     * Generates a unique hash for the board state including player turn.
-     *
-     * @param board  The game board.
-     * @param player The current player.
-     * @return A unique string representing the board state.
+     * Generates a unique hash for the board state including the player's color for caching.
      */
     private String generateStateHash(Board board, Player player) {
         StringBuilder sb = new StringBuilder();
-        sb.append(player.getColor() == Player.Color.BLUE ? "B_" : "W_");
+        sb.append(player.getColor() == Player.Color.BLUE ? "B_" : "G_");
 
         for (int y = 0; y < board.getSize(); y++) {
             for (int x = 0; x < board.getSize(); x++) {

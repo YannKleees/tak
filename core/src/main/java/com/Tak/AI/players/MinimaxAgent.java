@@ -19,7 +19,9 @@ import java.util.Objects;
 
 /**
  * MinimaxAgent represents an AI player using the Minimax algorithm for decision-making.
- * It also handles special forced-move logic for the first two moves in Tak.
+ * It applies symmetrical "forced worst move" logic for the first two moves of the game:
+ *   - If moveCount < 2, this agent forces the opponent to make their worst possible move.
+ *   - Otherwise, it performs normal Minimax on its own behalf.
  */
 public class MinimaxAgent extends Player implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -29,7 +31,15 @@ public class MinimaxAgent extends Player implements Serializable {
     private int maxDepth;
 
     /**
-     * Full constructor allowing a custom evaluation function and move ordering setting.
+     * Constructor allowing a custom evaluation function and move ordering setting.
+     *
+     * @param color            The color of this agent (BLUE or GREEN).
+     * @param flatStones       Number of flat stones for this agent.
+     * @param standingStones   Number of standing stones for this agent.
+     * @param capstones        Number of capstones for this agent.
+     * @param maxDepth         The maximum Minimax search depth.
+     * @param useMoveOrdering  Enable or disable move ordering heuristics.
+     * @param evaluator        The evaluation function (heuristic, neural net, etc.).
      */
     public MinimaxAgent(Color color,
                         int flatStones,
@@ -50,7 +60,7 @@ public class MinimaxAgent extends Player implements Serializable {
     }
 
     /**
-     * Constructor with default 'useMoveOrdering = true' and a custom evaluator.
+     * Constructor with default 'useMoveOrdering = true' and a custom evaluation function.
      */
     public MinimaxAgent(Color color,
                         int flatStones,
@@ -62,7 +72,7 @@ public class MinimaxAgent extends Player implements Serializable {
     }
 
     /**
-     * Constructor allowing toggling move ordering, but using a default (heuristic) EvaluationFunction.
+     * Constructor allowing toggling move ordering, but using the default heuristic-based evaluator.
      */
     public MinimaxAgent(Color color,
                         int flatStones,
@@ -74,7 +84,7 @@ public class MinimaxAgent extends Player implements Serializable {
     }
 
     /**
-     * Constructor with a default heuristic evaluator and move ordering = true.
+     * Constructor with a default heuristic evaluator and move ordering enabled.
      */
     public MinimaxAgent(Color color,
                         int flatStones,
@@ -85,23 +95,18 @@ public class MinimaxAgent extends Player implements Serializable {
     }
 
     /**
-     * Executes the AI player's move.
-     * Implements special forced logic for the first two moves of the game:
-     *   - Move #0 if this agent is BLUE => force the worst move for GREEN
-     *   - Move #1 if this agent is GREEN => force the worst move for BLUE
-     * Otherwise, do normal Minimax.
+     * Executes this AI player's move.
+     * If it's among the first two moves (moveCount < 2), forces the opponent to do a "worst" move.
+     * After that, uses normal Minimax to select this agent's own best move.
      */
     @Override
     public void makeMove(TakGame game) throws InvalidMoveException, GameOverException {
         Board board = game.getBoard();
         int currentCount = game.getMoveCount();
-        Color myColor = this.getColor();
 
-        // Check if we are in the first 2 moves
-        if (currentCount == 0 && myColor == Color.BLUE) {
-            // It's the very first move of the game, current agent is BLUE
-            // => Force the worst possible move for GREEN
-            Player forcedColor = this.getOpponent(); // should be GREEN
+        // For the first two moves, force the *opponent* to perform a "worst" move from their perspective
+        if (currentCount < 2) {
+            Player forcedColor = this.getOpponent();
             Action worstMove = findWorstMove(board, forcedColor, currentCount);
             if (worstMove != null) {
                 worstMove.execute(board);
@@ -109,23 +114,8 @@ public class MinimaxAgent extends Player implements Serializable {
                 game.checkWinConditions();
                 game.switchPlayer();
             } else {
-                throw new InvalidMoveException("No valid forced moves available (first move).");
+                throw new InvalidMoveException("No valid forced moves available in the first two moves.");
             }
-
-        } else if (currentCount == 1 && myColor == Color.GREEN) {
-            // It's the second move of the game, current agent is GREEN
-            // => Force the worst possible move for BLUE
-            Player forcedColor = this.getOpponent(); // should be BLUE
-            Action worstMove = findWorstMove(board, forcedColor, currentCount);
-            if (worstMove != null) {
-                worstMove.execute(board);
-                game.incrementMoveCount();
-                game.checkWinConditions();
-                game.switchPlayer();
-            } else {
-                throw new InvalidMoveException("No valid forced moves available (second move).");
-            }
-
         } else {
             // Normal Minimax logic for subsequent moves
             Action bestMove = minimaxAlgorithm.findBestMove(board, this, currentCount);
@@ -141,38 +131,40 @@ public class MinimaxAgent extends Player implements Serializable {
     }
 
     /**
-     * Helper method to pick the "worst" move for a specific color (forcedColor).
-     * This enumerates forcedColor's possible actions, executes each on a copy,
-     * and picks the one with the lowest evaluation (from forcedColor's perspective).
+     * Finds the "worst" move for the specified forcedColor player.
+     * We enumerate forcedColor's possible moves, simulate each, and pick the one
+     * that yields the lowest evaluation (from forcedColor's own perspective).
      */
     private Action findWorstMove(Board board, Player forcedColor, int currentMoveCount) {
-        // Enumerate forcedColor's possible actions
-        List<String> possibleActionStrings = ActionGenerator.generatePossibleActions(board, forcedColor, currentMoveCount);
-        List<Action> possibleActions = minimaxAlgorithm.parseActionStrings(possibleActionStrings, forcedColor);
+        // Generate all possible moves for forcedColor
+        List<String> possibleMoves =
+            ActionGenerator.generatePossibleActions(board, forcedColor, currentMoveCount);
+
+        // Parse them into actual Action objects
+        List<Action> actions = minimaxAlgorithm.parseActionStrings(possibleMoves, forcedColor);
 
         Action worstAction = null;
         double worstValue = Double.POSITIVE_INFINITY;
 
-        // Evaluate from forcedColor's perspective.
-        for (Action action : possibleActions) {
+        for (Action action : actions) {
             Board boardCopy = board.copy();
             try {
                 action.execute(boardCopy);
-                double moveValue = minimaxAlgorithm.getEvalFunction().evaluate(boardCopy, forcedColor);
-
-                if (moveValue < worstValue || worstAction == null) {
-                    worstValue = moveValue;
+                // Evaluate from forcedColor's perspective => the lower the score, the "worse" it is for forcedColor
+                double value = minimaxAlgorithm.getEvalFunction().evaluate(boardCopy, forcedColor);
+                if (value < worstValue) {
+                    worstValue = value;
                     worstAction = action;
                 }
             } catch (InvalidMoveException e) {
-                // skip invalid
+                // Skip invalid
             }
         }
         return worstAction;
     }
 
     /**
-     * Creates a copy of this agent, preserving color, piece counts, depth, etc.
+     * Creates a copy of this MinimaxAgent with the same color, piece counts, max depth, etc.
      */
     @Override
     public Player copy() {
@@ -182,7 +174,7 @@ public class MinimaxAgent extends Player implements Serializable {
             this.getRemainingPieces(PieceType.STANDING_STONE),
             this.getRemainingPieces(PieceType.CAPSTONE),
             this.maxDepth,
-            this.minimaxAlgorithm.isUseMoveOrdering(),
+            minimaxAlgorithm.isUseMoveOrdering(),
             this.evaluationFunction
         );
     }
@@ -209,23 +201,23 @@ public class MinimaxAgent extends Player implements Serializable {
     }
 
     /**
-     * Retrieves the number of nodes evaluated during the last move.
+     * @return the number of nodes evaluated during the last move (for debugging or display).
      */
     public int getNodesEvaluated() {
-        return this.minimaxAlgorithm.getNodesEvaluated();
+        return minimaxAlgorithm.getNodesEvaluated();
     }
 
     /**
-     * Retrieves the time taken (in milliseconds) during the last move.
+     * @return time taken (in milliseconds) during the last move (for debugging or display).
      */
     public long getTimeTakenMillis() {
-        return this.minimaxAlgorithm.getTimeTakenMillis();
+        return minimaxAlgorithm.getTimeTakenMillis();
     }
 
     /**
-     * Retrieves the number of alpha-beta pruning events during the last move.
+     * @return how many times alpha-beta pruning occurred during the last move (debug).
      */
     public int getPruneCount() {
-        return this.minimaxAlgorithm.getPruneCount();
+        return minimaxAlgorithm.getPruneCount();
     }
 }

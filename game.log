@@ -81,3 +81,126 @@
 2025-01-10T10:40:31.751532500 [INFO] [TakGame]: Final Players List:
 2025-01-10T10:40:31.757542200 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
 2025-01-10T10:40:31.758543200 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-10T10:49:58.045863 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-10T10:49:58.050866700 [INFO] [TakGame]: Final Players List:
+2025-01-10T10:49:58.060394400 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-10T10:49:58.060394400 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-10T10:50:56.348580500 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-10T10:50:56.352049100 [INFO] [TakGame]: Final Players List:
+2025-01-10T10:50:56.361327400 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-10T10:50:56.361327400 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-10T10:51:53.531066500 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-10T10:51:53.536078200 [INFO] [TakGame]: Final Players List:
+2025-01-10T10:51:53.545081100 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-10T10:51:53.546078300 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-10T10:52:33.049164900 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-10T10:52:33.052153600 [INFO] [TakGame]: Final Players List:
+2025-01-10T10:52:33.060157600 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-10T10:52:33.061171600 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-10T11:00:50.829733100 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-10T11:00:50.833732100 [INFO] [TakGame]: Final Players List:
+2025-01-10T11:00:50.841250200 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-10T11:00:50.841250200 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-10T11:01:53.842451700 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-10T11:01:53.845590300 [INFO] [TakGame]: Final Players List:
+2025-01-10T11:01:53.853596700 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-10T11:01:53.853596700 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:12:50.134375100 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:12:50.139371200 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:12:50.150375300 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:12:50.150375300 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:13:38.294228900 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:13:38.298227800 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:13:38.307226200 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:13:38.308235100 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:14:41.256264 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:14:41.260985 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:14:41.274508200 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:14:41.274508200 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:14:59.084928800 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:14:59.088711900 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:14:59.098710300 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:14:59.099752 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:15:47.541339300 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:15:47.544826500 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:15:47.554619700 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:15:47.555660400 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:16:20.004910500 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:16:20.007923300 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:16:20.016715600 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:16:20.016715600 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:16:43.709350500 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:16:43.714752200 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:16:43.725478800 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:16:43.725478800 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:30:09.900043800 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:30:09.907330300 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:30:09.917884700 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:30:09.917884700 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:30:55.893786200 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:30:55.898089700 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:30:55.908658400 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:30:55.908658400 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:31:29.322642600 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:31:29.327616100 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:31:29.336879 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:31:29.337389200 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:31:41.155017 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:31:41.160559400 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:31:41.172091500 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:31:41.172091500 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:31:51.077455800 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:31:51.080867900 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:31:51.091782900 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:31:51.091782900 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:32:13.443300500 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:32:13.448829300 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:32:13.456841500 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:32:13.456841500 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:34:32.414016900 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:34:32.419021500 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:34:32.428120900 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:34:32.428120900 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:34:52.351779700 [INFO] [GameScreen]: Initialized Human vs Human: BLUE vs GREEN
+2025-01-15T10:35:07.715027500 [INFO] [GameScreen]: Initialized Human vs AI: BLUE (Human) vs GREEN (AI)
+2025-01-15T10:39:13.850611 [INFO] [GameScreen]: Initialized Human vs AI: BLUE (Human) vs GREEN (AI)
+2025-01-15T10:39:57.554250400 [INFO] [GameScreen]: Initialized Human vs Human: BLUE vs GREEN
+2025-01-15T10:47:21.914937700 [INFO] [GameScreen]: Initialized Human vs Human: BLUE vs GREEN
+2025-01-15T10:48:12.250422500 [INFO] [GameScreen]: Initialized Human vs Human: BLUE vs GREEN
+2025-01-15T10:48:33.771 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:48:33.774998900 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:48:33.785001 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:48:33.785001 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:48:58.406796100 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:48:58.412826900 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:48:58.420799 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:48:58.420799 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:49:30.917816600 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:49:30.922854200 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:49:30.933969600 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:49:30.933969600 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:50:00.616000600 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:50:00.621282400 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:50:00.630268400 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:50:00.630268400 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:50:37.898788900 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:50:37.903035700 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:50:37.912161600 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:50:37.913165400 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:50:45.469427200 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:50:45.473849700 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:50:45.483377400 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:50:45.483377400 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:50:57.076118100 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:50:57.080652600 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:50:57.089649600 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:50:57.089649600 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:51:04.458354900 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:51:04.462378200 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:51:04.469379300 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T10:51:04.469379300 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:51:48.394248100 [INFO] [GameScreen]: Initialized Human vs AI: BLUE (Human) vs GREEN (AI)
+2025-01-15T10:52:33.629016800 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T10:52:33.633015900 [INFO] [TakGame]: Final Players List:
+2025-01-15T10:52:33.647020900 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T10:52:33.647020900 [INFO] [TakGame]: MinimaxAgent - Color: BLUE

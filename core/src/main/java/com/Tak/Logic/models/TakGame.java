@@ -146,23 +146,29 @@ public class TakGame implements Serializable {
             player2.setOpponent(player1);
             players.add(player1);
             players.add(player2);
+
+          //  currentPlayerIndex = 1;
         } else {
             // Add AIPlayers based on aiPlayersCount
             if (aiPlayersCount == 1) {
-                Player player1 = new HumanPlayer(Player.Color.BLUE, 15, 6, 1);
-                Player aiPlayer = new MinimaxAgent(Player.Color.GREEN, 21, 1, 1, 3);
+                Player player1 = new HumanPlayer(Player.Color.BLUE, 21, 21, 1);
+                Player aiPlayer = new MinimaxAgent(Player.Color.GREEN, 21, 21, 1, 3);
                 player1.setOpponent(aiPlayer);
                 aiPlayer.setOpponent(player1);
                 players.add(player1);
                 players.add(aiPlayer);
+
+             //   currentPlayerIndex = 1;
                 Logger.log("TakGame", "Added HumanPlayer BLUE and AIPlayer GREEN.");
             } else if (aiPlayersCount == 2) {
-                Player aiPlayer1 = new MinimaxAgent(Player.Color.BLUE, 21, 1, 1, 3);
-                Player aiPlayer2 = new MinimaxAgent(Color.GREEN, 21, 1, 1, 3);
+                Player aiPlayer1 = new MinimaxAgent(Player.Color.BLUE, 21, 21, 1, 3);
+                Player aiPlayer2 = new MinimaxAgent(Player.Color.GREEN, 21, 21, 1, 3);
                 aiPlayer1.setOpponent(aiPlayer2);
                 aiPlayer2.setOpponent(aiPlayer1);
                 players.add(aiPlayer1);
                 players.add(aiPlayer2);
+
+
                 Logger.log("TakGame", "Added two AIPlayers: BLUE and GREEN.");
             } else {
                 throw new IllegalArgumentException("aiPlayersCount must be 0, 1, or 2.");
