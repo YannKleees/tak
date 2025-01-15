@@ -20,38 +20,22 @@ public class NeuralNetwork implements Serializable {
     private final NeuralNetworkConfig config;
 
     /**
-     * weights[layerIndex] is a 2D array: [numNeuronsInPreviousLayer][numNeuronsInThisLayer]
-     * biases[layerIndex] is a 1D array: [numNeuronsInThisLayer]
-     *
-     * For example, if hiddenLayers = {20, 10}:
-     *   - weights[0]: shape [inputSize, 20]
-     *   - weights[1]: shape [20, 10]
-     *   - weights[2]: shape [10, outputSize] // final layer
+     * weights[layerIndex] = 2D array: [numNeuronsInPreviousLayer][numNeuronsInThisLayer]
+     * biases[layerIndex] = 1D array: [numNeuronsInThisLayer]
      */
     private double[][][] weights;
     private double[][] biases;
 
-    /**
-     * <p>Constructs a multi-layer NeuralNetwork with the specified config,
-     * and initializes all weights/biases randomly.</p>
-     *
-     * @param config The network configuration (layer sizes, activation function, etc.)
-     */
     public NeuralNetwork(NeuralNetworkConfig config) {
         this.config = config;
         initializeWeights();
     }
 
-    /**
-     * Allocates and randomly initializes all weight matrices & bias arrays.
-     */
     private void initializeWeights() {
-        int layerCount = config.getHiddenLayerSizes().length + 1; // hidden layers + output layer
+        int layerCount = config.getHiddenLayerSizes().length + 1;
         weights = new double[layerCount][][];
         biases = new double[layerCount][];
 
-        // ----- Build layer shapes -----
-        // layer 0: input -> hiddenLayer[0]
         int previousLayerSize = config.getInputSize();
         for (int i = 0; i < config.getHiddenLayerSizes().length; i++) {
             int thisLayerSize = config.getHiddenLayerSizes()[i];
@@ -59,54 +43,40 @@ public class NeuralNetwork implements Serializable {
             biases[i] = WeightInitializer.initializeBias(thisLayerSize);
             previousLayerSize = thisLayerSize;
         }
-        // final layer: last hidden -> output
+        // final layer
         int outputLayerIndex = layerCount - 1;
         weights[outputLayerIndex] = WeightInitializer.initializeRandom(previousLayerSize, config.getOutputSize());
         biases[outputLayerIndex] = WeightInitializer.initializeBias(config.getOutputSize());
     }
 
-    /**
-     * <p>Performs a forward pass through all hidden layers plus the output layer.</p>
-     *
-     * @param inputs The network input array.
-     * @return The output array (size = outputSize).
-     */
     public double[] forward(double[] inputs) {
         return ForwardPropagator.forward(
-                inputs,
-                weights,
-                biases,
-                config.getActivationFunction()
+            inputs,
+            weights,
+            biases,
+            config.getActivationFunction()
         );
     }
 
-    /**
-     * <p>Performs backpropagation and updates the network’s parameters.</p>
-     *
-     * @param inputs       The input array.
-     * @param targets      The desired/target output array.
-     * @param learningRate The learning rate for weight updates.
-     */
     public void backpropagate(double[] inputs, double[] targets, double learningRate) {
-        // We'll do a forward pass that captures all layer activations, so we don't recalc them.
+        // forward pass with cache
         ForwardPropagator.ForwardCache cache =
-                ForwardPropagator.forwardWithCache(inputs, weights, biases, config.getActivationFunction());
+            ForwardPropagator.forwardWithCache(inputs, weights, biases, config.getActivationFunction());
 
-        // Then backprop across all layers
+        // pass everything to BackPropagator
         BackPropagator.backpropagate(
-                inputs,
-                targets,
-                learningRate,
-                0.0, // Add the missing double argument
-                weights,
-                biases,
-                cache.layerOutputs,
-                config.getActivationFunction()
+            inputs,
+            targets,
+            learningRate,
+            0.0, // you can change this to a nonzero if you want L2
+            weights,
+            biases,
+            cache.layerOutputs,
+            config.getActivationFunction()
         );
     }
 
-    // ------------------------ GETTERS / SETTERS ---------------------------
-
+    // Getters / Setters
     public NeuralNetworkConfig getConfig() {
         return config;
     }
@@ -119,18 +89,10 @@ public class NeuralNetwork implements Serializable {
         return biases;
     }
 
-    /**
-     * <p>Setter for weights (all layers at once). 
-     * Make sure to pass an array that matches the shape needed by the config.</p>
-     */
     public void setWeights(double[][][] newWeights) {
         this.weights = newWeights;
     }
 
-    /**
-     * <p>Setter for biases (all layers at once).
-     * Make sure it matches the shape [layerCount][neuronsInLayer].</p>
-     */
     public void setBiases(double[][] newBiases) {
         this.biases = newBiases;
     }

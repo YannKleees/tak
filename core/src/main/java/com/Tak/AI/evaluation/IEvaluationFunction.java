@@ -18,4 +18,6 @@ public interface IEvaluationFunction extends Serializable {
      * @return A numerical score for the board state, from the perspective of 'player'.
      */
     double evaluate(Board board, Player player);
+
+    int depthFromBoardSize(int size);
 }

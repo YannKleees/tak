@@ -118,7 +118,7 @@ public class UIManager {
         textFieldStyle.fontColor = Color.GREEN;
         textFieldStyle.cursor = skin.newDrawable("cursor");
         textFieldStyle.selection = skin.newDrawable("selection");
-        textFieldStyle.background = skin.newDrawable("textfield-background"); // Set the background
+        textFieldStyle.background = skin.newDrawable("textfield-background");
         skin.add("default", textFieldStyle);
 
         // Add LabelStyle
@@ -454,10 +454,8 @@ public class UIManager {
             capstoneCountLabel.setVisible(true);
         }
 
-        // Now pick the color from targetPlayer
         Color pieceColor = (targetPlayer.getColor() == Player.Color.GREEN) ? Color.GREEN : Color.BLUE;
 
-        // Update placeholders with pieceColor
         normalStoneImage.setDrawable(
             new TextureRegionDrawable(createColoredPlaceholder("normal", pieceColor)));
         normalStoneImage.invalidate();
@@ -472,7 +470,6 @@ public class UIManager {
             new TextureRegionDrawable(createColoredPlaceholder("capstone", pieceColor)));
         capstoneImage.invalidate();
 
-        // Update piece counts from targetPlayer
         normalStoneCountLabel.setText(
             "Left: " + targetPlayer.getRemainingPieces(Piece.PieceType.FLAT_STONE));
         standingStoneCountLabel.setText(
@@ -480,7 +477,6 @@ public class UIManager {
         capstoneCountLabel.setText(
             "Left: " + targetPlayer.getRemainingPieces(Piece.PieceType.CAPSTONE));
 
-        // Disable hotbar buttons if no pieces remain
         normalStoneImage.setTouchable(
             targetPlayer.getRemainingPieces(Piece.PieceType.FLAT_STONE) > 0
                 ? Touchable.enabled : Touchable.disabled);
@@ -492,16 +488,13 @@ public class UIManager {
                 ? Touchable.enabled : Touchable.disabled);
     }
 
-
     /**
      * Updates the player scores displayed on the UI.
      */
     public void updatePlayerScores() {
-        // Retrieve scores from players
         int playerBLUEScore = takGame.getPlayer1().getScore();
         int playerGREENScore = takGame.getPlayer2().getScore();
 
-        // Update score labels
         playerBLUEScoreLabel.setText("Score: " + playerBLUEScore);
         playerGREENScoreLabel.setText("Score: " + playerGREENScore);
     }
@@ -531,13 +524,13 @@ public class UIManager {
      * @return The generated texture.
      */
     private Texture createCircleTexture(Color color) {
-        int size = 64; // Size of the circle
+        int size = 64;
         Pixmap pixmap = new Pixmap(size, size, Pixmap.Format.RGBA8888);
-        pixmap.setColor(0, 0, 0, 0); // Transparent background
+        pixmap.setColor(0, 0, 0, 0);
         pixmap.fill();
 
         pixmap.setColor(color);
-        pixmap.fillCircle(size / 2, size / 2, size / 2 - 2); // Circle with padding
+        pixmap.fillCircle(size / 2, size / 2, size / 2 - 2);
 
         Texture texture = new Texture(pixmap);
         pixmap.dispose();
@@ -600,11 +593,11 @@ public class UIManager {
     private Texture createNormalStonePlaceholderWithColor(Color color) {
         int size = 64;
         Pixmap pixmap = new Pixmap(size, size, Pixmap.Format.RGBA8888);
-        pixmap.setColor(0, 0, 0, 0); // Transparent background
+        pixmap.setColor(0, 0, 0, 0);
         pixmap.fill();
 
         pixmap.setColor(color);
-        pixmap.fillCircle(size / 2, size / 2, size / 2 - 2); // Circle with padding
+        pixmap.fillCircle(size / 2, size / 2, size / 2 - 2);
 
         Texture texture = new Texture(pixmap);
         pixmap.dispose();
@@ -621,11 +614,11 @@ public class UIManager {
         int width = 64;
         int height = 64;
         Pixmap pixmap = new Pixmap(width, height, Pixmap.Format.RGBA8888);
-        pixmap.setColor(0, 0, 0, 0); // Transparent background
+        pixmap.setColor(0, 0, 0, 0);
         pixmap.fill();
 
         pixmap.setColor(color);
-        pixmap.fillRectangle(8, 16, width - 16, height - 32); // Rectangle with padding
+        pixmap.fillRectangle(8, 16, width - 16, height - 32);
 
         Texture texture = new Texture(pixmap);
         pixmap.dispose();
@@ -641,11 +634,10 @@ public class UIManager {
     private Texture createCapstonePlaceholderWithColor(Color color) {
         int size = 64;
         Pixmap pixmap = new Pixmap(size, size, Pixmap.Format.RGBA8888);
-        pixmap.setColor(0, 0, 0, 0); // Transparent background
+        pixmap.setColor(0, 0, 0, 0);
         pixmap.fill();
 
         pixmap.setColor(color);
-        // Draw a simple triangle to represent the capstone
         pixmap.fillTriangle(size / 2, 2, 2, size - 2, size - 2, size - 2);
 
         Texture texture = new Texture(pixmap);

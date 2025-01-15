@@ -11,6 +11,7 @@
 2025-01-08T00:59:41.580786900 [INFO] [GameScreen]: Initialized Human vs AI: BLUE (Human) vs GREEN (AI)
 2025-01-08T01:00:32.140746500 [INFO] [GameScreen]: Initialized Human vs Human: BLUE vs GREEN
 2025-01-08T01:00:55.793516700 [INFO] [GameScreen]: Initialized Human vs AI: BLUE (Human) vs GREEN (AI)
+2025-01-09T17:03:19.982934 [INFO] [GameScreen]: Initialized Human vs AI: BLUE (Human) vs GREEN (AI)
 2025-01-10T09:30:40.014559300 [INFO] [GameScreen]: Initialized Human vs Human: BLUE vs GREEN
 2025-01-10T09:58:12.036539200 [INFO] [GameScreen]: Initialized Human vs AI: BLUE (Human) vs GREEN (AI)
 2025-01-10T10:16:50.405693200 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
@@ -204,3 +205,304 @@
 2025-01-15T10:52:33.633015900 [INFO] [TakGame]: Final Players List:
 2025-01-15T10:52:33.647020900 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
 2025-01-15T10:52:33.647020900 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T16:51:51.414272200 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T16:51:51.416283 [INFO] [TakGame]: Final Players List:
+2025-01-15T16:51:51.422203100 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T16:51:51.422203100 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T16:51:52.032119100 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T16:51:52.545356300 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T16:51:53.327343 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T16:51:53.949031800 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T16:51:54.535263300 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T16:51:55.098473400 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T16:51:55.664550100 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T16:51:56.228605200 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T16:51:56.806980200 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T16:51:57.325243500 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T16:51:57.927413500 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T16:51:58.485240100 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T16:51:59.116973 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T16:51:59.676289200 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T16:52:00.333889 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T16:52:00.877104700 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T16:52:01.468408300 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T16:52:02.026863500 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T16:52:02.678673400 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T16:52:03.395263600 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T16:52:04.072751 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T16:52:04.806549 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T16:52:05.543367 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T16:52:06.184889100 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T16:52:06.795811300 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T16:52:07.485440500 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T16:52:08.095389400 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:11.091314600 [INFO] [GameScreen]: Initialized Human vs Human: BLUE vs GREEN
+2025-01-15T17:12:13.395775500 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:14.747012400 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:17.308852400 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:21.751543 [INFO] [GameScreen]: Initialized Human vs AI: BLUE (Human) vs GREEN (AI)
+2025-01-15T17:12:24.646795200 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:25.168092300 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:26.488581800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:27.376733400 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:29.224329800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:29.805481400 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:38.864384800 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T17:12:38.866895700 [INFO] [TakGame]: Final Players List:
+2025-01-15T17:12:38.871439700 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T17:12:38.871439700 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T17:12:39.465381700 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:39.974613900 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:40.730885400 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:41.338071600 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:41.918763600 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:42.475573100 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:43.040185800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:43.603327100 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:44.180336900 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:44.699259100 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:45.297452200 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:45.855573500 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:46.477847900 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:47.035639600 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:47.687732700 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:48.230579400 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:48.821054 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:49.377351800 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:50.023234500 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:50.744764200 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:51.414331400 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:52.131880500 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:52.873749500 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:53.521400500 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:54.135577800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:54.828476900 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:55.455144600 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:56.168325900 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:12:56.830154200 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:12:57.562564100 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:20:59.053875200 [INFO] [GameScreen]: Initialized Human vs Human: BLUE vs GREEN
+2025-01-15T17:21:02.147627800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:21:06.213437500 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:21:12.317175100 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:21:13.579328200 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:21:14.677015600 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:21:15.733251100 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:21:16.746645500 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:21:23.593105500 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:21:24.739933200 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:21:26.683296900 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:21:30.024032700 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:21:41.531062200 [INFO] [GameScreen]: Initialized Human vs AI: BLUE (Human) vs GREEN (AI)
+2025-01-15T17:21:44.015225300 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:21:44.526240800 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:21:46.535501 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:21:51.404202100 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:22:00.493081400 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:22:01.168639 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:22:16.301200300 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T17:22:16.303323300 [INFO] [TakGame]: Final Players List:
+2025-01-15T17:22:16.308763600 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T17:22:16.308763600 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T17:22:16.911173800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:22:17.490127400 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:22:18.232082100 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:22:18.827274 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:22:19.412695400 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:22:19.969951300 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:22:20.535896 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:22:21.099859900 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:22:21.669986800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:22:22.186505900 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:22:22.784267900 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:22:23.318916800 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:22:23.943239400 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:22:24.516555300 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:22:25.170199300 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:31:59.271141500 [INFO] [GameScreen]: Initialized Human vs Human: BLUE vs GREEN
+2025-01-15T17:32:03.603059300 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:32:07.834358800 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:32:13.229337 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:32:18.167285700 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:32:20.819089100 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:32:35.310281 [INFO] [GameScreen]: Initialized Human vs AI: BLUE (Human) vs GREEN (AI)
+2025-01-15T17:32:38.135386100 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:32:38.657078900 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:32:40.991068700 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:32:43.572106800 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:34:26.054637300 [INFO] [GameScreen]: Initialized Human vs Human: BLUE vs GREEN
+2025-01-15T17:34:28.165736800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:34:29.627149800 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:34:34.160591100 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:34:41.542926800 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:34:43.667753700 [INFO] [TakGame]: Repeated board state => tie.
+2025-01-15T17:35:34.083072 [INFO] [TakGame]: Added two AIPlayers: BLUE and GREEN.
+2025-01-15T17:35:34.085137400 [INFO] [TakGame]: Final Players List:
+2025-01-15T17:35:34.090355200 [INFO] [TakGame]: MinimaxAgent - Color: BLUE
+2025-01-15T17:35:34.090355200 [INFO] [TakGame]: MinimaxAgent - Color: GREEN
+2025-01-15T17:35:34.696689500 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:35:35.212142600 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:35:36.000784 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:35:36.652332500 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:35:37.250303900 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:35:37.804176800 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:35:38.367509300 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:35:38.930252400 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:35:39.502249600 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:35:40.020097900 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:35:40.614621 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:35:41.185855900 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T17:35:41.809864600 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:35:46.253117500 [INFO] [GameScreen]: Initialized Human vs Human: BLUE vs GREEN
+2025-01-15T17:35:48.152810700 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T17:35:51.772077400 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:27:20.289665500 [INFO] [GameScreen]: Initialized Human vs Human: BLUE vs GREEN
+2025-01-15T18:27:22.874692600 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:27:23.912865600 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:27:35.347348100 [INFO] [GameScreen]: Initialized Human vs AI: BLUE (Human) vs GREEN (AI)
+2025-01-15T18:27:38.935242900 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:27:40.700445500 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:27:43.577776800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:27:44.586854400 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:39:21.969806600 [INFO] [GameScreen]: Initialized Human vs Human: BLUE vs GREEN
+2025-01-15T18:39:28.767812700 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:39:33.791214700 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:39:41.650921300 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:39:42.658301 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:39:43.652044700 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:40:49.094898500 [INFO] [GameScreen]: Initialized Human vs AI: BLUE (Human) vs GREEN (AI)
+2025-01-15T18:40:51.038709200 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:40:51.559924500 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:40:56.894950800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:40:57.804404400 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:41:03.297596800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:41:04.079869300 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:42:12.988483 [INFO] [GameScreen]: Initialized Human vs Human: BLUE vs GREEN
+2025-01-15T18:42:14.892101400 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:42:16.255775800 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:48:36.437313600 [INFO] [GameScreen]: Initialized AI vs AI
+2025-01-15T18:48:37.026739800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:48:37.536700400 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:48:38.263305 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:48:38.872688300 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:48:39.451698800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:48:40.007091100 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:48:40.580042400 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:48:41.139044900 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:48:41.710228900 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:48:42.226710900 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:48:42.823291700 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:48:43.371876300 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:48:43.989809200 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:48:44.541176800 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:48:45.188949400 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:48:45.728279300 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:48:46.317108800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:48:46.877202600 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:48:47.521723200 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:48:48.211864400 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:48:48.876732700 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:48:49.596177200 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:48:54.411000200 [INFO] [GameScreen]: Initialized Human vs Human
+2025-01-15T18:48:56.626811400 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:49:00.766780800 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:49:05.176715 [INFO] [TakGame]: Repeated board state => tie.
+2025-01-15T18:57:03.494906700 [INFO] [GameScreen]: Initialized Human vs Human
+2025-01-15T18:57:06.472550700 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T18:57:13.759247800 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T18:57:20.870078900 [INFO] [TakGame]: Repeated board state => tie.
+2025-01-15T19:11:54.264395400 [INFO] [GameScreen]: Initialized Human vs Human
+2025-01-15T19:11:57.656606900 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:03.268898 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:06.144620200 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:09.679048700 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:11.852202600 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:16.115559500 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:18.212936 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:22.622362400 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:23.635647 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:26.628780500 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:27.753431500 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:28.941281900 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:40.134275700 [INFO] [GameScreen]: Initialized AI vs AI
+2025-01-15T19:12:40.716762200 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:41.225505400 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:41.950212 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:42.547433900 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:43.133810 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:43.691525300 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:44.253237800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:44.815768700 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:45.386595700 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:45.902694700 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:46.494745800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:47.042389100 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:47.666973300 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:48.217675900 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:48.866434100 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:49.406171600 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:49.993222700 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:50.554229900 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:51.196215800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:51.873777100 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:52.538492800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:53.252973700 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:53.973894500 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:54.612400300 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:12:55.224382100 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:12:55.911819200 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:20:04.038201300 [INFO] [GameScreen]: Initialized Human vs Human
+2025-01-15T19:20:07.883790 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:20:08.962050900 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:20:15.593744900 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:20:17.024189 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:20:18.655853300 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:20:23.211131 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:20:27.377360400 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:20:35.865177300 [INFO] [GameScreen]: Initialized AI vs AI
+2025-01-15T19:22:10.412641900 [INFO] [GameScreen]: Initialized Human vs Human
+2025-01-15T19:22:12.518534900 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:22:13.715773900 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:22:19.867296300 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:22:21.019538600 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:22:22.519669600 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:22:24.575272600 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:22:31.012655700 [INFO] [GameScreen]: Initialized AI vs AI
+2025-01-15T19:22:31.602024500 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:22:32.110035200 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:22:32.821286700 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:26:28.471317200 [INFO] [GameScreen]: Initialized AI vs AI
+2025-01-15T19:26:30.067159600 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:26:31.582242100 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:26:33.361392600 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:26:37.538098900 [INFO] [GameScreen]: Initialized Human vs Human
+2025-01-15T19:26:39.813803400 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:26:41.080665600 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:26:45.322758200 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:26:50.016664 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:29:51.671621 [INFO] [GameScreen]: Initialized Human vs Human
+2025-01-15T19:29:53.950631 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:29:57.193886100 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:29:59.422797100 [INFO] [TakGame]: Repeated board state => tie.
+2025-01-15T19:30:07.180665200 [INFO] [GameScreen]: Initialized AI vs AI
+2025-01-15T19:30:08.864473500 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:30:10.387682300 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:30:12.262630 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:30:17.955889800 [INFO] [GameScreen]: Initialized Human vs AI
+2025-01-15T19:30:24.218964400 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:30:25.755065 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:30:33.242737600 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:30:35.499500800 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:40:27.427851500 [INFO] [GameScreen]: Initialized AI vs AI
+2025-01-15T19:40:28.157026900 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:40:28.678928200 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:40:29.633080800 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:40:30.312896100 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:40:30.977628200 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:40:31.568249800 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:40:32.192573400 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:40:32.791045100 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:40:33.410255600 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:40:33.938453100 [INFO] [TakGame]: Switched to player: BLUE
+2025-01-15T19:40:34.581134400 [INFO] [TakGame]: Switched to player: GREEN
+2025-01-15T19:40:35.138710700 [INFO] [TakGame]: Switched to player: BLUE

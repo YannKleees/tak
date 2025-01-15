@@ -10,14 +10,14 @@ public class AIGameTester {
         // Initialize the trainer and load the network
         NeuralNetworkTrainer nnTrainer = NeuralNetworkInitializer.initializeTrainer();
         nnTrainer.loadNetwork("trained_network.txt"); // Load your trained network
-        
+
         // Initialize AI players
         List<Player> aiPlayers = AIPlayerInitializer.createAIPlayers(nnTrainer);
-        
+
         // Create a TakGame with AI players
         int boardSize = 5;
         TakGame game = new TakGame(boardSize, aiPlayers);
-        
+
         // Play the game until it ends
         while (!game.isGameEnded()) {
             try {
@@ -27,7 +27,7 @@ public class AIGameTester {
                 break;
             }
         }
-        
+
         // Announce the winner
         Player winner = game.getWinner();
         if (winner != null) {
@@ -35,7 +35,7 @@ public class AIGameTester {
         } else {
             System.out.println("The game ended in a tie.");
         }
-        
+
         // Optionally, log the final board state
         game.logFinalBoardState();
     }

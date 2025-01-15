@@ -64,6 +64,11 @@ public class EvaluationFunction implements IEvaluationFunction, Serializable {
         return heuristicScore;
     }
 
+    @Override
+    public int depthFromBoardSize(int size) {
+        return 0;
+    }
+
     /**
      * Heuristic evaluation function that adjusts weights dynamically based on whether
      * the AI is ahead or behind.

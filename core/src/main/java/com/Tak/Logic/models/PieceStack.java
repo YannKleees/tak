@@ -115,4 +115,12 @@ public class PieceStack {
         }
         return newStack;
     }
+    public PieceStack copyNoRemap() {
+        PieceStack newStack = new PieceStack();
+        for (Piece p : this.pieces) {
+            newStack.addPiece(p); // same piece object, no re-map
+        }
+        return newStack;
+    }
+
 }

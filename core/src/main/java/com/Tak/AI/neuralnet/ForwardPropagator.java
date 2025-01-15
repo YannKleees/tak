@@ -22,10 +22,10 @@ public class ForwardPropagator {
 
         for (int layerIndex = 0; layerIndex < weights.length; layerIndex++) {
             currentActivations = computeLayerOutput(
-                    currentActivations,
-                    weights[layerIndex],
-                    biases[layerIndex],
-                    activationFunction
+                currentActivations,
+                weights[layerIndex],
+                biases[layerIndex],
+                activationFunction
             );
         }
         return currentActivations;
@@ -41,10 +41,10 @@ public class ForwardPropagator {
         double[] currentActivations = inputs;
         for (int layerIndex = 0; layerIndex < weights.length; layerIndex++) {
             currentActivations = computeLayerOutput(
-                    currentActivations,
-                    weights[layerIndex],
-                    biases[layerIndex],
-                    activationFunction
+                currentActivations,
+                weights[layerIndex],
+                biases[layerIndex],
+                activationFunction
             );
             cache.layerOutputs[layerIndex] = currentActivations;
         }

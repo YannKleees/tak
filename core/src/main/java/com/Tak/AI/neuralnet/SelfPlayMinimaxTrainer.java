@@ -20,21 +20,15 @@ import java.util.List;
  *   <li>Create a TakGame with two MinimaxAgents that use {@link NeuralNetworkEvaluator}.</li>
  *   <li>Simulate a full game (AI vs. AI).</li>
  *   <li>Gather (state -> outcome) data at each step or final result.</li>
- *   <li>Call <code>nnTrainer.train(...)</code> or <code>nnTrainer.trainAll(...)</code> with that data.</li>
- *   <li>Repeat for multiple games to (hopefully) improve the network's evaluation ability.</li>
+ *   <li>Train the network with that data via {@code nnTrainer.trainAll(...)}.</li>
+ *   <li>Repeat for multiple games to improve the network's evaluation ability.</li>
  * </ol>
  */
 public class SelfPlayMinimaxTrainer {
 
-    private NeuralNetworkTrainer nnTrainer; 
+    private NeuralNetworkTrainer nnTrainer;
     private int numberOfGames;
 
-    /**
-     * <p>Constructs a SelfPlayMinimaxTrainer with specified parameters.</p>
-     *
-     * @param nnTrainer     The trainer for the neural net (provides backprop calls).
-     * @param numberOfGames How many self-play or AI-vs-AI games to run.
-     */
     public SelfPlayMinimaxTrainer(NeuralNetworkTrainer nnTrainer, int numberOfGames) {
         this.nnTrainer = nnTrainer;
         this.numberOfGames = numberOfGames;
@@ -61,18 +55,16 @@ public class SelfPlayMinimaxTrainer {
             try {
                 Player current = game.getCurrentPlayer();
                 double[] state = BoardToInputsConverter.convert(game.getBoard(), current);
-                System.out.println("Current player: " + current.getColor());
+
                 current.makeMove(game);
-                System.out.println("Move made successfully. Switching player.");
+
                 Board board = game.getBoard();
-                board.printBoard();
+                // (Optional) board.printBoard(); // if you want to see each step
 
                 // Record the (state -> which player moved)
                 recordedStates.add(new StateRecord(state, current));
 
             } catch (InvalidMoveException | GameOverException e) {
-                // If the move is invalid or the game is over for some reason,
-                // we break out of the loop
                 break;
             }
         }
@@ -84,14 +76,13 @@ public class SelfPlayMinimaxTrainer {
         for (StateRecord sr : recordedStates) {
             double[] inputFeatures = sr.boardFeatures;
             double[] target = new double[1];
-
             if (winner == null) {
                 // Tie
-                target[0] = 0.0; 
+                target[0] = 0.0;
             } else if (sr.mover.equals(winner)) {
-                target[0] = 1.0; // +1.0 if the mover eventually won
+                target[0] = 1.0;
             } else {
-                target[0] = -1.0; // -1.0 if the mover eventually lost
+                target[0] = -1.0;
             }
             examples.add(new TrainingExample(inputFeatures, target));
         }
@@ -100,7 +91,7 @@ public class SelfPlayMinimaxTrainer {
     }
 
     private TakGame createExampleTakGame() {
-        int boardSize = 5; 
+        int boardSize = 5;
         Player player1 = new MinimaxAgent(
             Color.BLUE, 21, 21, 1, 3, false,
             new NeuralNetworkEvaluator(nnTrainer.getNetwork())
@@ -110,10 +101,8 @@ public class SelfPlayMinimaxTrainer {
             new NeuralNetworkEvaluator(nnTrainer.getNetwork())
         );
 
-        // Using a constructor that takes a list of players
         List<Player> players = Arrays.asList(player1, player2);
-        TakGame game = new TakGame(boardSize, players);
-        return game;
+        return new TakGame(boardSize, players);
     }
 
     private void trainFromGameData(List<TrainingExample> examples) {

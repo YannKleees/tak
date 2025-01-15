@@ -32,7 +32,6 @@ public class NeuralNetManager {
                     System.exit(0);
                     break;
                 default:
-                    // This should never happen
                     System.out.println("Invalid choice. Please try again.");
             }
         }
@@ -101,7 +100,6 @@ public class NeuralNetManager {
     private void createNewNetwork() {
         System.out.println("\n=== Create a New Neural Network ===");
 
-        // Gather configurations from the user
         int inputSize = promptForNumber("Enter the input size: ", 1, Integer.MAX_VALUE);
         int numHiddenLayers = promptForNumber("Enter the number of hidden layers: ", 1, 10);
 
@@ -116,7 +114,7 @@ public class NeuralNetManager {
         // Create the configuration
         NeuralNetworkConfig config = new NeuralNetworkConfig(inputSize, hiddenLayerSizes, outputSize, activationFunction);
         NeuralNetwork network = new NeuralNetwork(config);
-        double learningRate = 0.01; // You can also prompt the user for this value if desired
+        double learningRate = 0.01;
         NeuralNetworkTrainer trainer = new NeuralNetworkTrainer(network, learningRate);
 
         // Save the new network
@@ -180,7 +178,6 @@ public class NeuralNetManager {
             } else if (name.contains(" ") || name.contains("/") || name.contains("\\")) {
                 System.out.print("Name contains invalid characters. Enter a different name: ");
             } else {
-                // Check if the name already exists
                 File file = new File(NETWORK_DIR + File.separator + name + ".txt");
                 if (file.exists()) {
                     System.out.print("A network with this name already exists. Enter a different name: ");

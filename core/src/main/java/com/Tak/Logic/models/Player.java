@@ -6,7 +6,6 @@ import java.io.Serializable;
 
 import com.Tak.Logic.exceptions.GameOverException;
 import com.Tak.Logic.exceptions.InvalidMoveException;
-import com.Tak.Logic.utils.Logger;
 
 /**
  * The Player class represents a player in the Tak game.
@@ -21,14 +20,14 @@ public abstract class Player implements Serializable {
     private Player opponent;
     private int stones;        // Combined count for flat and standing stones
     private int capstones;
-    protected int score; // Changed to protected to allow subclasses to access
+    protected int score;
 
     /**
      * Constructor to initialize a player.
      *
-     * @param color           The color of the player (BLACK or WHITE).
-     * @param stones          Total number of stones (flat and standing combined).
-     * @param capstones       Number of capstones.
+     * @param color    The color of the player (e.g., BLUE or GREEN).
+     * @param stones   Total number of stones (flat + standing).
+     * @param capstones Number of capstones.
      */
     public Player(Color color, int stones, int capstones) {
         this.color = color;
@@ -37,61 +36,48 @@ public abstract class Player implements Serializable {
         this.score = 0;
     }
 
-    /**
-     * Sets the opponent player.
-     *
-     * @param opponent The opponent player.
-     */
+    // ----------------------------------------------------------------
+    // Basic getters/setters and piece tracking
+    // ----------------------------------------------------------------
+
+    public Color getColor() {
+        return this.color;
+    }
+
     public void setOpponent(Player opponent) {
         this.opponent = opponent;
     }
 
-    /**
-     * Gets the opponent player.
-     *
-     * @return The opponent player.
-     */
     public Player getOpponent() {
         return this.opponent;
     }
-    
+
     public void setScore(int score) {
         this.score = score;
     }
-    
-    /**
-     * Decrements the count of a specific piece type.
-     *
-     * @param pieceType The type of piece to decrement.
-     */
+
+    public int getScore() {
+        return this.score;
+    }
+
     public void decrementPiece(Piece.PieceType pieceType) {
         switch (pieceType) {
             case FLAT_STONE:
             case STANDING_STONE:
                 if (stones > 0) {
                     stones--;
-                } else {
-                    //Logger.log("Player", "No stones left to decrement.");
                 }
                 break;
             case CAPSTONE:
                 if (capstones > 0) {
                     capstones--;
-                } else {
-                    //Logger.log("Player", "No CAPSTONEs left to decrement.");
                 }
                 break;
             default:
-                //Logger.log("Player", "Unknown PieceType: " + pieceType);
                 break;
         }
     }
 
-    /**
-     * Increments the count of a specific piece type.
-     *
-     * @param pieceType The type of piece to increment.
-     */
     public void incrementPiece(Piece.PieceType pieceType) {
         switch (pieceType) {
             case FLAT_STONE:
@@ -102,7 +88,6 @@ public abstract class Player implements Serializable {
                 capstones++;
                 break;
             default:
-                //Logger.log("Player", "Unknown PieceType: " + pieceType);
                 break;
         }
     }
@@ -110,7 +95,7 @@ public abstract class Player implements Serializable {
     public boolean hasPieces(Piece.PieceType pieceType) {
         return hasPiecesLeft(pieceType);
     }
-    
+
     public boolean hasPiecesLeft(Piece.PieceType pieceType) {
         switch (pieceType) {
             case FLAT_STONE:
@@ -122,14 +107,7 @@ public abstract class Player implements Serializable {
                 return false;
         }
     }
-    
 
-    /**
-     * Gets the number of remaining pieces of a specific type.
-     *
-     * @param pieceType The type of piece.
-     * @return The number of remaining pieces.
-     */
     public int getRemainingPieces(Piece.PieceType pieceType) {
         switch (pieceType) {
             case FLAT_STONE:
@@ -142,83 +120,82 @@ public abstract class Player implements Serializable {
         }
     }
 
-    /**
-     * Resets the player's pieces to the specified counts.
-     *
-     * @param stones     Total number of stones (flat and standing combined).
-     * @param capstones Number of capstones.
-     */
     public void resetPieces(int stones, int capstones) {
         this.stones = stones;
         this.capstones = capstones;
         System.out.println(this.color + " pieces have been reset.");
     }
 
-    /**
-     * Resets the player's score.
-     */
     public void resetScore() {
         this.score = 0;
         System.out.println(this.color + " score has been reset.");
     }
 
-    /**
-     * Increments the player's score.
-     *
-     * @param points The number of points to add.
-     */
     public void incrementScore(int points) {
         this.score += points;
         System.out.println(this.color + " score increased by " + points + " to " + this.score + ".");
     }
 
-    /**
-     * Gets the player's color.
-     *
-     * @return The player's color.
-     */
-    public Color getColor() {
-        return this.color;
-    }
+    // ----------------------------------------------------------------
+    // Abstract methods that subclasses must implement
+    // ----------------------------------------------------------------
 
-    /**
-     * Gets the player's current score.
-     *
-     * @return The player's score.
-     */
-    public int getScore() {
-        return this.score;
-    }
-    public void updateFrom(Player other) {
-        // Update internal behavior (fields, strategies, etc.)
-        this.stones = other.getRemainingPieces(Piece.PieceType.FLAT_STONE);
-        this.capstones = other.getRemainingPieces(Piece.PieceType.CAPSTONE);
-        this.opponent = other.getOpponent(); // Maintain opponent relationships
-        this.score = other.getScore();
-    }
-    
-    /**
-     * Abstract method to create a copy of the player.
-     *
-     * @return A new Player instance with the same properties.
-     */
     public abstract Player copy();
 
-    /**
-     * Abstract method to execute the player's move.
-     *
-     * @param game The current TakGame instance.
-     * @throws InvalidMoveException If an invalid move is attempted.
-     * @throws GameOverException    If the game has already ended.
-     */
     public abstract void makeMove(TakGame game) throws InvalidMoveException, GameOverException;
 
-    /**
-     * Overrides equals method to compare Players based on unique attributes.
-     *
-     * @param obj The object to compare.
-     * @return true if equal, false otherwise.
-     */
+    public abstract int getTotalPiecesLeft();
+
+    // ----------------------------------------------------------------
+    // "Can Make A Move" logic (for 'no moves left' detection)
+    // ----------------------------------------------------------------
+
+    public boolean canMakeAMove(Board board) {
+        // 1) Check if we can place a piece
+        if (canPlaceAnyPiece(board)) {
+            return true;
+        }
+        // 2) Check if we can move a stack
+        if (canMoveAStack(board)) {
+            return true;
+        }
+        return false;
+    }
+
+    protected boolean canPlaceAnyPiece(Board board) {
+        // If the player has any stone or capstone left...
+        boolean hasAnyPieceLeft = (stones > 0 || capstones > 0);
+        if (!hasAnyPieceLeft) {
+            return false;
+        }
+
+        for (int x = 0; x < board.getSize(); x++) {
+            for (int y = 0; y < board.getSize(); y++) {
+                if (board.isCellEmpty(x, y)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    protected boolean canMoveAStack(Board board) {
+        // Simplified: if there's any stack whose top belongs to us, we say "we can move"
+        for (int x = 0; x < board.getSize(); x++) {
+            for (int y = 0; y < board.getSize(); y++) {
+                Piece top = board.getPieceAt(x, y);
+                if (top != null && top.getOwner().equals(this)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // ----------------------------------------------------------------
+    // Equals & hashCode
+    // ----------------------------------------------------------------
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -227,15 +204,18 @@ public abstract class Player implements Serializable {
         return this.color == other.color;
     }
 
-    /**
-     * Overrides hashCode method consistent with equals.
-     *
-     * @return The hash code.
-     */
     @Override
     public int hashCode() {
         return Objects.hash(color);
     }
 
-    public abstract int getTotalPiecesLeft();
+    /**
+     * Updates this player's state from another (for copying).
+     */
+    public void updateFrom(Player other) {
+        this.stones = other.getRemainingPieces(Piece.PieceType.FLAT_STONE);
+        this.capstones = other.getRemainingPieces(Piece.PieceType.CAPSTONE);
+        this.opponent = other.getOpponent();
+        this.score = other.getScore();
+    }
 }

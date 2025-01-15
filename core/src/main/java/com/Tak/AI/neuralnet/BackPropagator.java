@@ -16,6 +16,7 @@ public class BackPropagator {
      * @param inputs         The original network inputs.
      * @param targets        The desired network outputs.
      * @param learningRate   The learning rate for updates.
+     * @param regularizationRate The L2 regularization rate (if used).
      * @param weights        The full array of weight matrices (one per layer).
      * @param biases         The full array of bias arrays (one per layer).
      * @param layerOutputs   layerOutputs[i] = output of layer i (where i=0 is first hidden, last is the final output).
@@ -45,30 +46,30 @@ public class BackPropagator {
         double[] layerErrorSignal = outputErrors;
 
         // 2) Propagate backward through hidden layers
-        //    - We do this layer by layer in reverse
         for (int layerIndex = lastLayerIndex; layerIndex >= 0; layerIndex--) {
             double[] currentLayerOutput = layerOutputs[layerIndex];
-            double[] previousLayerOutput = (layerIndex == 0) 
-                    ? inputs
-                    : layerOutputs[layerIndex - 1];
+            double[] previousLayerOutput = (layerIndex == 0)
+                ? inputs
+                : layerOutputs[layerIndex - 1];
 
-            // a) Update weights[layerIndex]
+            // a) Update weights
             for (int inNeuron = 0; inNeuron < previousLayerOutput.length; inNeuron++) {
                 for (int outNeuron = 0; outNeuron < currentLayerOutput.length; outNeuron++) {
+                    // Gradient step
                     double delta = learningRate * layerErrorSignal[outNeuron] * previousLayerOutput[inNeuron];
-                    //weights[layerIndex][inNeuron][outNeuron] += delta;
-                    weights[layerIndex][inNeuron][outNeuron] += delta - (regularizationRate * weights[layerIndex][inNeuron][outNeuron]);
-
+                    // Optional L2 regularization
+                    weights[layerIndex][inNeuron][outNeuron] +=
+                        delta - (regularizationRate * weights[layerIndex][inNeuron][outNeuron]);
                 }
             }
 
-            // b) Update biases[layerIndex]
+            // b) Update biases
             for (int outNeuron = 0; outNeuron < currentLayerOutput.length; outNeuron++) {
                 double delta = learningRate * layerErrorSignal[outNeuron];
                 biases[layerIndex][outNeuron] += delta;
             }
 
-            // c) If not the first layer, compute the next "layerErrorSignal"
+            // c) Compute error signal for the next (previous) layer, if any
             if (layerIndex > 0) {
                 double[] newErrorSignal = new double[previousLayerOutput.length];
                 for (int inNeuron = 0; inNeuron < previousLayerOutput.length; inNeuron++) {
@@ -87,11 +88,8 @@ public class BackPropagator {
     }
 
     /**
-     * <p>Applies the derivative of the chosen activation function 
+     * <p>Applies the derivative of the chosen activation function
      * to a neuron's post-activation output value.</p>
-     *
-     * <p>For instance, if activation is sigmoid, the neuron's output was sigmoid(z). 
-     * The derivative is output*(1-output).</p>
      */
     private static double activateDerivative(double activatedValue, ActivationFunction function) {
         switch (function) {
