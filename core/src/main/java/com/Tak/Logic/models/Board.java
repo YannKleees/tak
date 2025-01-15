@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public class Board {
     private final int size;
-    private final int carryLimit; // Renamed from maxStackHeight to clarify its purpose
+    private final int carryLimit; // clarifies purpose
     protected final PieceStack[][] board;
     private List<Player> players;
     private int moveCount;
@@ -108,7 +108,7 @@ public class Board {
      * @return True if within bounds, false otherwise.
      */
     public boolean isWithinBounds(int x, int y) {
-        return x >= 0 && x < size && y >= 0 && y < size;
+        return (x >= 0 && x < size && y >= 0 && y < size);
     }
 
     /**
@@ -132,15 +132,14 @@ public class Board {
         if (!isWithinBounds(x, y)) {
             throw new InvalidMoveException("Board position out of bounds.");
         }
-    
         PieceStack stack = board[x][y];
         if (stack.isEmpty()) {
             stack.addPiece(piece);
         } else {
-            throw new InvalidMoveException("Cannot place " + piece.getPieceType() + " on occupied cell at (" + x + ", " + y + ").");
+            throw new InvalidMoveException("Cannot place " + piece.getPieceType() 
+                    + " on occupied cell at (" + x + ", " + y + ").");
         }
     }
-    
 
     /**
      * Removes a number of pieces from the top of the stack at the given position.
@@ -184,7 +183,6 @@ public class Board {
             }
         }
         moveCount = 0;
-        //Logger.log("Board", "Board has been reset.");
     }
 
     /**
@@ -195,16 +193,15 @@ public class Board {
     public Board copy() {
         Board newBoard = new Board(this.size, this.carryLimit);
         newBoard.moveCount = this.moveCount;
-        // Map from original player to copied player
+
         Map<Player, Player> playerMap = new HashMap<>();
-        // Deep copy of players
         newBoard.players = new ArrayList<>();
         for (Player player : this.players) {
             Player playerCopy = player.copy();
             newBoard.players.add(playerCopy);
             playerMap.put(player, playerCopy);
         }
-        // Now set opponents correctly
+
         for (Player originalPlayer : this.players) {
             Player copiedPlayer = playerMap.get(originalPlayer);
             Player originalOpponent = originalPlayer.getOpponent();
@@ -213,7 +210,7 @@ public class Board {
                 copiedPlayer.setOpponent(copiedOpponent);
             }
         }
-        // Now copy the board and use the playerMap to set piece owners
+
         for (int x = 0; x < this.size; x++) {
             for (int y = 0; y < this.size; y++) {
                 PieceStack originalStack = this.board[x][y];
@@ -231,12 +228,12 @@ public class Board {
      * @return The player with the specified color, or null if not found.
      */
     public Player getPlayerByColor(Player.Color color) {
-        for (Player player : this.players) {
-            if (player.getColor() == color) {
-                return player;
+        for (Player p : players) {
+            if (p.getColor() == color) {
+                return p;
             }
         }
-        return null; // Or throw an exception if player not found
+        return null;
     }
 
     /**
@@ -246,7 +243,7 @@ public class Board {
      * @return A new Board instance representing the rotated board.
      */
     public Board rotateClockwise(int times) {
-        times = times % 4; // Normalize the number of rotations
+        times = times % 4;
         Board rotated = this.copy();
         Map<Player, Player> playerMap = createPlayerMap(rotated, this.players);
         for (int t = 0; t < times; t++) {
@@ -269,7 +266,7 @@ public class Board {
             }
         }
         rotated.moveCount = this.moveCount;
-        rotated.players = new ArrayList<>(playerMap.values()); // Assign copied players
+        rotated.players = new ArrayList<>(playerMap.values());
         return rotated;
     }
 
@@ -298,12 +295,12 @@ public class Board {
      */
     public int countPlayerPieces(Player player) {
         int count = 0;
-        for (int x = 0; x < getSize(); x++) {
-            for (int y = 0; y < getSize(); y++) {
-                PieceStack stack = getBoardStack(x, y);
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                PieceStack stack = board[x][y];
                 if (!stack.isEmpty()) {
                     Piece topPiece = stack.getTopPiece();
-                    if (topPiece.getOwner() == player) {
+                    if (topPiece.getOwner().equals(player)) {
                         count++;
                     }
                 }
@@ -357,33 +354,10 @@ public class Board {
         return result;
     }
 
-    /**
-     * Helper method to get a 1D index from 2D coordinates.
-     *
-     * @param x The x-coordinate.
-     * @param y The y-coordinate.
-     * @return The 1D index.
-     */
-    private int getIndex(int x, int y) {
-        return x * size + y;
-    }
-
-    /**
-     * Returns the size of the board.
-     *
-     * @return The board size.
-     */
     public int getSize() {
         return size;
     }
 
-    /**
-     * Retrieves the list of pieces at a given board position.
-     *
-     * @param sourceX The x-coordinate.
-     * @param sourceY The y-coordinate.
-     * @return The list of pieces at the specified position.
-     */
     public List<Piece> getBoardPosition(int sourceX, int sourceY) {
         if (!isWithinBounds(sourceX, sourceY)) {
             throw new IndexOutOfBoundsException("Board position out of bounds.");
@@ -391,29 +365,14 @@ public class Board {
         return board[sourceX][sourceY].getPieces();
     }
 
-    /**
-     * Increments the move count by one.
-     */
     public void incrementMoveCount() {
         moveCount++;
     }
 
-    /**
-     * Returns the number of moves made on the board.
-     *
-     * @return The current move count.
-     */
     public int getMoveCount() {
         return moveCount;
     }
 
-    /**
-     * Checks if a piece can be placed at the specified coordinates.
-     *
-     * @param x The x-coordinate.
-     * @param y The y-coordinate.
-     * @return True if a piece can be placed, false otherwise.
-     */
     public boolean canPlacePiece(int x, int y) {
         return isWithinBounds(x, y) && isCellEmpty(x, y);
     }
@@ -430,10 +389,12 @@ public class Board {
      */
     public Board copyAndRotateClockwise(int times) {
         Board copiedBoard = this.copy();
-        copiedBoard = copiedBoard.rotateClockwise(times);
-        return copiedBoard;
+        return copiedBoard.rotateClockwise(times);
     }
 
+    /**
+     * Prints the current state of the board, including remaining pieces for each player.
+     */
     public void printBoard() {
         int totalPieces = 0; // Counter for total pieces on the board
         int bluePiecesOnBoard = 0;  // Counter for Blue's pieces on the board
@@ -525,6 +486,4 @@ public class Board {
         
         System.out.println("----------------------------------");
     }
-    
-    }
-
+}
