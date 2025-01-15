@@ -1,4 +1,3 @@
-// File: core/src/main/java/com/Tak/Logic/models/TakGame.java
 package com.Tak.Logic.models;
 
 import com.Tak.AI.players.MinimaxAgent;
@@ -16,6 +15,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * The TakGame class manages the game state, including the board, players, move counts, and win conditions.
@@ -32,6 +33,9 @@ public class TakGame implements Serializable {
     private Player winner;
 
     private transient WinChecker winChecker; // Marked as transient if not serializable
+
+    private static final int MAX_MOVES = 1000; // Maximum number of moves to prevent infinite loops
+    private Set<String> previousBoardStates; // To track repeated board states
 
     /**
      * Constructs a TakGame with the specified board size, AI usage, and number of AI players.
@@ -50,8 +54,9 @@ public class TakGame implements Serializable {
         isGameEnded = false;
         winner = null;
 
-        initializePlayers(useAI, aiPlayersCount); // Initialize players
-        winChecker = new WinChecker(); // Only WinChecker remains
+        initializePlayers(useAI, aiPlayersCount);
+        winChecker = new WinChecker();
+        previousBoardStates = new HashSet<>();
     }
 
     /**
@@ -80,6 +85,7 @@ public class TakGame implements Serializable {
         //Logger.log("TakGame", "Initialized TakGame with custom players.");
 
         winChecker = new WinChecker();
+        previousBoardStates = new HashSet<>();
     }
 
     /**
@@ -239,7 +245,26 @@ public class TakGame implements Serializable {
         executor.executeMove(fromX, fromY, move);
 
         incrementMoveCount();
+
+        // Check for repeated board state
+        String boardStateHash = getBoardStateHash();
+        if (previousBoardStates.contains(boardStateHash)) {
+            Logger.log("TakGame", "Repeated board state detected. Declaring a tie.");
+            endGameAsTie();
+            return;
+        } else {
+            previousBoardStates.add(boardStateHash);
+        }
+
         checkWinConditions();
+
+        // Check for maximum move count to prevent infinite loops
+        if (moveCount >= MAX_MOVES && !isGameEnded) {
+            Logger.log("TakGame", "Maximum move count reached. Declaring a tie to prevent infinite loop.");
+            endGameAsTie();
+            return;
+        }
+
         switchPlayer();
     }
 
@@ -264,7 +289,26 @@ public class TakGame implements Serializable {
         pieceOwner.decrementPiece(pieceType);
 
         incrementMoveCount();
+
+        // Check for repeated board state after placing a piece
+        String boardStateHash = getBoardStateHash();
+        if (previousBoardStates.contains(boardStateHash)) {
+            Logger.log("TakGame", "Repeated board state detected after placing a piece. Declaring a tie.");
+            endGameAsTie();
+            return;
+        } else {
+            previousBoardStates.add(boardStateHash);
+        }
+
         checkWinConditions();
+
+        // Check for maximum move count to prevent infinite loops
+        if (moveCount >= MAX_MOVES && !isGameEnded) {
+            Logger.log("TakGame", "Maximum move count reached. Declaring a tie to prevent infinite loop.");
+            endGameAsTie();
+            return;
+        }
+
         switchPlayer();
     }
 
@@ -290,9 +334,12 @@ public class TakGame implements Serializable {
     }
 
     /**
-     * Checks for game end conditions via WinChecker:
-     * 1) Road Win for any player
-     * 2) If board is full => flat count
+     * Checks for game end conditions:
+     * 1) Road Win
+     * 2) If a player has no stones left => compare top stones
+     * 3) If board is full => flat winner
+     * 4) If maximum moves reached => tie
+     * 5) If repeated board state detected => tie
      */
     public synchronized void checkWinConditions() {
         if (isGameEnded) return;
@@ -304,12 +351,42 @@ public class TakGame implements Serializable {
                 isGameEnded = true;
                 winner = p;
                 winner.incrementScore(1);
-                //Logger.log("TakGame", "Player " + winner.getColor() + " wins by road!");
+                Logger.log("TakGame", "Player " + winner.getColor() + " wins by road!");
                 return;
             }
         }
 
-        // 2) If board is full => check top flat stones
+        // 2) Check if any player has no stones left
+        for (Player p : players) {
+            if (p.getTotalPiecesLeft() == 0) {
+                // Player p has no stones left
+                Player opponent = p.getOpponent();
+
+                // Count top stones for both players
+                int pTopStones = board.countPlayerPieces(p);
+                int opponentTopStones = board.countPlayerPieces(opponent);
+
+                if (pTopStones > opponentTopStones) {
+                    winner = p;
+                } else if (pTopStones < opponentTopStones) {
+                    winner = opponent;
+                } else {
+                    winner = null; // Tie
+                }
+
+                isGameEnded = true;
+
+                if (winner != null) {
+                    winner.incrementScore(1);
+                    //Logger.log("TakGame", "Player " + winner.getColor() + " wins by top stones!");
+                } else {
+                    Logger.log("TakGame", "Game ended in a tie based on top stones.");
+                }
+                return;
+            }
+        }
+
+        // 3) If board is full => check top flat stones
         if (board.isFull()) {
             isGameEnded = true; // game ends either a tie or flat winner
             Player flatWinner = winChecker.getTopPlayer(board, players);
@@ -321,7 +398,18 @@ public class TakGame implements Serializable {
             } else {
                 //Logger.log("TakGame", "Game ended in a tie (flat).");
             }
+            return;
         }
+
+        // 4) Check for maximum move count
+        if (moveCount >= MAX_MOVES) {
+            isGameEnded = true;
+            winner = null;
+            Logger.log("TakGame", "Maximum move count reached. Game ended in a tie to prevent infinite loop.");
+            return;
+        }
+
+        // 5) Repeated board state is handled in moveStack and placePiece
     }
 
     /**
@@ -333,8 +421,8 @@ public class TakGame implements Serializable {
         isGameEnded = false;
         winner = null;
         currentPlayerIndex = 0;
+        previousBoardStates.clear();
 
-        // No more gameStateManager usage
         for (Player player : players) {
             player.resetPieces(21, 1); // Standard counts
             if (resetScores) {
@@ -348,7 +436,7 @@ public class TakGame implements Serializable {
      */
     public synchronized void switchPlayer() {
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-        //Logger.log("TakGame", "Switched to player: " + getCurrentPlayer().getColor());
+        Logger.log("TakGame", "Switched to player: " + getCurrentPlayer().getColor());
     }
 
     /**
@@ -419,8 +507,35 @@ public class TakGame implements Serializable {
         in.defaultReadObject();
         // Re-initialize transient fields
         winChecker = new WinChecker();
+        previousBoardStates = new HashSet<>();
     }
 
+    /**
+     * Generates a hash representation of the current board state.
+     * This can be used to detect repeated states.
+     *
+     * @return A string hash representing the current board state.
+     */
+    private String getBoardStateHash() {
+        StringBuilder sb = new StringBuilder();
+        for (int x = 0; x < board.getSize(); x++) {
+            for (int y = 0; y < board.getSize(); y++) {
+                Piece topPiece = board.getPieceAt(x, y);
+                if (topPiece != null) {
+                    sb.append(topPiece.toString());
+                } else {
+                    sb.append("null");
+                }
+                sb.append("|");
+            }
+            sb.append(";");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Logs the final board state.
+     */
     public void logFinalBoardState() {
         StringBuilder boardState = new StringBuilder();
         boardState.append("Final Board State:\n");
@@ -436,6 +551,6 @@ public class TakGame implements Serializable {
             }
             boardState.append("\n");
         }
-        //Logger.log("Game", boardState.toString());
+        Logger.log("Game", boardState.toString());
     }
 }

@@ -97,6 +97,7 @@ public class NeuralNetwork implements Serializable {
                 inputs,
                 targets,
                 learningRate,
+                0.0, // Add the missing double argument
                 weights,
                 biases,
                 cache.layerOutputs,

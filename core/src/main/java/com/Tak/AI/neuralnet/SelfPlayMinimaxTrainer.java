@@ -63,11 +63,16 @@ public class SelfPlayMinimaxTrainer {
                 double[] state = BoardToInputsConverter.convert(game.getBoard(), current);
                 System.out.println("Current player: " + current.getColor());
                 current.makeMove(game);
-System.out.println("Move made successfully. Switching player.");
+                System.out.println("Move made successfully. Switching player.");
                 Board board = game.getBoard();
                 board.printBoard();
+
+                // Record the (state -> which player moved)
                 recordedStates.add(new StateRecord(state, current));
+
             } catch (InvalidMoveException | GameOverException e) {
+                // If the move is invalid or the game is over for some reason,
+                // we break out of the loop
                 break;
             }
         }
@@ -75,16 +80,18 @@ System.out.println("Move made successfully. Switching player.");
         Player winner = game.getWinner();
         List<TrainingExample> examples = new ArrayList<>();
 
+        // Convert each recorded state into a training example
         for (StateRecord sr : recordedStates) {
             double[] inputFeatures = sr.boardFeatures;
             double[] target = new double[1];
 
             if (winner == null) {
+                // Tie
                 target[0] = 0.0; 
             } else if (sr.mover.equals(winner)) {
-                target[0] = 1.0;
+                target[0] = 1.0; // +1.0 if the mover eventually won
             } else {
-                target[0] = -1.0;
+                target[0] = -1.0; // -1.0 if the mover eventually lost
             }
             examples.add(new TrainingExample(inputFeatures, target));
         }
@@ -95,15 +102,15 @@ System.out.println("Move made successfully. Switching player.");
     private TakGame createExampleTakGame() {
         int boardSize = 5; 
         Player player1 = new MinimaxAgent(
-            Color.BLUE, 15, 6, 1, 3, true,
+            Color.BLUE, 21, 21, 1, 3, false,
             new NeuralNetworkEvaluator(nnTrainer.getNetwork())
         );
         Player player2 = new MinimaxAgent(
-            Color.GREEN, 15, 6, 1, 3, true,
+            Color.GREEN, 21, 21, 1, 3, false,
             new NeuralNetworkEvaluator(nnTrainer.getNetwork())
         );
 
-        // **Updated Constructor Call: Use List<Player> instead of two Player arguments**
+        // Using a constructor that takes a list of players
         List<Player> players = Arrays.asList(player1, player2);
         TakGame game = new TakGame(boardSize, players);
         return game;
@@ -116,6 +123,7 @@ System.out.println("Move made successfully. Switching player.");
     private static class StateRecord {
         double[] boardFeatures;
         Player mover;
+
         StateRecord(double[] boardFeatures, Player mover) {
             this.boardFeatures = boardFeatures;
             this.mover = mover;
@@ -125,13 +133,16 @@ System.out.println("Move made successfully. Switching player.");
     public static class TrainingExample {
         private double[] input;
         private double[] target;
+
         public TrainingExample(double[] input, double[] target) {
             this.input = input;
             this.target = target;
         }
+
         public double[] getInput() {
             return input;
         }
+
         public double[] getTarget() {
             return target;
         }

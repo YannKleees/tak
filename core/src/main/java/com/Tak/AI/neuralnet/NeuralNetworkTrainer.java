@@ -1,33 +1,52 @@
 package com.Tak.AI.neuralnet;
 
-import java.io.*;
-import java.util.ArrayList;
+import com.Tak.Logic.models.Player;
+import com.Tak.Logic.models.TakGame;
+import com.Tak.Logic.utils.Logger;
+
+import java.io.IOException;
 import java.util.List;
 
 /**
  * <p>A trainer for a multi-layer NeuralNetwork, 
  * providing single-sample or batch training, plus save/load methods.</p>
  */
-public class NeuralNetworkTrainer implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class NeuralNetworkTrainer {
 
     private NeuralNetwork network;
     private double learningRate;
 
+    // Metadata
+    private int numberOfStatesTrained;
+    private double lastOutput;
+
     public NeuralNetworkTrainer(NeuralNetwork network, double learningRate) {
         this.network = network;
         this.learningRate = learningRate;
+        this.numberOfStatesTrained = 0;
+        this.lastOutput = 0.0;
     }
 
     /**
      * Trains the network on a single example.
+     *
+     * @param inputs   The input features.
+     * @param targets  The target outputs.
      */
     public void train(double[] inputs, double[] targets) {
         network.backpropagate(inputs, targets, learningRate);
+        // Update metadata per state
+        numberOfStatesTrained++;
+        if (targets.length > 0) {
+            lastOutput = targets[0];
+        }
     }
 
     /**
      * Trains on a batch of examples.
+     *
+     * @param inputBatch   List of input feature arrays.
+     * @param targetBatch  List of target output arrays.
      */
     public void trainBatch(List<double[]> inputBatch, List<double[]> targetBatch) {
         for (int i = 0; i < inputBatch.size(); i++) {
@@ -36,215 +55,51 @@ public class NeuralNetworkTrainer implements Serializable {
     }
 
     /**
-     * <p>**Reintroduced** convenience method to handle a list of
-     * SelfPlayMinimaxTrainer.TrainingExample objects (if your code calls it).</p>
+     * <p>Handles a list of SelfPlayMinimaxTrainer.TrainingExample objects.</p>
+     *
+     * @param gameData List of training examples.
      */
     public void trainAll(List<SelfPlayMinimaxTrainer.TrainingExample> gameData) {
         for (SelfPlayMinimaxTrainer.TrainingExample ex : gameData) {
             train(ex.getInput(), ex.getTarget());
+            // Metadata is updated in the train method
         }
     }
 
     /**
-     * Saves the network to a structured text file.
+     * Saves the network and metadata to a .txt file.
+     *
+     * @param filePath The path to the .txt file.
      */
     public void saveNetwork(String filePath) {
-        NeuralNetworkConfig cfg = network.getConfig();
-        double[][][] w = network.getWeights();
-        double[][] b = network.getBiases();
-
-        try (PrintWriter writer = new PrintWriter(new FileWriter(filePath))) {
-            // [Configuration]
-            writer.println("[Configuration]");
-            writer.println("inputSize=" + cfg.getInputSize());
-            writer.println("numHiddenLayers=" + cfg.getHiddenLayerSizes().length);
-
-            // hiddenSizes
-            for (int i = 0; i < cfg.getHiddenLayerSizes().length; i++) {
-                writer.println("hiddenSize" + i + "=" + cfg.getHiddenLayerSizes()[i]);
-            }
-
-            writer.println("outputSize=" + cfg.getOutputSize());
-            writer.println("activationFunction=" + cfg.getActivationFunction());
-            writer.println();
-
-            // Weights/Biases
-            for (int layerIndex = 0; layerIndex < w.length; layerIndex++) {
-                writer.println("[WeightsLayer" + layerIndex + "]");
-                double[][] layerWeights = w[layerIndex];
-                for (double[] row : layerWeights) {
-                    writer.println(joinArray(row, " "));
-                }
-                writer.println();
-
-                writer.println("[BiasLayer" + layerIndex + "]");
-                double[] layerBias = b[layerIndex];
-                writer.println(joinArray(layerBias, " "));
-                writer.println();
-            }
-
+        try {
+            NeuralNetworkTxtManager.saveTrainer(this, filePath, numberOfStatesTrained, lastOutput);
+            Logger.log("NeuralNetworkTrainer", "Network and metadata successfully saved to " + filePath);
         } catch (IOException e) {
+            Logger.log("NeuralNetworkTrainer", "Failed to save network: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     /**
-     * Loads a network from a structured text file.
+     * Loads the network and metadata from a .txt file.
+     *
+     * @param filePath The path to the .txt file.
      */
     public void loadNetwork(String filePath) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            int inputSize = 0;
-            int numHiddenLayers = 0;
-            List<Integer> hiddenSizes = new ArrayList<>();
-            int outputSize = 0;
-            ActivationFunction actFunc = ActivationFunction.TANH; // default
-
-            double[][][] loadedWeights = null;
-            double[][] loadedBiases = null;
-
-            boolean configRead = false;
-            int layerCount = 0;
-            int currentWeightLayer = -1;
-            int rowRead = 0;
-
-            while ((line = reader.readLine()) != null) {
-                line = line.trim();
-                if (line.isEmpty()) {
-                    continue;
-                }
-
-                if (line.startsWith("[Configuration]")) {
-                    while (true) {
-                        reader.mark(10000);
-                        String cLine = reader.readLine();
-                        if (cLine == null || cLine.trim().isEmpty() || cLine.trim().startsWith("[")) {
-                            reader.reset();
-                            break;
-                        }
-                        cLine = cLine.trim();
-                        String[] parts = cLine.split("=");
-                        if (parts.length != 2) throw new IOException("Invalid config line: " + cLine);
-
-                        switch (parts[0]) {
-                            case "inputSize":
-                                inputSize = Integer.parseInt(parts[1]);
-                                break;
-                            case "numHiddenLayers":
-                                numHiddenLayers = Integer.parseInt(parts[1]);
-                                break;
-                            case "outputSize":
-                                outputSize = Integer.parseInt(parts[1]);
-                                break;
-                            case "activationFunction":
-                                actFunc = ActivationFunction.valueOf(parts[1]);
-                                break;
-                            default:
-                                if (parts[0].startsWith("hiddenSize")) {
-                                    hiddenSizes.add(Integer.parseInt(parts[1]));
-                                } else {
-                                    throw new IOException("Unknown config parameter: " + parts[0]);
-                                }
-                                break;
-                        }
-                    }
-                    layerCount = numHiddenLayers + 1;
-                    loadedWeights = new double[layerCount][][];
-                    loadedBiases = new double[layerCount][];
-                    configRead = true;
-                }
-                else if (line.startsWith("[WeightsLayer")) {
-                    if (!configRead) {
-                        throw new IOException("Encountered WeightsLayer before reading [Configuration].");
-                    }
-                    String idxStr = line.substring("[WeightsLayer".length(), line.indexOf("]"));
-                    currentWeightLayer = Integer.parseInt(idxStr);
-
-                    int rows = 0, cols = 0;
-                    if (currentWeightLayer == 0) {
-                        rows = inputSize;
-                        cols = hiddenSizes.get(0);
-                    } else if (currentWeightLayer == layerCount - 1) {
-                        rows = hiddenSizes.get(hiddenSizes.size() - 1);
-                        cols = outputSize;
-                    } else {
-                        rows = hiddenSizes.get(currentWeightLayer - 1);
-                        cols = hiddenSizes.get(currentWeightLayer);
-                    }
-                    loadedWeights[currentWeightLayer] = new double[rows][cols];
-
-                    rowRead = 0;
-                    while (rowRead < rows) {
-                        reader.mark(5000);
-                        String wLine = reader.readLine();
-                        if (wLine == null || wLine.trim().isEmpty() || wLine.trim().startsWith("[")) {
-                            reader.reset();
-                            break;
-                        }
-                        String[] tokens = wLine.trim().split(" ");
-                        if (tokens.length != cols) {
-                            throw new IOException("Invalid number of columns for WeightsLayer " + currentWeightLayer);
-                        }
-                        for (int c = 0; c < cols; c++) {
-                            loadedWeights[currentWeightLayer][rowRead][c] = Double.parseDouble(tokens[c]);
-                        }
-                        rowRead++;
-                    }
-                }
-                else if (line.startsWith("[BiasLayer")) {
-                    if (!configRead) {
-                        throw new IOException("Encountered BiasLayer before reading [Configuration].");
-                    }
-                    String idxStr = line.substring("[BiasLayer".length(), line.indexOf("]"));
-                    currentWeightLayer = Integer.parseInt(idxStr);
-
-                    int size = (currentWeightLayer == layerCount - 1)
-                            ? outputSize
-                            : hiddenSizes.get(currentWeightLayer);
-
-                    loadedBiases[currentWeightLayer] = new double[size];
-                    String bLine = reader.readLine();
-                    if (bLine == null) {
-                        throw new IOException("Missing biases line for layer " + currentWeightLayer);
-                    }
-                    String[] tokens = bLine.trim().split(" ");
-                    if (tokens.length != size) {
-                        throw new IOException("Invalid number of biases in layer " + currentWeightLayer);
-                    }
-                    for (int i = 0; i < size; i++) {
-                        loadedBiases[currentWeightLayer][i] = Double.parseDouble(tokens[i]);
-                    }
-                }
-            }
-
-            // Rebuild network
-            NeuralNetworkConfig newCfg = new NeuralNetworkConfig(
-                    inputSize,
-                    hiddenSizes.stream().mapToInt(Integer::intValue).toArray(),
-                    outputSize,
-                    actFunc
-            );
-            this.network = new NeuralNetwork(newCfg);
-            this.network.setWeights(loadedWeights);
-            this.network.setBiases(loadedBiases);
-
+        try {
+            NeuralNetworkTxtManager.NeuralNetworkLoadData loadData = NeuralNetworkTxtManager.loadTrainer(filePath);
+            this.network = loadData.network;
+            this.numberOfStatesTrained = loadData.numberOfGamesTrained;
+            this.lastOutput = loadData.lastOutput;
+            Logger.log("NeuralNetworkTrainer", "Network and metadata successfully loaded from " + filePath);
         } catch (IOException e) {
+            Logger.log("NeuralNetworkTrainer", "Failed to load network: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    private String joinArray(double[] array, String delimiter) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < array.length; i++) {
-            sb.append(array[i]);
-            if (i < array.length - 1) {
-                sb.append(delimiter);
-            }
-        }
-        return sb.toString();
-    }
-
-    // ----------- GETTERS / SETTERS -----------
+    // Getters and Setters
     public NeuralNetwork getNetwork() {
         return network;
     }
@@ -259,5 +114,14 @@ public class NeuralNetworkTrainer implements Serializable {
 
     public void decayLearningRate(double factor) {
         this.learningRate *= factor;
+    }
+
+    // Getters for Metadata
+    public int getNumberOfStatesTrained() {
+        return numberOfStatesTrained;
+    }
+
+    public double getLastOutput() {
+        return lastOutput;
     }
 }
