@@ -220,4 +220,12 @@ public class MinimaxAgent extends Player implements Serializable {
     public int getPruneCount() {
         return minimaxAlgorithm.getPruneCount();
     }
+    /**
+     * Getter for the evaluation function.
+     *
+     * @return The evaluation function used by this agent.
+     */
+    public IEvaluationFunction getEvaluationFunction() {
+        return this.evaluationFunction;
+    }
 }
