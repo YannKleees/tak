@@ -1,13 +1,20 @@
 package com.Tak.AI.neuralnet;
 
+import com.Tak.AI.experiments.NeuralNetVsHeuristicExperiment;
+import com.Tak.AI.neuralnet.NeuralNetworkInitializer;
+import com.Tak.AI.neuralnet.NeuralNetworkTrainer;
+
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
 import java.util.Scanner;
 
+/**
+ * A simplified NeuralNetManager that works with a single network file ("trained_network.txt"),
+ * allowing you to continue training or run experiments without creating multiple .txt files.
+ */
 public class NeuralNetManager {
 
-    private static final String NETWORK_DIR = "neuralnet";
+    private static final String SINGLE_NETWORK_FILE = "trained_network.txt";
     private static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -16,31 +23,49 @@ public class NeuralNetManager {
     }
 
     public void run() {
+        System.out.println("\n=== Welcome to the Single-File Neural Network Manager ===");
+
+        // If the file doesn't exist yet, create a new network and save it once.
+        File networkFile = new File(SINGLE_NETWORK_FILE);
+        if (!networkFile.exists()) {
+            System.out.println("No existing network file found. Creating a new one...");
+            createNewNetwork();
+        } else {
+            System.out.println("Existing network file found. You can continue training or run an experiment.");
+        }
+
         while (true) {
             displayMainMenu();
-            int choice = getUserChoice(1, 3);
+            int choice = getUserChoice(1, 4);
             switch (choice) {
                 case 1:
                     continueTraining();
                     break;
                 case 2:
-                    createNewNetwork();
+                    runExperiment();
                     break;
                 case 3:
-                    System.out.println("Exiting Neural Network Manager. Goodbye!");
+                    System.out.println("Exiting Single-File Neural Network Manager. Goodbye!");
                     scanner.close();
                     System.exit(0);
                     break;
+                case 4: // This won't happen due to the range (1-3), but left in for clarity
                 default:
                     System.out.println("Invalid choice. Please try again.");
             }
         }
     }
 
+    /**
+     * Displays a simple main menu with only three options:
+     * 1) Continue training the single-file network
+     * 2) Run an experiment vs. the heuristic approach
+     * 3) Exit
+     */
     private void displayMainMenu() {
-        System.out.println("\n=== Neural Network Manager ===");
-        System.out.println("1. Continue Training an Existing Network");
-        System.out.println("2. Create a New Neural Network");
+        System.out.println("\n--- Main Menu ---");
+        System.out.println("1. Continue Training");
+        System.out.println("2. Run NeuralNet vs. Heuristic Experiment");
         System.out.println("3. Exit");
         System.out.print("Enter your choice (1-3): ");
     }
@@ -60,85 +85,65 @@ public class NeuralNetManager {
         }
     }
 
-    private void continueTraining() {
-        List<String> networks = listNetworks();
-        if (networks.isEmpty()) {
-            System.out.println("No existing networks found. Please create a new network first.");
-            return;
-        }
-
-        System.out.println("\n=== Select a Neural Network to Continue Training ===");
-        for (int i = 0; i < networks.size(); i++) {
-            System.out.println((i + 1) + ". " + networks.get(i));
-        }
-        System.out.println((networks.size() + 1) + ". Cancel");
-        System.out.print("Enter your choice (1-" + (networks.size() + 1) + "): ");
-
-        int choice = getUserChoice(1, networks.size() + 1);
-        if (choice == networks.size() + 1) {
-            System.out.println("Cancelled selection.");
-            return;
-        }
-
-        String selectedNetwork = networks.get(choice - 1);
-        System.out.println("Selected Network: " + selectedNetwork);
-
-        // Load the selected network
+    /**
+     * Creates a fresh network file if none exists.
+     * Called once at startup if "trained_network.txt" doesn't exist.
+     */
+    private void createNewNetwork() {
         NeuralNetworkTrainer trainer = NeuralNetworkInitializer.initializeTrainer();
-        trainer.loadNetwork(NETWORK_DIR + File.separator + selectedNetwork);
+        trainer.saveNetwork(SINGLE_NETWORK_FILE);
+        System.out.println("New network created and saved to '" + SINGLE_NETWORK_FILE + "'.");
+    }
 
-        // Proceed with training
-        int numberOfGames = promptForNumber("Enter the number of training games to run: ", 1, Integer.MAX_VALUE);
+    /**
+     * Loads the single-file network from "trained_network.txt" and asks the user
+     * for how many self-play (or any other approach) training games they'd like to run.
+     * Then saves back to the same file.
+     */
+    private void continueTraining() {
+        // Load existing network
+        NeuralNetworkTrainer trainer = NeuralNetworkInitializer.initializeTrainer();
+        trainer.loadNetwork(SINGLE_NETWORK_FILE);
+
+        // Let user choose how many games to train
+        int numberOfGames = promptForNumber("Enter the number of self-play training games: ", 1, Integer.MAX_VALUE);
+
+        // Run SelfPlayMinimaxTrainer or any custom training logic
         SelfPlayMinimaxTrainer selfPlayTrainer = new SelfPlayMinimaxTrainer(trainer, numberOfGames);
         selfPlayTrainer.runTraining();
 
-        // Save the trained network
-        trainer.saveNetwork(NETWORK_DIR + File.separator + selectedNetwork);
-        System.out.println("Training completed and network saved to " + selectedNetwork);
+        // Save back to the same file
+        trainer.saveNetwork(SINGLE_NETWORK_FILE);
+        System.out.println("Training completed. Network updated in '" + SINGLE_NETWORK_FILE + "'.");
     }
 
-    private void createNewNetwork() {
-        System.out.println("\n=== Create a New Neural Network ===");
+    /**
+     * Runs the NeuralNet vs. Heuristic experiment with the single-file network.
+     * Shows metrics to indicate if/when the ANN outperforms the heuristic approach.
+     */
+    private void runExperiment() {
+        // Load the network
+        NeuralNetworkTrainer trainer = NeuralNetworkInitializer.initializeTrainer();
+        trainer.loadNetwork(SINGLE_NETWORK_FILE);
 
-        int inputSize = promptForNumber("Enter the input size: ", 1, Integer.MAX_VALUE);
-        int numHiddenLayers = promptForNumber("Enter the number of hidden layers: ", 1, 10);
+        // Create a NeuralNetworkEvaluator from the trainer's network
+        NeuralNetworkEvaluator nnEvaluator = new NeuralNetworkEvaluator(trainer.getNetwork());
 
-        int[] hiddenLayerSizes = new int[numHiddenLayers];
-        for (int i = 0; i < numHiddenLayers; i++) {
-            hiddenLayerSizes[i] = promptForNumber("Enter the size of hidden layer " + (i + 1) + ": ", 1, 1000);
+        // We pass the nnEvaluator AND the trainer to the experiment so it can
+        // retrain or do post-processing if we want. (You can omit if not needed.)
+        NeuralNetVsHeuristicExperiment experiment =
+                new NeuralNetVsHeuristicExperiment(nnEvaluator, trainer);
+
+        // Run the experiment (the experiment class will handle the details)
+        try {
+            experiment.run();
+        } catch (IOException e) {
+            System.out.println("Error during experiment: " + e.getMessage());
         }
 
-        int outputSize = promptForNumber("Enter the output size: ", 1, Integer.MAX_VALUE);
-        ActivationFunction activationFunction = promptForActivationFunction();
-
-        // Create the configuration
-        NeuralNetworkConfig config = new NeuralNetworkConfig(inputSize, hiddenLayerSizes, outputSize, activationFunction);
-        NeuralNetwork network = new NeuralNetwork(config);
-        double learningRate = 0.01;
-        NeuralNetworkTrainer trainer = new NeuralNetworkTrainer(network, learningRate);
-
-        // Save the new network
-        String networkName = promptForNetworkName();
-        String savePath = NETWORK_DIR + File.separator + networkName + ".txt";
-        trainer.saveNetwork(savePath);
-        System.out.println("New neural network created and saved as " + networkName + ".txt");
-    }
-
-    private List<String> listNetworks() {
-        List<String> networks = new ArrayList<>();
-        File dir = new File(NETWORK_DIR);
-        if (!dir.exists()) {
-            dir.mkdir();
-            return networks;
-        }
-
-        File[] files = dir.listFiles((d, name) -> name.endsWith(".txt"));
-        if (files != null) {
-            for (File file : files) {
-                networks.add(file.getName());
-            }
-        }
-        return networks;
+        // Optionally re-save if the experiment triggers any training
+        trainer.saveNetwork(SINGLE_NETWORK_FILE);
+        System.out.println("Experiment finished. Network saved to '" + SINGLE_NETWORK_FILE + "'.");
     }
 
     private int promptForNumber(String prompt, int min, int max) {
@@ -153,37 +158,6 @@ public class NeuralNetManager {
                 }
             } catch (NumberFormatException e) {
                 System.out.print("Invalid input. " + prompt);
-            }
-        }
-    }
-
-    private ActivationFunction promptForActivationFunction() {
-        System.out.println("Select Activation Function:");
-        ActivationFunction[] functions = ActivationFunction.values();
-        for (int i = 0; i < functions.length; i++) {
-            System.out.println((i + 1) + ". " + functions[i]);
-        }
-        System.out.print("Enter your choice (1-" + functions.length + "): ");
-
-        int choice = getUserChoice(1, functions.length);
-        return functions[choice - 1];
-    }
-
-    private String promptForNetworkName() {
-        System.out.print("Enter a name for the new neural network: ");
-        while (true) {
-            String name = scanner.nextLine().trim();
-            if (name.isEmpty()) {
-                System.out.print("Name cannot be empty. Enter a valid name: ");
-            } else if (name.contains(" ") || name.contains("/") || name.contains("\\")) {
-                System.out.print("Name contains invalid characters. Enter a different name: ");
-            } else {
-                File file = new File(NETWORK_DIR + File.separator + name + ".txt");
-                if (file.exists()) {
-                    System.out.print("A network with this name already exists. Enter a different name: ");
-                } else {
-                    return name;
-                }
             }
         }
     }

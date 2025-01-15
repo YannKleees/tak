@@ -1,3 +1,4 @@
+// File: com/Tak/AI/neuralnet/NeuralNetworkTrainer.java
 package com.Tak.AI.neuralnet;
 
 import com.Tak.Logic.utils.Logger;
@@ -18,6 +19,7 @@ public class NeuralNetworkTrainer {
     private int numberOfStatesTrained;
     private double lastOutput;
 
+    // Constructor with NeuralNetwork and learningRate
     public NeuralNetworkTrainer(NeuralNetwork network, double learningRate) {
         this.network = network;
         this.learningRate = learningRate;
@@ -29,6 +31,9 @@ public class NeuralNetworkTrainer {
      * Trains the network on a single example.
      */
     public void train(double[] inputs, double[] targets) {
+        if (network == null) {
+            throw new IllegalStateException("NeuralNetwork is not initialized.");
+        }
         network.backpropagate(inputs, targets, learningRate);
         numberOfStatesTrained++;
         if (targets.length > 0) {
