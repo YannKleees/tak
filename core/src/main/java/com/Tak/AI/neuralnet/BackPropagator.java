@@ -24,6 +24,7 @@ public class BackPropagator {
     public static void backpropagate(double[] inputs,
                                      double[] targets,
                                      double learningRate,
+                                     double regularizationRate,
                                      double[][][] weights,
                                      double[][] biases,
                                      double[][] layerOutputs,
@@ -55,7 +56,9 @@ public class BackPropagator {
             for (int inNeuron = 0; inNeuron < previousLayerOutput.length; inNeuron++) {
                 for (int outNeuron = 0; outNeuron < currentLayerOutput.length; outNeuron++) {
                     double delta = learningRate * layerErrorSignal[outNeuron] * previousLayerOutput[inNeuron];
-                    weights[layerIndex][inNeuron][outNeuron] += delta;
+                    //weights[layerIndex][inNeuron][outNeuron] += delta;
+                    weights[layerIndex][inNeuron][outNeuron] += delta - (regularizationRate * weights[layerIndex][inNeuron][outNeuron]);
+
                 }
             }
 
