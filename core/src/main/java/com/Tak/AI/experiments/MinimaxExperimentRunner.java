@@ -1,7 +1,7 @@
 // File: com/Tak/AI/experiments/NeuralNetVsHeuristicExperiment.java
 package com.Tak.AI.experiments;
 
-import com.Tak.AI.evaluation.EvaluationFunction; // Heuristic-based evaluation
+import com.Tak.AI.evaluation.HeuristicEvaluator; // Heuristic-based evaluation
 import com.Tak.AI.neuralnet.NeuralNetworkInitializer;
 import com.Tak.AI.neuralnet.NeuralNetworkTrainer;
 import com.Tak.AI.neuralnet.SelfPlayMinimaxTrainer;

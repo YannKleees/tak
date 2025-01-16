@@ -17,7 +17,7 @@ import java.util.Map;
  * without any color-specific orientation logic (no forced left-right or top-down).
  * It assigns scores based on strategic factors like road potential, stacking, blocking, etc.
  */
-public class EvaluationFunction implements IEvaluationFunction, Serializable {
+public class HeuristicEvaluator implements IEvaluationFunction, Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -27,7 +27,7 @@ public class EvaluationFunction implements IEvaluationFunction, Serializable {
     /**
      * Default constructor. Initializes necessary components.
      */
-    public EvaluationFunction() {
+    public HeuristicEvaluator() {
         this.roadChecker = new RoadConnectivity();
         this.evaluationCache = new HashMap<>();
     }

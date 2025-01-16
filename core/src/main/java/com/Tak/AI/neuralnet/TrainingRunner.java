@@ -7,8 +7,8 @@ public class TrainingRunner {
         System.out.println("Neural network initialized");
         
         // Define the number of training games
-        int numberOfGames = 1; // Adjust based on your computational resources
-        System.out.println("Training for " + numberOfGames + " games");
+        int numberOfGames = 1; // Start with 1 game for a small training session
+        System.out.println("Training for " + numberOfGames + " game(s)");
         
         // Initialize the self-play trainer
         SelfPlayMinimaxTrainer trainer = new SelfPlayMinimaxTrainer(nnTrainer, numberOfGames);
@@ -19,7 +19,8 @@ public class TrainingRunner {
         System.out.println("Training completed");
         
         // Save the trained network with metadata
-        String savePath = "trained_network.txt";
+        String networkName = "TanH"; // Ensure this matches the name used in NeuralNetManager
+        String savePath = "networks/" + networkName + ".txt"; // Save within the 'networks' directory
         nnTrainer.saveNetwork(savePath);
         
         System.out.println("Training completed and network saved to " + savePath);

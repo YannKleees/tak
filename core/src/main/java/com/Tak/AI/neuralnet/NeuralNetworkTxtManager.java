@@ -5,15 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <p>A dedicated manager for handling .txt file operations related to Neural Networks.
- * It adheres to the SOLID principles by encapsulating all file-related functionalities.</p>
+ * A dedicated manager for handling .txt file operations related to Neural Networks.
+ * It adheres to the SOLID principles by encapsulating all file-related functionalities.
  *
- * <strong>Responsibilities:</strong>
- * <ul>
- *   <li>Saving neural network configurations and weights to .txt files.</li>
- *   <li>Loading neural network configurations and weights from .txt files.</li>
- *   <li>Managing metadata such as the number of games trained and performance outputs.</li>
- * </ul>
+ * Responsibilities:
+ * - Saving neural network configurations and weights to .txt files.
+ * - Loading neural network configurations and weights from .txt files.
+ * - Managing metadata such as the number of games trained and performance outputs.
  */
 public class NeuralNetworkTxtManager {
 
@@ -87,6 +85,7 @@ public class NeuralNetworkTxtManager {
     public static NeuralNetworkLoadData loadTrainer(String filePath) throws IOException {
         NeuralNetworkConfig config = null;
         double[][][] weights = null;
+        double[][] biases = null;
         int numberOfGamesTrained = 0;
         double lastOutput = 0.0;
 
@@ -97,13 +96,12 @@ public class NeuralNetworkTxtManager {
         int outputSize = 0;
         ActivationFunction activationFunction = ActivationFunction.TANH;
 
-        double[][] biases = null;
         int currentLayerIndex = -1;
         List<Double> currentLayerBiases = new ArrayList<>();
+        List<double[]> currentLayerWeights = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
-            List<double[]> currentLayerWeights = new ArrayList<>();
 
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
@@ -157,11 +155,11 @@ public class NeuralNetworkTxtManager {
                 }
 
                 else if (line.startsWith("[WeightsLayer")) {
-                    // Before starting a new layer, assign biases for the previous layer if available
-                    if (currentLayerIndex != -1 && !currentLayerBiases.isEmpty()) {
-                        biases[currentLayerIndex] = currentLayerBiases.stream().mapToDouble(Double::doubleValue).toArray();
-                        System.out.println("Loaded Biases for Layer " + currentLayerIndex + " with " + biases[currentLayerIndex].length + " neurons.");
-                        currentLayerBiases = new ArrayList<>();
+                    // Assign weights for the previous layer if applicable
+                    if (currentLayerIndex != -1 && !currentLayerWeights.isEmpty()) {
+                        weights[currentLayerIndex] = currentLayerWeights.toArray(new double[0][]);
+                        System.out.println("Loaded Weights for Layer " + currentLayerIndex + " with " + weights[currentLayerIndex].length + " rows.");
+                        currentLayerWeights = new ArrayList<>();
                     }
 
                     // Extract layer index
@@ -172,10 +170,10 @@ public class NeuralNetworkTxtManager {
                 }
 
                 else if (line.startsWith("[BiasLayer")) {
-                    // Assign weights for the current layer
-                    if (!currentLayerWeights.isEmpty()) {
+                    // Assign weights for the current layer before parsing biases
+                    if (currentLayerIndex != -1 && !currentLayerWeights.isEmpty()) {
                         weights[currentLayerIndex] = currentLayerWeights.toArray(new double[0][]);
-                        System.out.println("Loaded Weights for Layer " + currentLayerIndex + " with " + weights[currentLayerIndex].length + " neurons.");
+                        System.out.println("Loaded Weights for Layer " + currentLayerIndex + " with " + weights[currentLayerIndex].length + " rows.");
                         currentLayerWeights = new ArrayList<>();
                     }
 
@@ -184,14 +182,35 @@ public class NeuralNetworkTxtManager {
                     currentLayerIndex = Integer.parseInt(idxStr);
                     currentLayerBiases = new ArrayList<>();
                     System.out.println("Parsing [BiasLayer" + currentLayerIndex + "]...");
+
+                    // Read the next non-bracketed line containing biases
+                    while ((line = reader.readLine()) != null) {
+                        line = line.trim();
+                        if (line.isEmpty() || line.startsWith("[")) {
+                            break;
+                        }
+                        String[] tokens = line.split(" ");
+                        for (String tok : tokens) {
+                            try {
+                                currentLayerBiases.add(Double.parseDouble(tok));
+                            } catch (NumberFormatException e) {
+                                System.out.println("Invalid bias value: " + tok);
+                                currentLayerBiases.add(0.0); // or handle appropriately
+                            }
+                        }
+                        // Assign the biases to biases[layerIndex]
+                        biases[currentLayerIndex] = currentLayerBiases.stream().mapToDouble(Double::doubleValue).toArray();
+                        System.out.println("Loaded Biases for Layer " + currentLayerIndex + " with " + biases[currentLayerIndex].length + " neurons.");
+                        break; // Exit after reading biases
+                    }
                 }
 
                 else if (line.startsWith("[Metadata]")) {
-                    // Assign biases for the last layer before metadata
-                    if (!currentLayerBiases.isEmpty()) {
-                        biases[currentLayerIndex] = currentLayerBiases.stream().mapToDouble(Double::doubleValue).toArray();
-                        System.out.println("Loaded Biases for Layer " + currentLayerIndex + " with " + biases[currentLayerIndex].length + " neurons.");
-                        currentLayerBiases = new ArrayList<>();
+                    // Assign weights for the last layer if applicable
+                    if (currentLayerIndex != -1 && !currentLayerWeights.isEmpty()) {
+                        weights[currentLayerIndex] = currentLayerWeights.toArray(new double[0][]);
+                        System.out.println("Loaded Weights for Layer " + currentLayerIndex + " with " + weights[currentLayerIndex].length + " rows.");
+                        currentLayerWeights = new ArrayList<>();
                     }
 
                     // Now read metadata lines
@@ -225,11 +244,10 @@ public class NeuralNetworkTxtManager {
                 }
 
                 else {
-                    // Now parse the lines as either weights or biases
-                    // If we haven't encountered [BiasLayer..], we are reading weights
+                    // Parse weights or biases
                     if (currentLayerIndex >= 0 && weights != null && biases != null) {
                         if (weights[currentLayerIndex] == null) {
-                            // We are reading weight rows
+                            // Reading weight rows
                             String[] tokens = line.split(" ");
                             double[] row = new double[tokens.length];
                             for (int i = 0; i < tokens.length; i++) {
@@ -242,26 +260,15 @@ public class NeuralNetworkTxtManager {
                             }
                             currentLayerWeights.add(row);
                         }
-                        else {
-                            // We must be reading bias lines
-                            String[] tokens = line.split(" ");
-                            for (String tok : tokens) {
-                                try {
-                                    currentLayerBiases.add(Double.parseDouble(tok));
-                                } catch (NumberFormatException e) {
-                                    System.out.println("Invalid bias value: " + tok);
-                                    currentLayerBiases.add(0.0); // or handle appropriately
-                                }
-                            }
-                        }
+                        // No need to handle biases here as they are parsed in [BiasLayerX] section
                     }
                 }
             }
 
-            // Assign the last layer's biases if not already assigned
-            if (currentLayerIndex >= 0 && biases != null && !currentLayerBiases.isEmpty()) {
-                biases[currentLayerIndex] = currentLayerBiases.stream().mapToDouble(Double::doubleValue).toArray();
-                System.out.println("Loaded Biases for Layer " + currentLayerIndex + " with " + biases[currentLayerIndex].length + " neurons.");
+            // Assign the last layer's weights if not already assigned
+            if (currentLayerIndex != -1 && !currentLayerWeights.isEmpty() && weights[currentLayerIndex] == null) {
+                weights[currentLayerIndex] = currentLayerWeights.toArray(new double[0][]);
+                System.out.println("Loaded Weights for Layer " + currentLayerIndex + " with " + weights[currentLayerIndex].length + " rows.");
             }
 
             // Build the NeuralNetworkConfig
@@ -277,40 +284,87 @@ public class NeuralNetworkTxtManager {
             net.setWeights(weights);
             net.setBiases(biases);
 
+            // Validate dimensions
+            validateNetworkDimensions(net);
+
             System.out.println("Neural network successfully loaded with configuration: ");
             System.out.println("Input Size: " + inputSize);
             System.out.println("Hidden Layers: " + hiddenSizes);
             System.out.println("Output Size: " + outputSize);
             System.out.println("Activation Function: " + activationFunction);
 
-                return new NeuralNetworkLoadData(net, numberOfGamesTrained, lastOutput);
+            return new NeuralNetworkLoadData(net, numberOfGamesTrained, lastOutput);
             }
         }
 
-    /**
-     * Converts a double[] to a space-separated string.
-     */
-    private static String joinArray(double[] array, String delimiter) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < array.length; i++) {
-            sb.append(array[i]);
-            if (i < array.length - 1) sb.append(delimiter);
-        }
-        return sb.toString();
-    }
+        /**
+         * Validates that the network's weights and biases match the configuration.
+         *
+         * @param net The NeuralNetwork instance to validate.
+         * @throws IOException If a mismatch is detected.
+         */
+        private static void validateNetworkDimensions(NeuralNetwork net) throws IOException {
+            NeuralNetworkConfig cfg = net.getConfig();
+            double[][][] weights = net.getWeights();
+            double[][] biases = net.getBiases();
 
-    /**
-     * Data structure for loading the neural network and metadata.
-     */
-    public static class NeuralNetworkLoadData {
-        public NeuralNetwork network;
-        public int numberOfGamesTrained;
-        public double lastOutput;
+            int numLayers = cfg.getHiddenLayerSizes().length + 1; // hidden + output
 
-        NeuralNetworkLoadData(NeuralNetwork network, int numberOfGamesTrained, double lastOutput) {
-            this.network = network;
-            this.numberOfGamesTrained = numberOfGamesTrained;
-            this.lastOutput = lastOutput;
+            if (weights.length != numLayers || biases.length != numLayers) {
+                throw new IOException("Mismatch in the number of layers. Expected " + numLayers + " layers.");
+            }
+
+            // Check each layer's dimensions
+            for (int layerIndex = 0; layerIndex < numLayers; layerIndex++) {
+                int expectedInputSize = (layerIndex == 0) ? cfg.getInputSize() : cfg.getHiddenLayerSizes()[layerIndex - 1];
+                int expectedOutputSize = (layerIndex < cfg.getHiddenLayerSizes().length) ? cfg.getHiddenLayerSizes()[layerIndex] : cfg.getOutputSize();
+
+                if (weights[layerIndex].length != expectedInputSize) {
+                    throw new IOException("Layer " + layerIndex + " weights have incorrect input size. Expected: " + expectedInputSize + ", Found: " + weights[layerIndex].length);
+                }
+
+                for (int i = 0; i < weights[layerIndex].length; i++) {
+                    if (weights[layerIndex][i].length != expectedOutputSize) {
+                        throw new IOException("Layer " + layerIndex + " weights at row " + i + " have incorrect output size. Expected: " + expectedOutputSize + ", Found: " + weights[layerIndex][i].length);
+                    }
+                }
+
+                if (biases[layerIndex] == null) {
+                    throw new IOException("Biases for Layer " + layerIndex + " are null.");
+                }
+
+                if (biases[layerIndex].length != expectedOutputSize) {
+                    throw new IOException("Layer " + layerIndex + " biases have incorrect size. Expected: " + expectedOutputSize + ", Found: " + biases[layerIndex].length);
+                }
+
+                System.out.println("Layer " + layerIndex + " validated successfully.");
+            }
+        }
+
+        /**
+         * Converts a double[] to a space-separated string.
+         */
+        private static String joinArray(double[] array, String delimiter) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < array.length; i++) {
+                sb.append(array[i]);
+                if (i < array.length - 1) sb.append(delimiter);
+            }
+            return sb.toString();
+        }
+
+        /**
+         * Data structure for loading the neural network and metadata.
+         */
+        public static class NeuralNetworkLoadData {
+            public NeuralNetwork network;
+            public int numberOfGamesTrained;
+            public double lastOutput;
+
+            public NeuralNetworkLoadData(NeuralNetwork network, int numberOfGamesTrained, double lastOutput) {
+                this.network = network;
+                this.numberOfGamesTrained = numberOfGamesTrained;
+                this.lastOutput = lastOutput;
+            }
         }
     }
-}

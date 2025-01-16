@@ -1,7 +1,7 @@
 // File: com/Tak/AI/experiments/HeuristicMinimaxAgent.java
 package com.Tak.AI.experiments;
 
-import com.Tak.AI.evaluation.EvaluationFunction;
+import com.Tak.AI.evaluation.HeuristicEvaluator;
 import com.Tak.AI.neuralnet.BoardToInputsConverter;
 import com.Tak.AI.players.MinimaxAgent;
 import com.Tak.Logic.exceptions.GameOverException;
@@ -26,7 +26,7 @@ public class HeuristicMinimaxAgent extends MinimaxAgent {
     private List<double[]> moveBoardStates;
 
     public HeuristicMinimaxAgent(Color color, int flatStones, int standingStones, int capstones, int maxDepth) {
-        super(color, flatStones, standingStones, capstones, maxDepth, true, new EvaluationFunction());
+        super(color, flatStones, standingStones, capstones, maxDepth, true, new HeuristicEvaluator());
         this.moveBoardStates = new ArrayList<>();
     }
 

@@ -34,7 +34,7 @@ public class TakGame implements Serializable {
 
     private transient WinChecker winChecker; // Marked as transient if not serializable
 
-    private static final int MAX_MOVES = 1000; // Maximum number of moves to prevent infinite loops
+    private static final int MAX_MOVES = 250; // Maximum number of moves to prevent infinite loops
     private Set<String> previousBoardStates; // To track repeated board states
 
     /**

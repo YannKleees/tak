@@ -1,16 +1,11 @@
-// File: com/Tak/AI/neuralnet/NeuralNetworkTrainer.java
 package com.Tak.AI.neuralnet;
-
-import com.Tak.Logic.models.Player;
-import com.Tak.Logic.models.TakGame;
-import com.Tak.Logic.utils.Logger;
 
 import java.io.IOException;
 import java.util.List;
 
 /**
- * <p>A trainer for a multi-layer NeuralNetwork, 
- * providing single-sample or batch training, plus save/load methods.</p>
+ * A trainer for a multi-layer NeuralNetwork, 
+ * providing single-sample or batch training, plus save/load methods.
  */
 public class NeuralNetworkTrainer {
 
@@ -60,7 +55,7 @@ public class NeuralNetworkTrainer {
     }
 
     /**
-     * <p>Handles a list of SelfPlayMinimaxTrainer.TrainingExample objects.</p>
+     * Handles a list of SelfPlayMinimaxTrainer.TrainingExample objects.
      *
      * @param gameData List of training examples.
      */
@@ -79,9 +74,9 @@ public class NeuralNetworkTrainer {
     public void saveNetwork(String filePath) {
         try {
             NeuralNetworkTxtManager.saveTrainer(this, filePath, numberOfStatesTrained, lastOutput);
-            Logger.log("NeuralNetworkTrainer", "Network and metadata successfully saved to " + filePath);
+            System.out.println("Network and metadata successfully saved to " + filePath);
         } catch (IOException e) {
-            Logger.log("NeuralNetworkTrainer", "Failed to save network: " + e.getMessage());
+            System.out.println("Failed to save network: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -97,9 +92,9 @@ public class NeuralNetworkTrainer {
             this.network = loadData.network;
             this.numberOfStatesTrained = loadData.numberOfGamesTrained;
             this.lastOutput = loadData.lastOutput;
-            Logger.log("NeuralNetworkTrainer", "Network and metadata successfully loaded from " + filePath);
+            System.out.println("Network '" + filePath + "' loaded successfully.");
         } catch (IOException e) {
-            Logger.log("NeuralNetworkTrainer", "Failed to load network: " + e.getMessage());
+            System.out.println("Failed to load network: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -129,4 +124,5 @@ public class NeuralNetworkTrainer {
     public double getLastOutput() {
         return lastOutput;
     }
+    
 }

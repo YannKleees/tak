@@ -10,11 +10,11 @@ import java.util.List;
 public class AIPlayerInitializer {
     public static List<Player> createAIPlayers(NeuralNetworkTrainer nnTrainer) {
         Player player1 = new MinimaxAgent(
-            Color.BLUE, 15, 6, 1, 3, true,
+            Color.BLUE, 21, 21, 1, 3, false,
             new NeuralNetworkEvaluator(nnTrainer.getNetwork())
         );
         Player player2 = new MinimaxAgent(
-            Color.GREEN, 15, 6, 1, 3, true,
+            Color.GREEN, 21, 21, 1, 3, false,
             new NeuralNetworkEvaluator(nnTrainer.getNetwork())
         );
         

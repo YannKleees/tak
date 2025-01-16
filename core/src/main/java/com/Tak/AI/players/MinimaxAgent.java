@@ -1,7 +1,7 @@
 package com.Tak.AI.players;
 
 import com.Tak.AI.actions.Action;
-import com.Tak.AI.evaluation.EvaluationFunction;
+import com.Tak.AI.evaluation.HeuristicEvaluator;
 import com.Tak.AI.evaluation.IEvaluationFunction;
 import com.Tak.AI.search.MiniMaxAlgorithm;
 import com.Tak.AI.utils.ActionGenerator;
@@ -80,7 +80,7 @@ public class MinimaxAgent extends Player implements Serializable {
                         int capstones,
                         int maxDepth,
                         boolean useMoveOrdering) {
-        this(color, flatStones, standingStones, capstones, maxDepth, useMoveOrdering, new EvaluationFunction());
+        this(color, flatStones, standingStones, capstones, maxDepth, useMoveOrdering, new HeuristicEvaluator());
     }
 
     /**
@@ -91,7 +91,7 @@ public class MinimaxAgent extends Player implements Serializable {
                         int standingStones,
                         int capstones,
                         int maxDepth) {
-        this(color, flatStones, standingStones, capstones, maxDepth, true, new EvaluationFunction());
+        this(color, flatStones, standingStones, capstones, maxDepth, true, new HeuristicEvaluator());
     }
 
     /**

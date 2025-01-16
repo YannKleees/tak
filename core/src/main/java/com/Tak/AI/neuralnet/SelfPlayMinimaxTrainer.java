@@ -102,11 +102,11 @@ public class SelfPlayMinimaxTrainer {
     private TakGame createExampleTakGame() {
         int boardSize = 5; 
         Player player1 = new MinimaxAgent(
-            Color.BLUE, 21, 21, 1, 2, false,
+            Color.BLUE, 21, 21, 1, 3, false,
             new NeuralNetworkEvaluator(nnTrainer.getNetwork())
         );
         Player player2 = new MinimaxAgent(
-            Color.GREEN, 21, 21, 1, 2, false,
+            Color.GREEN, 21, 21, 1, 3, false,
             new NeuralNetworkEvaluator(nnTrainer.getNetwork())
         );
 
@@ -133,6 +133,11 @@ public class SelfPlayMinimaxTrainer {
     public static class TrainingExample {
         private double[] input;
         private double[] target;
+
+        // Add this setter method
+        public void setTarget(double[] target) {
+            this.target = target;
+        }
 
         public TrainingExample(double[] input, double[] target) {
             this.input = input;
