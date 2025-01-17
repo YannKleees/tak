@@ -35,7 +35,7 @@ public class TakGame implements Serializable {
     private transient WinChecker winChecker; // Marked as transient if not serializable
 
     private static final int MAX_MOVES = 250; // Maximum number of moves to prevent infinite loops
-    private Set<String> previousBoardStates; // To track repeated board states
+    //private Set<String> previousBoardStates; // To track repeated board states
 
     /**
      * Constructs a TakGame with the specified board size, AI usage, and number of AI players.
@@ -56,7 +56,7 @@ public class TakGame implements Serializable {
 
         initializePlayers(useAI, aiPlayersCount);
         winChecker = new WinChecker();
-        previousBoardStates = new HashSet<>();
+        //previousBoardStates = new HashSet<>();
     }
 
     /**
@@ -85,7 +85,7 @@ public class TakGame implements Serializable {
         //Logger.log("TakGame", "Initialized TakGame with custom players.");
 
         winChecker = new WinChecker();
-        previousBoardStates = new HashSet<>();
+        //previousBoardStates = new HashSet<>();
     }
 
     /**
@@ -248,13 +248,13 @@ public class TakGame implements Serializable {
 
         // Check for repeated board state
         String boardStateHash = getBoardStateHash();
-        if (previousBoardStates.contains(boardStateHash)) {
-            Logger.log("TakGame", "Repeated board state detected. Declaring a tie.");
-            endGameAsTie();
-            return;
-        } else {
-            previousBoardStates.add(boardStateHash);
-        }
+        //if (previousBoardStates.contains(boardStateHash)) {
+            //Logger.log("TakGame", "Repeated board state detected. Declaring a tie.");
+            //endGameAsTie();
+            //return;
+        //} else {
+            //previousBoardStates.add(boardStateHash);
+        //}
 
         checkWinConditions();
 
@@ -292,13 +292,10 @@ public class TakGame implements Serializable {
 
         // Check for repeated board state after placing a piece
         String boardStateHash = getBoardStateHash();
-        if (previousBoardStates.contains(boardStateHash)) {
-            Logger.log("TakGame", "Repeated board state detected after placing a piece. Declaring a tie.");
-            endGameAsTie();
-            return;
-        } else {
-            previousBoardStates.add(boardStateHash);
-        }
+        //if (previousBoardStates.contains(boardStateHash)) {
+            //Logger.log("TakGame", "Repeated board state detected after placing a piece. Declaring a tie.");
+            //endGameAsTie();
+            //return;
 
         checkWinConditions();
 
@@ -421,7 +418,7 @@ public class TakGame implements Serializable {
         isGameEnded = false;
         winner = null;
         currentPlayerIndex = 0;
-        previousBoardStates.clear();
+        //   previousBoardStates.clear();
 
         for (Player player : players) {
             player.resetPieces(21, 1); // Standard counts
@@ -507,7 +504,7 @@ public class TakGame implements Serializable {
         in.defaultReadObject();
         // Re-initialize transient fields
         winChecker = new WinChecker();
-        previousBoardStates = new HashSet<>();
+        //previousBoardStates = new HashSet<>();
     }
 
     /**
