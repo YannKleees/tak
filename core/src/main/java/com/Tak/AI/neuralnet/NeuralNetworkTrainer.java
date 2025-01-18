@@ -26,6 +26,9 @@ public class NeuralNetworkTrainer {
     private double lrDecayFactor = 1.0;    // e.g. 0.99 each epoch, or 1.0 to disable
     private Random rnd = new Random();
 
+    // (New) L2 regularization parameter
+    private double regularizationRate = 0.0;
+
     public NeuralNetworkTrainer(NeuralNetwork network, double learningRate) {
         this.network = network;
         this.learningRate = learningRate;
@@ -41,8 +44,8 @@ public class NeuralNetworkTrainer {
             throw new IllegalStateException("NeuralNetwork is not initialized.");
         }
 
-        // Perform backprop
-        network.backpropagate(inputs, targets, learningRate);
+        // Perform backprop with given regularization
+        network.backpropagate(inputs, targets, learningRate, regularizationRate);
 
         // Calculate MSE loss
         double[] outputs = network.forward(inputs);
@@ -180,5 +183,9 @@ public class NeuralNetworkTrainer {
 
     public void setLearningRateDecay(double factor) {
         this.lrDecayFactor = factor;
+    }
+
+    public void setRegularizationRate(double regRate) {
+        this.regularizationRate = regRate;
     }
 }

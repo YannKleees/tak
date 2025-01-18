@@ -59,40 +59,37 @@ public class NeuralNetwork implements Serializable {
      * @return The output array (size = outputSize).
      */
     public double[] forward(double[] inputs) {
-        //System.out.println("Starting forward pass...");
         double[] outputs = ForwardPropagator.forward(
             inputs, 
             weights, 
             biases, 
             config.getActivationFunction()
         );
-        //System.out.println("Forward pass completed. Output: " + outputs[0]);
         return outputs;
     }
 
     /**
      * Performs backpropagation and updates the network’s parameters.
      *
-     * @param inputs         The input array.
-     * @param targets        The desired/target output array.
-     * @param learningRate   The learning rate for weight updates.
+     * @param inputs             The input array.
+     * @param targets            The desired/target output array.
+     * @param learningRate       The learning rate for weight updates.
+     * @param regularizationRate The L2 regularization rate.
      */
-    public void backpropagate(double[] inputs, double[] targets, double learningRate) {
-        System.out.println("Starting backpropagation...");
+    public void backpropagate(double[] inputs, double[] targets, double learningRate, double regularizationRate) {
         ForwardPropagator.ForwardCache cache =
-                ForwardPropagator.forwardWithCache(inputs, weights, biases, config.getActivationFunction());
+            ForwardPropagator.forwardWithCache(inputs, weights, biases, config.getActivationFunction());
 
         BackPropagator.backpropagate(
             inputs,
             targets,
             learningRate,
-            0.0, // regularization rate
+            regularizationRate,     // <-- Pass regularization rate here
             weights,
             biases,
             cache.layerOutputs,
             config.getActivationFunction()
         );
-        System.out.println("Backpropagation completed.");
     }
 
     // ------------------------ GETTERS / SETTERS ---------------------------

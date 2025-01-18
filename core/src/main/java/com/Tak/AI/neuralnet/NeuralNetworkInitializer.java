@@ -14,7 +14,7 @@ public class NeuralNetworkInitializer {
     }
 
     public static NeuralNetworkTrainer initializeTrainer() {
-        // default hidden size = 20, TANH
-        return initializeTrainer(new int[]{20}, ActivationFunction.TANH);
+        // default hidden size = 20, now using RELU (was TANH)
+        return initializeTrainer(new int[]{20}, ActivationFunction.RELU);
     }
 }

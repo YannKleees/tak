@@ -6,15 +6,19 @@ import com.Tak.AI.neuralnet.NeuralNetworkEvaluator;
 import com.Tak.AI.neuralnet.NeuralNetworkTrainer;
 import com.Tak.AI.neuralnet.SelfPlayMinimaxTrainer;
 import com.Tak.AI.players.MinimaxAgent;
+import com.Tak.AI.actions.Action;
+import com.Tak.AI.utils.ActionGenerator;
+import com.Tak.Logic.exceptions.GameOverException;
+import com.Tak.Logic.exceptions.InvalidMoveException;
+import com.Tak.Logic.models.Board;
 import com.Tak.Logic.models.Player;
 import com.Tak.Logic.models.Player.Color;
 import com.Tak.Logic.models.TakGame;
-import com.Tak.Logic.exceptions.GameOverException;
-import com.Tak.Logic.exceptions.InvalidMoveException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 /**
  * An iterative trainer that repeatedly runs multiple "rounds" of Net-vs-Heuristic training.
@@ -22,6 +26,9 @@ import java.util.List;
  *   1) We run N training games (the net is always BLUE).
  *   2) We update the network using the data from those games.
  *   3) Optionally, we measure or print some progress (like final boards).
+ *
+ * Modification: we add randomization to the first few moves to avoid
+ * repeating the same openings. This is done in 'playOneGameCollectStates()'.
  */
 public class IterativeNetVsHeuristicTrainer {
 
@@ -31,6 +38,10 @@ public class IterativeNetVsHeuristicTrainer {
     private final int totalRounds;
     private final boolean printFinalBoard;  // If true, we'll print the final board each game
 
+    // Define how many plies to randomize (2 plies = each side has 1 move).
+    private final int randomOpeningPlies = 2;
+    private final Random rnd = new Random();
+
     /**
      * @param trainer         The network trainer to be improved repeatedly.
      * @param boardSize       e.g., 5 for a 5x5 Tak board
@@ -39,10 +50,10 @@ public class IterativeNetVsHeuristicTrainer {
      * @param printFinalBoard if true, log the final board at the end of each game
      */
     public IterativeNetVsHeuristicTrainer(NeuralNetworkTrainer trainer,
-                                         int boardSize,
-                                         int gamesPerRound,
-                                         int totalRounds,
-                                         boolean printFinalBoard) {
+                                          int boardSize,
+                                          int gamesPerRound,
+                                          int totalRounds,
+                                          boolean printFinalBoard) {
         this.trainer = trainer;
         this.boardSize = boardSize;
         this.gamesPerRound = gamesPerRound;
@@ -65,7 +76,6 @@ public class IterativeNetVsHeuristicTrainer {
 
             // Display average loss for the round
             System.out.printf("Finished Round %d. AvgLoss=%.4f\n", round, avgLoss);
-
             // Optionally, additional metrics or evaluations can be added here
         }
 
@@ -93,7 +103,7 @@ public class IterativeNetVsHeuristicTrainer {
             double loss = trainer.trainAll(trainingExamples);
             totalLoss += loss;
 
-            // Log every 5 games to monitor progress
+            // Log every 5 games (optional) to monitor progress
             if (i % 5 == 0) {
                 System.out.printf("  Game %d/%d Loss=%.4f\n", i, gamesPerRound, loss);
             }
@@ -105,6 +115,8 @@ public class IterativeNetVsHeuristicTrainer {
     /**
      * Plays a single game (BLUE=net, GREEN=heuristic),
      * collecting board states for *BLUE moves only* so we can label them post-game.
+     *
+     * NOTE: We add randomization to the first few plies to avoid repeating the same openings.
      *
      * @return a list of (state, currentPlayer, finalTakGame) so we can label them later.
      */
@@ -120,35 +132,85 @@ public class IterativeNetVsHeuristicTrainer {
             new HeuristicEvaluator()
         );
 
+        // Build the game with these two players
         TakGame game = new TakGame(boardSize, Arrays.asList(netPlayer, heuristicPlayer));
         List<TrainingGameRecord> records = new ArrayList<>();
 
         while (!game.isGameEnded()) {
             Player current = game.getCurrentPlayer();
+            int moveCount = game.getMoveCount(); // how many moves total so far
 
-            // If the current player is BLUE (ANN), store the board state
-            if (current == netPlayer) {
-                double[] state = BoardToInputsConverter.convert(game.getBoard(), netPlayer);
-                records.add(new TrainingGameRecord(state, netPlayer, game));
-            }
+            if (moveCount < randomOpeningPlies * 2) {
+                // For the first few plies, pick a random move from all possible actions
 
-            try {
-                current.makeMove(game);
-            } catch (InvalidMoveException | GameOverException e) {
-                // Log the exception and terminate the game gracefully
-                System.out.println("  An error occurred during the game: " + e.getMessage());
-                break;
+                // 1) Generate all action strings for 'current'
+                List<String> actionStrings =
+                    ActionGenerator.generatePossibleActions(game.getBoard(), current, moveCount);
+
+                // 2) Parse them into actual 'Action' objects
+                List<Action> allActions = parseActionStrings(actionStrings, current);
+                if (!allActions.isEmpty()) {
+                    // Pick one at random
+                    Action randomAction = allActions.get(rnd.nextInt(allActions.size()));
+                    try {
+                        // Execute it on the board
+                        randomAction.execute(game.getBoard());
+                        // Increment move count, check end, switch player
+                        game.incrementMoveCount();
+                        game.checkWinConditions();
+                        game.switchPlayer();
+                    } catch (InvalidMoveException e) {
+                        System.out.println("  Error during random opening: " + e.getMessage());
+                        break;
+                    }
+                } else {
+                    System.out.println("No moves found for random opening. Breaking.");
+                    break;
+                }
+
+            } else {
+                // Once we've passed the random opening plies, use normal approach
+                // If current is the net player, we record the state first
+                if (current == netPlayer) {
+                    double[] state = BoardToInputsConverter.convert(game.getBoard(), netPlayer);
+                    records.add(new TrainingGameRecord(state, netPlayer, game));
+                }
+
+                // Let the player's normal makeMove(...) happen
+                // e.g. MinimaxAgent calls minimax
+                try {
+                    current.makeMove(game);
+                } catch (InvalidMoveException | GameOverException e) {
+                    System.out.println("  An error occurred during normal move: " + e.getMessage());
+                    break;
+                }
             }
         }
 
         // Optionally print the final board state
         if (printFinalBoard) {
             System.out.println("  Final Board State:");
-            game.getBoard().printBoard(); // Corrected method call
+            game.getBoard().printBoard();
             System.out.println();
         }
 
         return records;
+    }
+
+    /**
+     * Helper: parse a list of action strings into Action objects
+     */
+    private List<Action> parseActionStrings(List<String> actionStrings, Player player) {
+        List<Action> actions = new ArrayList<>();
+        for (String actionStr : actionStrings) {
+            try {
+                Action action = Action.fromString(actionStr, player.getColor());
+                actions.add(action);
+            } catch (InvalidMoveException e) {
+                // ignore invalid
+            }
+        }
+        return actions;
     }
 
     /**
@@ -159,7 +221,6 @@ public class IterativeNetVsHeuristicTrainer {
      * @return A list of labeled training examples for the ANN.
      */
     private List<SelfPlayMinimaxTrainer.TrainingExample> labelData(List<TrainingGameRecord> gameRecords) {
-        // If no records were collected, return an empty list
         if (gameRecords.isEmpty()) {
             return new ArrayList<>();
         }
@@ -170,31 +231,28 @@ public class IterativeNetVsHeuristicTrainer {
 
         List<SelfPlayMinimaxTrainer.TrainingExample> output = new ArrayList<>();
         for (TrainingGameRecord record : gameRecords) {
-            double label;
+            double[] target = new double[1];
             if (winner == null) {
-                label = 0.0; // Tie
+                target[0] = 0.0; // tie
             } else if (winner.getColor() == Color.BLUE) {
-                label = 1.0; // ANN won
+                target[0] = 1.0; // net (BLUE) won
             } else {
-                label = -1.0; // ANN lost
+                target[0] = -1.0; // net lost
             }
-
-            // Create a training example with the state and the corresponding label
-            SelfPlayMinimaxTrainer.TrainingExample ex =
-                    new SelfPlayMinimaxTrainer.TrainingExample(record.boardState, new double[]{label});
-            output.add(ex);
+            // (Optional) add a small shaping term if you like
+            output.add(new SelfPlayMinimaxTrainer.TrainingExample(record.boardState, target));
         }
         return output;
     }
 
     /**
-     * A small wrapper struct to store the board state, the "mover," and the TakGame reference.
-     * We use the final TakGame reference to figure out who won after the game ends.
+     * Simple wrapper to store the board state, the "mover," and the game reference
+     * so we can label them after the game ends.
      */
     private static class TrainingGameRecord {
         double[] boardState;
         Player mover;
-        TakGame takGame;  // We'll store the final reference to see the winner
+        TakGame takGame;
 
         TrainingGameRecord(double[] state, Player mover, TakGame g) {
             this.boardState = state;
