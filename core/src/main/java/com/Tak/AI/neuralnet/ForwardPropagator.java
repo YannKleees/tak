@@ -11,7 +11,7 @@ public class ForwardPropagator {
      * layerOutputs[last] => final output
      */
     public static class ForwardCache {
-        public double[][] layerOutputs;
+        public double[][] layerOutputs; 
     }
 
     public static double[] forward(double[] inputs,
@@ -57,8 +57,8 @@ public class ForwardPropagator {
                                                ActivationFunction func) {
         int inSize = layerWeights.length;
         int outSize = layerWeights[0].length;
-
         double[] output = new double[outSize];
+
         for (int o = 0; o < outSize; o++) {
             double sum = 0.0;
             for (int i = 0; i < inSize; i++) {

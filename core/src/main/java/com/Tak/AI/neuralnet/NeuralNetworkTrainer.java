@@ -1,11 +1,15 @@
 package com.Tak.AI.neuralnet;
 
 import java.io.IOException;
+import com.Tak.AI.neuralnet.NeuralNetworkTxtManager;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 /**
- * A trainer for a multi-layer NeuralNetwork, 
- * providing single-sample or batch training, plus save/load methods.
+ * A trainer for a multi-layer NeuralNetwork,
+ * providing single/batch training, plus optional mini-batching, shuffling,
+ * learning rate decay, and save/load methods.
  */
 public class NeuralNetworkTrainer {
 
@@ -16,7 +20,12 @@ public class NeuralNetworkTrainer {
     private int numberOfStatesTrained;
     private double lastOutput;
 
-    // Constructor with NeuralNetwork and learningRate
+    // (New) Options for advanced features
+    private boolean shuffleData = false;    // If true, shuffle data in trainAll
+    private int miniBatchSize = 0;         // If > 0, do mini-batches
+    private double lrDecayFactor = 1.0;    // e.g. 0.99 each epoch, or 1.0 to disable
+    private Random rnd = new Random();
+
     public NeuralNetworkTrainer(NeuralNetwork network, double learningRate) {
         this.network = network;
         this.learningRate = learningRate;
@@ -25,29 +34,76 @@ public class NeuralNetworkTrainer {
     }
 
     /**
-     * Trains the network on a single example.
-     *
-     * @param inputs   The input features.
-     * @param targets  The target outputs.
+     * Trains the network on a single example and returns the loss.
      */
-    public void train(double[] inputs, double[] targets) {
+    public double train(double[] inputs, double[] targets) {
         if (network == null) {
             throw new IllegalStateException("NeuralNetwork is not initialized.");
         }
+
+        // Perform backprop
         network.backpropagate(inputs, targets, learningRate);
-        // Update metadata per state
+
+        // Calculate MSE loss
+        double[] outputs = network.forward(inputs);
+        double loss = 0.0;
+        for (int i = 0; i < targets.length; i++) {
+            loss += Math.pow(targets[i] - outputs[i], 2);
+        }
+        loss /= targets.length;
+
+        // Update metadata
         numberOfStatesTrained++;
         if (targets.length > 0) {
             lastOutput = targets[0];
         }
+
+        return loss;
     }
 
     /**
-     * Trains on a batch of examples.
-     *
-     * @param inputBatch   List of input feature arrays.
-     * @param targetBatch  List of target output arrays.
+     * (New) Shuffle and optionally do mini-batches. Return average loss.
      */
+    public double trainAll(List<SelfPlayMinimaxTrainer.TrainingExample> dataset) {
+        if (shuffleData) {
+            Collections.shuffle(dataset, rnd);
+        }
+
+        if (miniBatchSize > 0 && miniBatchSize < dataset.size()) {
+            return trainMiniBatches(dataset);
+        } else {
+            double totalLoss = 0.0;
+            for (SelfPlayMinimaxTrainer.TrainingExample ex : dataset) {
+                totalLoss += train(ex.getInput(), ex.getTarget());
+            }
+            return totalLoss / dataset.size();
+        }
+    }
+
+    /**
+     * (New) Perform mini-batch training on the dataset.
+     */
+    private double trainMiniBatches(List<SelfPlayMinimaxTrainer.TrainingExample> dataset) {
+        double totalLoss = 0.0;
+        int count = 0;
+
+        for (int start = 0; start < dataset.size(); start += miniBatchSize) {
+            int end = Math.min(start + miniBatchSize, dataset.size());
+
+            double batchLoss = 0.0;
+            for (int i = start; i < end; i++) {
+                SelfPlayMinimaxTrainer.TrainingExample ex = dataset.get(i);
+                batchLoss += train(ex.getInput(), ex.getTarget());
+            }
+
+            batchLoss /= (end - start);
+            totalLoss += batchLoss;
+            count++;
+        }
+
+        return totalLoss / count;
+    }
+
     public void trainBatch(List<double[]> inputBatch, List<double[]> targetBatch) {
         for (int i = 0; i < inputBatch.size(); i++) {
             train(inputBatch.get(i), targetBatch.get(i));
@@ -55,21 +111,16 @@ public class NeuralNetworkTrainer {
     }
 
     /**
-     * Handles a list of SelfPlayMinimaxTrainer.TrainingExample objects.
-     *
-     * @param gameData List of training examples.
+     * (New) Apply learning rate decay after each epoch (call once per epoch).
      */
-    public void trainAll(List<SelfPlayMinimaxTrainer.TrainingExample> gameData) {
-        for (SelfPlayMinimaxTrainer.TrainingExample ex : gameData) {
-            train(ex.getInput(), ex.getTarget());
-            // Metadata is updated in the train method
+    public void applyLearningRateDecay() {
+        if (lrDecayFactor < 1.0 && lrDecayFactor > 0.0) {
+            this.learningRate *= lrDecayFactor;
         }
     }
 
     /**
      * Saves the network and metadata to a .txt file.
-     *
-     * @param filePath The path to the .txt file.
      */
     public void saveNetwork(String filePath) {
         try {
@@ -83,8 +134,6 @@ public class NeuralNetworkTrainer {
 
     /**
      * Loads the network and metadata from a .txt file.
-     *
-     * @param filePath The path to the .txt file.
      */
     public void loadNetwork(String filePath) {
         try {
@@ -99,7 +148,8 @@ public class NeuralNetworkTrainer {
         }
     }
 
-    // Getters and Setters
+    // -------------------- Getters / Setters / Misc. --------------------
+
     public NeuralNetwork getNetwork() {
         return network;
     }
@@ -112,11 +162,6 @@ public class NeuralNetworkTrainer {
         this.learningRate = lr;
     }
 
-    public void decayLearningRate(double factor) {
-        this.learningRate *= factor;
-    }
-
-    // Getters for Metadata
     public int getNumberOfStatesTrained() {
         return numberOfStatesTrained;
     }
@@ -124,5 +169,16 @@ public class NeuralNetworkTrainer {
     public double getLastOutput() {
         return lastOutput;
     }
-    
+
+    public void setShuffleData(boolean shuffle) {
+        this.shuffleData = shuffle;
+    }
+
+    public void setMiniBatchSize(int batchSize) {
+        this.miniBatchSize = batchSize;
+    }
+
+    public void setLearningRateDecay(double factor) {
+        this.lrDecayFactor = factor;
+    }
 }

@@ -1,7 +1,7 @@
 package com.Tak.AI.neuralnet;
 
 /**
- * Utility class for setting up NeuralNetwork configurations.
+ * Utility for building a NeuralNetworkConfig with default input size = 3*(5*5) + 2, output = 1.
  */
 public class NeuralNetworkSetup {
     /**
@@ -12,9 +12,10 @@ public class NeuralNetworkSetup {
      * @return A NeuralNetworkConfig instance.
      */
     public static NeuralNetworkConfig createConfig(int[] hiddenLayerSizes, ActivationFunction activationFunction) {
-        int inputSize = 3 * 5 * 5 + 2; // Example: 3 features per cell for a 5x5 board + 2 global features
-        int outputSize = 1; // Assuming a single output for evaluation score
-
+        // For a 5x5 board with 3 features/cell + 2 global features = 75 + 2 = 77
+        // Adjust if you want to handle variable board sizes in a more dynamic approach.
+        int inputSize = 130; // 77
+        int outputSize = 1;
         return new NeuralNetworkConfig(inputSize, hiddenLayerSizes, outputSize, activationFunction);
     }
 }

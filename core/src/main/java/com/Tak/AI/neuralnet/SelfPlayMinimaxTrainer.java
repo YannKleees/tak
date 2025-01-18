@@ -1,155 +1,191 @@
 package com.Tak.AI.neuralnet;
 
+import com.Tak.AI.evaluation.HeuristicEvaluator;
 import com.Tak.AI.players.MinimaxAgent;
 import com.Tak.Logic.exceptions.GameOverException;
 import com.Tak.Logic.exceptions.InvalidMoveException;
 import com.Tak.Logic.models.Board;
 import com.Tak.Logic.models.Player;
-import com.Tak.Logic.models.TakGame;
 import com.Tak.Logic.models.Player.Color;
+import com.Tak.Logic.models.TakGame;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * <p>Demonstrates self-play or AI vs. AI training using Minimax + NeuralNetwork.</p>
- *
- * <strong>Basic Steps (Potential Outline):</strong>
- * <ol>
- *   <li>Create a TakGame with two MinimaxAgents that use {@link NeuralNetworkEvaluator}.</li>
- *   <li>Simulate a full game (AI vs. AI).</li>
- *   <li>Gather (state -> outcome) data at each step or final result.</li>
- *   <li>Call <code>nnTrainer.train(...)</code> or <code>nnTrainer.trainAll(...)</code> with that data.</li>
- *   <li>Repeat for multiple games to (hopefully) improve the network's evaluation ability.</li>
- * </ol>
+ * Demonstrates self-play or AI vs. AI training using Minimax + NeuralNetwork,
+ * with Early Stopping, reward shaping, etc.
  */
 public class SelfPlayMinimaxTrainer {
 
-    private NeuralNetworkTrainer nnTrainer; 
+    private NeuralNetworkTrainer nnTrainer;
     private int numberOfGames;
+    private int validationFrequency;
+    private int patience;
+    private double bestValidationLoss;
+    private int patienceCounter;
 
-    /**
-     * <p>Constructs a SelfPlayMinimaxTrainer with specified parameters.</p>
-     *
-     * @param nnTrainer     The trainer for the neural net (provides backprop calls).
-     * @param numberOfGames How many self-play or AI-vs-AI games to run.
-     */
-    public SelfPlayMinimaxTrainer(NeuralNetworkTrainer nnTrainer, int numberOfGames) {
+    public SelfPlayMinimaxTrainer(NeuralNetworkTrainer nnTrainer, int numberOfGames, int validationFrequency, int patience) {
         this.nnTrainer = nnTrainer;
         this.numberOfGames = numberOfGames;
+        this.validationFrequency = validationFrequency;
+        this.patience = patience;
+        this.bestValidationLoss = Double.MAX_VALUE;
+        this.patienceCounter = 0;
     }
 
     public void runTraining() {
         for (int i = 0; i < numberOfGames; i++) {
-            System.out.println("Starting game " + (i + 1) + " of " + numberOfGames + "...");
-            List<TrainingExample> gameExamples = playOneGame();
-            System.out.println("Game " + (i + 1) + " ended. Training from data...");
-            trainFromGameData(gameExamples);
+            System.out.println("=== Game " + (i+1) + "/" + numberOfGames + " ===");
+            List<TrainingExample> gameData = playOneGame();
+            double gameLoss = trainFromGameData(gameData);
+            System.out.println("Game " + (i+1) + " average loss: " + gameLoss);
 
-            if ((i + 1) % 100 == 0) {
-                System.out.println("Completed " + (i + 1) + " games.");
+            // Early stopping
+            if ((i+1) % validationFrequency == 0) {
+                double valLoss = validateNetwork();
+                if (valLoss < bestValidationLoss) {
+                    bestValidationLoss = valLoss;
+                    patienceCounter = 0;
+                    System.out.println("New best val loss: " + valLoss);
+                } else {
+                    patienceCounter++;
+                    System.out.println("No improvement. Patience = " + patienceCounter + "/" + patience);
+                    if (patienceCounter >= patience) {
+                        System.out.println("Early Stopping triggered!");
+                        break;
+                    }
+                }
             }
         }
     }
 
     private List<TrainingExample> playOneGame() {
-        List<StateRecord> recordedStates = new ArrayList<>();
-        TakGame game = createExampleTakGame();
+        List<StateRecord> recorded = new ArrayList<>();
+        TakGame game = createTrainingTakGame(5);
 
         while (!game.isGameEnded()) {
             try {
                 Player current = game.getCurrentPlayer();
                 double[] state = BoardToInputsConverter.convert(game.getBoard(), current);
-                System.out.println("Current player: " + current.getColor());
                 current.makeMove(game);
-                System.out.println("Move made successfully. Switching player.");
-                Board board = game.getBoard();
-                board.printBoard();
 
-                // Record the (state -> which player moved)
-                recordedStates.add(new StateRecord(state, current));
-
+                recorded.add(new StateRecord(state, current));
             } catch (InvalidMoveException | GameOverException e) {
-                // If the move is invalid or the game is over for some reason,
-                // we break out of the loop
+                // break on error
                 break;
             }
         }
 
         Player winner = game.getWinner();
-        List<TrainingExample> examples = new ArrayList<>();
-
-        // Convert each recorded state into a training example
-        for (StateRecord sr : recordedStates) {
-            double[] inputFeatures = sr.boardFeatures;
-            double[] target = new double[1];
-
-            if (winner == null) {
-                // Tie
-                target[0] = 0.0; 
-            } else if (sr.mover.equals(winner)) {
-                target[0] = 1.0; // +1.0 if the mover eventually won
-            } else {
-                target[0] = -1.0; // -1.0 if the mover eventually lost
-            }
-            examples.add(new TrainingExample(inputFeatures, target));
-        }
-
-        return examples;
+        return convertToTrainingExamples(recorded, winner);
     }
 
-    private TakGame createExampleTakGame() {
-        int boardSize = 5; 
-        Player player1 = new MinimaxAgent(
+    private List<TrainingExample> convertToTrainingExamples(List<StateRecord> records, Player winner) {
+        List<TrainingExample> exList = new ArrayList<>();
+        for (StateRecord sr : records) {
+            double[] target = new double[1];
+            if (winner == null) {
+                target[0] = 0.0; 
+            } else if (sr.mover.equals(winner)) {
+                target[0] = 1.0; 
+            } else {
+                target[0] = -1.0; 
+            }
+            // example: add a small "shaping" term from board features
+            target[0] += computeRewardShaping(sr.boardFeatures);
+            exList.add(new TrainingExample(sr.boardFeatures, target));
+        }
+        return exList;
+    }
+
+    private double computeRewardShaping(double[] features) {
+        // example: let's say the second-to-last feature is occupancy ratio
+        int idx = features.length - 2;
+        double ratio = features[idx];
+        return 0.1 * ratio; // scale
+    }
+
+    private double trainFromGameData(List<TrainingExample> examples) {
+        return nnTrainer.trainAll(examples);
+    }
+
+    private double validateNetwork() {
+        int valGames = 5;
+        double totalLoss = 0.0;
+        for (int i = 0; i < valGames; i++) {
+            TakGame game = createValidationTakGame();
+            List<TrainingExample> valStates = new ArrayList<>();
+
+            while (!game.isGameEnded()) {
+                try {
+                    Player current = game.getCurrentPlayer();
+                    double[] st = BoardToInputsConverter.convert(game.getBoard(), current);
+                    current.makeMove(game);
+                    if (current.getColor() == Color.BLUE) {
+                        valStates.add(new TrainingExample(st, new double[]{0.0}));
+                    }
+                } catch (Exception e) {
+                    break;
+                }
+            }
+
+            Player winner = game.getWinner();
+            for (TrainingExample ex : valStates) {
+                if (winner == null) {
+                    ex.setTarget(new double[]{0.0});
+                } else if (winner.getColor() == Color.BLUE) {
+                    ex.setTarget(new double[]{1.0});
+                } else {
+                    ex.setTarget(new double[]{-1.0});
+                }
+                double[] out = nnTrainer.getNetwork().forward(ex.getInput());
+                double loss = 0.0;
+                for (int k = 0; k < ex.getTarget().length; k++) {
+                    loss += Math.pow(ex.getTarget()[k] - out[k], 2);
+                }
+                totalLoss += (loss / ex.getTarget().length);
+            }
+        }
+        return totalLoss / valGames;
+    }
+
+    private TakGame createTrainingTakGame(int boardSize) {
+        Player nnPlayer = new MinimaxAgent(
             Color.BLUE, 21, 21, 1, 3, false,
             new NeuralNetworkEvaluator(nnTrainer.getNetwork())
         );
-        Player player2 = new MinimaxAgent(
+        Player heuristic = new MinimaxAgent(
             Color.GREEN, 21, 21, 1, 3, false,
-            new NeuralNetworkEvaluator(nnTrainer.getNetwork())
+            new HeuristicEvaluator()
         );
-
-        // Using a constructor that takes a list of players
-        List<Player> players = Arrays.asList(player1, player2);
-        TakGame game = new TakGame(boardSize, players);
-        return game;
+        return new TakGame(boardSize, Arrays.asList(nnPlayer, heuristic));
     }
 
-    private void trainFromGameData(List<TrainingExample> examples) {
-        nnTrainer.trainAll(examples);
+    private TakGame createValidationTakGame() {
+        // same as createTrainingTakGame(5), or you can define differently
+        return createTrainingTakGame(5);
     }
 
     private static class StateRecord {
         double[] boardFeatures;
         Player mover;
-
-        StateRecord(double[] boardFeatures, Player mover) {
-            this.boardFeatures = boardFeatures;
-            this.mover = mover;
+        StateRecord(double[] feats, Player m) {
+            boardFeatures = feats;
+            mover = m;
         }
     }
 
     public static class TrainingExample {
         private double[] input;
         private double[] target;
-
-        // Add this setter method
-        public void setTarget(double[] target) {
-            this.target = target;
+        public TrainingExample(double[] inp, double[] tar) {
+            input = inp;
+            target = tar;
         }
-
-        public TrainingExample(double[] input, double[] target) {
-            this.input = input;
-            this.target = target;
-        }
-
-        public double[] getInput() {
-            return input;
-        }
-
-        public double[] getTarget() {
-            return target;
-        }
+        public void setTarget(double[] t) { target = t; }
+        public double[] getInput() { return input; }
+        public double[] getTarget() { return target; }
     }
 }

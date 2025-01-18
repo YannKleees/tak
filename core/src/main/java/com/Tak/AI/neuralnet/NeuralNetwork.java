@@ -40,13 +40,13 @@ public class NeuralNetwork implements Serializable {
         int previousLayerSize = config.getInputSize();
         for (int i = 0; i < config.getHiddenLayerSizes().length; i++) {
             int currentLayerSize = config.getHiddenLayerSizes()[i];
-            weights[i] = WeightInitializer.initializeRandom(previousLayerSize, currentLayerSize);
+            weights[i] = WeightInitializer.initializeXavier(previousLayerSize, currentLayerSize);
             biases[i] = WeightInitializer.initializeBias(currentLayerSize);
             previousLayerSize = currentLayerSize;
         }
         // Output layer
         int outputLayerIndex = layerCount - 1;
-        weights[outputLayerIndex] = WeightInitializer.initializeRandom(previousLayerSize, config.getOutputSize());
+        weights[outputLayerIndex] = WeightInitializer.initializeXavier(previousLayerSize, config.getOutputSize());
         biases[outputLayerIndex] = WeightInitializer.initializeBias(config.getOutputSize());
 
         System.out.println("NeuralNetwork initialized with weights and biases.");
@@ -61,10 +61,10 @@ public class NeuralNetwork implements Serializable {
     public double[] forward(double[] inputs) {
         //System.out.println("Starting forward pass...");
         double[] outputs = ForwardPropagator.forward(
-                inputs,
-                weights,
-                biases,
-                config.getActivationFunction()
+            inputs, 
+            weights, 
+            biases, 
+            config.getActivationFunction()
         );
         //System.out.println("Forward pass completed. Output: " + outputs[0]);
         return outputs;
@@ -83,14 +83,14 @@ public class NeuralNetwork implements Serializable {
                 ForwardPropagator.forwardWithCache(inputs, weights, biases, config.getActivationFunction());
 
         BackPropagator.backpropagate(
-                inputs,
-                targets,
-                learningRate,
-                0.0, // regularization rate
-                weights,
-                biases,
-                cache.layerOutputs,
-                config.getActivationFunction()
+            inputs,
+            targets,
+            learningRate,
+            0.0, // regularization rate
+            weights,
+            biases,
+            cache.layerOutputs,
+            config.getActivationFunction()
         );
         System.out.println("Backpropagation completed.");
     }

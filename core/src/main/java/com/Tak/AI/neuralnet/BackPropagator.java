@@ -1,25 +1,25 @@
 package com.Tak.AI.neuralnet;
 
 /**
- * <p>Handles the backpropagation logic in a multi-layer feedforward network.</p>
- *
+ * Handles backpropagation for a multi-layer feedforward network.
  * Basic steps:
- *  1) Compute output layer errors
- *  2) Propagate errors backward through each hidden layer
- *  3) Update weights and biases
+ *   1) Compute output layer errors
+ *   2) Propagate errors backward through hidden layers
+ *   3) Update weights and biases
  */
 public class BackPropagator {
 
     /**
-     * <p>Performs backprop across all layers in reverse order.</p>
+     * Performs backprop across all layers in reverse order.
      *
-     * @param inputs         The original network inputs.
-     * @param targets        The desired network outputs.
-     * @param learningRate   The learning rate for updates.
-     * @param weights        The full array of weight matrices (one per layer).
-     * @param biases         The full array of bias arrays (one per layer).
-     * @param layerOutputs   layerOutputs[i] = output of layer i (where i=0 is first hidden, last is the final output).
-     * @param activationFunc The activation used in all layers (for derivative).
+     * @param inputs         Original network inputs.
+     * @param targets        Desired outputs.
+     * @param learningRate   Learning rate for updates.
+     * @param regularizationRate L2 regularization rate.
+     * @param weights        Full array of weight matrices [layer][inNeuron][outNeuron].
+     * @param biases         Full array of bias arrays [layer][outNeuron].
+     * @param layerOutputs   layerOutputs[i] => output of layer i.
+     * @param activationFunc Activation function used.
      */
     public static void backpropagate(double[] inputs,
                                      double[] targets,
@@ -32,7 +32,7 @@ public class BackPropagator {
 
         int lastLayerIndex = weights.length - 1;
 
-        // 1) Output layer error
+        // 1) Calculate output layer errors
         double[] output = layerOutputs[lastLayerIndex];
         double[] outputErrors = new double[output.length];
         for (int i = 0; i < output.length; i++) {
@@ -41,34 +41,32 @@ public class BackPropagator {
             outputErrors[i] = errorTerm * derivative;
         }
 
-        // We'll keep a running "error signal" from layer to layer
         double[] layerErrorSignal = outputErrors;
 
-        // 2) Propagate backward through hidden layers
-        //    - We do this layer by layer in reverse
+        // 2) Propagate backward
         for (int layerIndex = lastLayerIndex; layerIndex >= 0; layerIndex--) {
             double[] currentLayerOutput = layerOutputs[layerIndex];
             double[] previousLayerOutput = (layerIndex == 0) 
-                    ? inputs
+                    ? inputs 
                     : layerOutputs[layerIndex - 1];
 
-            // a) Update weights[layerIndex]
+            // (a) Update weights
             for (int inNeuron = 0; inNeuron < previousLayerOutput.length; inNeuron++) {
                 for (int outNeuron = 0; outNeuron < currentLayerOutput.length; outNeuron++) {
                     double delta = learningRate * layerErrorSignal[outNeuron] * previousLayerOutput[inNeuron];
-                    //weights[layerIndex][inNeuron][outNeuron] += delta;
-                    weights[layerIndex][inNeuron][outNeuron] += delta - (regularizationRate * weights[layerIndex][inNeuron][outNeuron]);
-
+                    // L2 regularization:
+                    weights[layerIndex][inNeuron][outNeuron] += delta 
+                            - (regularizationRate * weights[layerIndex][inNeuron][outNeuron]);
                 }
             }
 
-            // b) Update biases[layerIndex]
+            // (b) Update biases
             for (int outNeuron = 0; outNeuron < currentLayerOutput.length; outNeuron++) {
                 double delta = learningRate * layerErrorSignal[outNeuron];
                 biases[layerIndex][outNeuron] += delta;
             }
 
-            // c) If not the first layer, compute the next "layerErrorSignal"
+            // (c) Compute next error signal if not at first layer
             if (layerIndex > 0) {
                 double[] newErrorSignal = new double[previousLayerOutput.length];
                 for (int inNeuron = 0; inNeuron < previousLayerOutput.length; inNeuron++) {
@@ -76,7 +74,6 @@ public class BackPropagator {
                     for (int outNeuron = 0; outNeuron < currentLayerOutput.length; outNeuron++) {
                         sum += layerErrorSignal[outNeuron] * weights[layerIndex][inNeuron][outNeuron];
                     }
-                    // multiply by derivative wrt the previous layer's activation
                     double prevActivation = previousLayerOutput[inNeuron];
                     double derivative = activateDerivative(prevActivation, activationFunc);
                     newErrorSignal[inNeuron] = sum * derivative;
@@ -87,22 +84,20 @@ public class BackPropagator {
     }
 
     /**
-     * <p>Applies the derivative of the chosen activation function 
-     * to a neuron's post-activation output value.</p>
-     *
-     * <p>For instance, if activation is sigmoid, the neuron's output was sigmoid(z). 
-     * The derivative is output*(1-output).</p>
+     * Derivative of the activation function given a neuron's post-activation output.
+     * Note for ReLU: We use the post-activation value, which is zero or positive.
      */
     private static double activateDerivative(double activatedValue, ActivationFunction function) {
         switch (function) {
             case LINEAR:
                 return 1.0;
             case SIGMOID:
-                // d/dx(sigmoid) = sigmoid * (1 - sigmoid)
                 return activatedValue * (1.0 - activatedValue);
             case TANH:
-                // d/dx(tanh) = 1 - tanh^2
                 return 1.0 - (activatedValue * activatedValue);
+            case RELU:
+                // If output > 0 => derivative is 1; else 0
+                return (activatedValue > 0.0) ? 1.0 : 0.0;
             default:
                 return 1.0;
         }

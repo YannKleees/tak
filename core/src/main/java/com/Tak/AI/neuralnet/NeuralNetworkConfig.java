@@ -3,11 +3,7 @@ package com.Tak.AI.neuralnet;
 import java.io.Serializable;
 
 /**
- * <p>Holds configuration details for constructing and running a multi-layer neural network.</p>
- *
- * <strong>Key Changes:</strong>
- * - Allows either multiple hidden layers via an int[] or
- *   a single hidden layer via a simpler constructor.
+ * Configuration for a feedforward neural network (layers, activation function, etc.).
  */
 public class NeuralNetworkConfig implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -52,15 +48,12 @@ public class NeuralNetworkConfig implements Serializable {
     public int getInputSize() {
         return inputSize;
     }
-
     public int[] getHiddenLayerSizes() {
         return hiddenLayerSizes;
     }
-
     public int getOutputSize() {
         return outputSize;
     }
-
     public ActivationFunction getActivationFunction() {
         return activationFunction;
     }

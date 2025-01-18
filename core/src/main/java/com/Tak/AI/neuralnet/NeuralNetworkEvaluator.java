@@ -35,13 +35,9 @@ public class NeuralNetworkEvaluator implements IEvaluationFunction, Serializable
      */
     @Override
     public double evaluate(Board board, Player player) {
-        // Convert the board state to an input array
         double[] inputs = BoardToInputsConverter.convert(board, player);
-
-        // Run the network's forward pass
         double[] outputs = network.forward(inputs);
-
-        // If multiple outputs, interpret them. Here we just assume output[0] is the final score
+        // Assume outputs[0] is the final evaluation
         return (outputs.length > 0) ? outputs[0] : 0.0;
     }
 
@@ -53,7 +49,6 @@ public class NeuralNetworkEvaluator implements IEvaluationFunction, Serializable
      * @return The recommended search depth for Minimax or other search algorithms.
      */
     public int depthFromBoardSize(int size) {
-        // TODO: Possibly base it on size (larger board => smaller depth or some heuristic).
-        return 3; // placeholder
+        return 3; // Or some heuristic
     }
 }
