@@ -1,3 +1,4 @@
+// File: core/src/main/java/com/Tak/GUI/GameRenderer.java
 package com.Tak.GUI;
 
 import com.Tak.Logic.models.Board;
@@ -103,7 +104,6 @@ public class GameRenderer {
             VertexAttributes.Usage.Position | VertexAttributes.Usage.Normal
         );
 
-
         pieceInstances = new Array<>();
 
         // Initialize hover and selection outlines as null
@@ -199,7 +199,7 @@ public class GameRenderer {
     public float getTileSize() {
         return TILE_SIZE;
     }
-    
+
     /**
      * Returns the height for a given piece type.
      *

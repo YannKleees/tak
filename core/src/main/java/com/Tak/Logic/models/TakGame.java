@@ -433,7 +433,7 @@ public class TakGame implements Serializable {
      */
     public synchronized void switchPlayer() {
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-        Logger.log("TakGame", "Switched to player: " + getCurrentPlayer().getColor());
+        //Logger.log("TakGame", "Switched to player: " + getCurrentPlayer().getColor());
     }
 
     /**

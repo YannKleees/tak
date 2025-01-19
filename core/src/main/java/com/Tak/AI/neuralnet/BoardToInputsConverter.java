@@ -6,60 +6,39 @@ import com.Tak.Logic.models.PieceStack;
 import com.Tak.Logic.models.Player;
 
 import java.util.ArrayDeque;
-import java.util.Queue;
 
 /**
- * More "refined" converter for neural network inputs:
- * Per-cell features:
- *   1) pieceType encoding
- *   2) stackSize
- *   3) ownershipRatio
- *   4) adjacencyCount
- *   5) (optional) capstoneFlattenPotential
+ * Revised input converter with per-feature scaling for Tanh networks.
  *
- * Global features:
- *   1) occupancy ratio
- *   2) scaled moveCount
- *   3) largest connected group (this player)
- *   4) largest connected group (opponent)
- *   5) difference in largest-group (this - opponent), or ratio
+ * Key changes:
+ *  - Scale down large feature values (like encodePieceType 3 => /3).
+ *  - Keep everything roughly in [-1,+1].
  */
 public class BoardToInputsConverter {
 
     public static double[] convert(Board board, Player player) {
         int size = board.getSize();
 
-        // Let’s define how many per-cell features we now want:
-        // previously we had 4, let's add 1 more for "capstone flatten potential"
-        int featuresPerCell = 5; 
-
+        // Per-cell features we want (5): [encodedType, stackSz, ownership, adjacency, flattenPotential]
+        int featuresPerCell = 5;
         int totalCellFeatures = size * size * featuresPerCell;
 
-        // Let’s define 5 global features now:
-        // 1) occupancy ratio
-        // 2) scaled moveCount
-        // 3) largest group (player)
-        // 4) largest group (opponent)
-        // 5) difference (largestGroupPlayer - largestGroupOpponent) or ratio
-        int globalFeatures = 5;  
-
+        // 5 global features: [occupancy ratio, scaled moveCount, largestGroup(p), largestGroup(opp), difference]
+        int globalFeatures = 5;
         int totalFeatures = totalCellFeatures + globalFeatures;
+
         double[] inputs = new double[totalFeatures];
 
         int index = 0;
         int filledCells = 0;
         int totalCells = size * size;
 
-        // 1) For each cell, compute the local features
+        // Per-cell
         for (int r = 0; r < size; r++) {
             for (int c = 0; c < size; c++) {
                 PieceStack stack = board.getBoardStack(r, c);
                 if (stack.isEmpty()) {
-                    // pieceType => 0
-                    // stackSize => 0
-                    // ownership => 0
-                    // adjacency => 0
-                    // flattenPotential => 0
+                    // If empty, all 0
                     for (int k = 0; k < featuresPerCell; k++) {
                         inputs[index++] = 0.0;
                     }
@@ -67,51 +46,57 @@ public class BoardToInputsConverter {
                     filledCells++;
 
                     Piece top = stack.getTopPiece();
-                    double encodedType = encodePieceType(top, player);
-                    double stackSz = stack.size();
-                    double ownership = computeOwnershipRatio(stack, player);
-                    double adjacency = computeAdjacency(board, r, c, player);
+                    double encodedType = encodePieceType(top, player);  // => range [-3..+3]
+                    double stackSz = stack.size();                      // e.g. 1..5
+                    double ownership = computeOwnershipRatio(stack, player); // => [-1..+1]
+                    double adjacency = computeAdjacency(board, r, c, player); // => [0..4]
+                    double flattenPotential = computeFlattenPotential(board, r, c, player); // => [0..4]
 
-                    // New: if there's a capstone belonging to 'player' at (r,c),
-                    // compute how many opponent standing stones are adjacent
-                    double flattenPotential = computeFlattenPotential(board, r, c, player);
+                    // Scale them individually:
+                    double scaledType = encodedType / 3.0;      // => [-1..+1]
+                    double scaledStack = stackSz / 5.0;         // => [0..1]
+                    double scaledOwnership = ownership;         // => [-1..+1]
+                    double scaledAdj = adjacency / 4.0;         // => [0..1]
+                    double scaledFlatten = flattenPotential / 4.0; // => [0..1]
 
-                    inputs[index++] = encodedType;
-                    inputs[index++] = stackSz;
-                    inputs[index++] = ownership;
-                    inputs[index++] = adjacency;
-                    inputs[index++] = flattenPotential;
+                    // Now store them
+                    inputs[index++] = scaledType;
+                    inputs[index++] = scaledStack;
+                    inputs[index++] = scaledOwnership;
+                    inputs[index++] = scaledAdj;
+                    inputs[index++] = scaledFlatten;
                 }
             }
         }
 
-        // 2) occupancy ratio
-        inputs[index++] = (double) filledCells / totalCells;
+        // (A) occupancy ratio => 0..1
+        double occupancy = (double) filledCells / totalCells;
+        inputs[index++] = occupancy;
 
-        // 3) scaled move count
+        // (B) scaled move count => board.getMoveCount() / 100
         double moveCountScaled = board.getMoveCount() / 100.0;
+        if (moveCountScaled > 1.0) {
+            moveCountScaled = 1.0; // clamp
+        }
         inputs[index++] = moveCountScaled;
 
-        // 4) largest connected group for player
+        // (C) largest connected groups
         double myLargestGroup = computeLargestConnectedGroup(board, player);
-        // 5) largest connected group for opponent
-        Player opp = player.getOpponent();
-        double oppLargestGroup = computeLargestConnectedGroup(board, opp);
+        double oppLargestGroup = computeLargestConnectedGroup(board, player.getOpponent());
+        double scaledMyGroup = myLargestGroup / totalCells; // => [0..1]
+        double scaledOppGroup = oppLargestGroup / totalCells; // => [0..1]
 
-        inputs[index++] = myLargestGroup / totalCells;   // optional scale
-        inputs[index++] = oppLargestGroup / totalCells;  // optional scale
+        inputs[index++] = scaledMyGroup;
+        inputs[index++] = scaledOppGroup;
 
-        // 6) difference or ratio
-        double diff = (myLargestGroup - oppLargestGroup) / (double) totalCells;
-        inputs[index++] = diff; 
-        // Alternatively, you could do ratio => myLargestGroup / (oppLargestGroup + 1).
+        // (D) difference => scale by totalCells => range ~[-1..+1]
+        double diff = (myLargestGroup - oppLargestGroup) / totalCells;
+        inputs[index++] = diff;
 
         return inputs;
     }
 
-    // ---------------------------
-    //      PER-CELL FEATURES
-    // ---------------------------
+    // --------------------------- PER-CELL FEATURES ---------------------------
 
     private static double encodePieceType(Piece top, Player player) {
         boolean isMine = top.getOwner().equals(player);
@@ -138,12 +123,9 @@ public class BoardToInputsConverter {
         }
         int total = myCount + oppCount;
         if (total == 0) return 0.0;
-        return (double)(myCount - oppCount) / total; // [-1..1]
+        return (double) (myCount - oppCount) / total; // [-1..1]
     }
 
-    /**
-     * Up to 4 neighbors that have top piece of the same color => adjacency
-     */
     private static double computeAdjacency(Board board, int r, int c, Player player) {
         int size = board.getSize();
         int[][] offsets = {{-1,0}, {1,0}, {0,-1}, {0,1}};
@@ -170,10 +152,6 @@ public class BoardToInputsConverter {
         return sameNeighbors; // 0..4
     }
 
-    /**
-     * If there's a capstone for 'player' at (r,c), 
-     * check how many adjacent opponent standing stones are flattenable.
-     */
     private static double computeFlattenPotential(Board board, int r, int c, Player player) {
         PieceStack stack = board.getBoardStack(r, c);
         if (stack.isEmpty()) return 0.0;
@@ -194,7 +172,6 @@ public class BoardToInputsConverter {
                 PieceStack neighbor = board.getBoardStack(nr, nc);
                 if (!neighbor.isEmpty()) {
                     Piece neighborTop = neighbor.getTopPiece();
-                    // If neighbor is an opponent's standing stone => flatten possible
                     if (!neighborTop.getOwner().equals(player) 
                         && neighborTop.getPieceType() == Piece.PieceType.STANDING_STONE) {
                         flattenCount++;
@@ -202,18 +179,11 @@ public class BoardToInputsConverter {
                 }
             }
         }
-        return flattenCount; // 0..4 in most cases
+        return flattenCount; // 0..4
     }
 
-    // ---------------------------
-    //      GLOBAL FEATURES
-    // ---------------------------
+    // --------------------------- GLOBAL FEATURES ---------------------------
 
-    /**
-     * BFS-based approach to find the largest connected group of top pieces
-     * owned by the specified player. This is the same logic from your code,
-     * but let's keep it separate for player's perspective or opponent's perspective.
-     */
     private static double computeLargestConnectedGroup(Board board, Player player) {
         int size = board.getSize();
         boolean[][] visited = new boolean[size][size];
@@ -232,7 +202,7 @@ public class BoardToInputsConverter {
                 }
             }
         }
-        return maxGroupSize; 
+        return maxGroupSize;
     }
 
     private static int bfsComponent(Board board, int startR, int startC, boolean[][] visited, Player player) {
@@ -254,7 +224,7 @@ public class BoardToInputsConverter {
                 int nc = c + off[1];
                 if (nr >= 0 && nr < size && nc >= 0 && nc < size && !visited[nr][nc]) {
                     PieceStack neighborStack = board.getBoardStack(nr, nc);
-                    if (!neighborStack.isEmpty() 
+                    if (!neighborStack.isEmpty()
                         && neighborStack.getTopPiece().getOwner().equals(player)) {
                         visited[nr][nc] = true;
                         queue.add(new int[]{nr, nc});

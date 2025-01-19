@@ -4,7 +4,6 @@ import com.Tak.AI.evaluation.HeuristicEvaluator;
 import com.Tak.AI.players.MinimaxAgent;
 import com.Tak.Logic.exceptions.GameOverException;
 import com.Tak.Logic.exceptions.InvalidMoveException;
-import com.Tak.Logic.models.Board;
 import com.Tak.Logic.models.Player;
 import com.Tak.Logic.models.Player.Color;
 import com.Tak.Logic.models.TakGame;
@@ -14,8 +13,8 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Demonstrates self-play or AI vs. AI training using Minimax + NeuralNetwork,
- * with Early Stopping, reward shaping, etc.
+ * Demonstrates self-play or AI vs AI training using Minimax + NeuralNetwork.
+ * Updated for 2D targets: [scoreBLUE, scoreGREEN].
  */
 public class SelfPlayMinimaxTrainer {
 
@@ -26,10 +25,10 @@ public class SelfPlayMinimaxTrainer {
     private double bestValidationLoss;
     private int patienceCounter;
 
-    public SelfPlayMinimaxTrainer(NeuralNetworkTrainer nnTrainer, int numberOfGames, int validationFrequency, int patience) {
+    public SelfPlayMinimaxTrainer(NeuralNetworkTrainer nnTrainer, int numberOfGames, int valFrequency, int patience) {
         this.nnTrainer = nnTrainer;
         this.numberOfGames = numberOfGames;
-        this.validationFrequency = validationFrequency;
+        this.validationFrequency = valFrequency;
         this.patience = patience;
         this.bestValidationLoss = Double.MAX_VALUE;
         this.patienceCounter = 0;
@@ -73,7 +72,6 @@ public class SelfPlayMinimaxTrainer {
 
                 recorded.add(new StateRecord(state, current));
             } catch (InvalidMoveException | GameOverException e) {
-                // break on error
                 break;
             }
         }
@@ -85,26 +83,49 @@ public class SelfPlayMinimaxTrainer {
     private List<TrainingExample> convertToTrainingExamples(List<StateRecord> records, Player winner) {
         List<TrainingExample> exList = new ArrayList<>();
         for (StateRecord sr : records) {
-            double[] target = new double[1];
+            double[] target = new double[2];
             if (winner == null) {
-                target[0] = 0.0; 
-            } else if (sr.mover.equals(winner)) {
-                target[0] = 1.0; 
+                target[0] = 0.0;
+                target[1] = 0.0;
             } else {
-                target[0] = -1.0; 
+                boolean isMoverWinner = sr.mover.equals(winner);
+                if (sr.mover.getColor() == Color.BLUE) {
+                    if (isMoverWinner) {
+                        target[0] = 1.0;
+                        target[1] = -1.0;
+                    } else {
+                        target[0] = -1.0;
+                        target[1] = 1.0;
+                    }
+                } else {
+                    // mover is GREEN
+                    if (isMoverWinner) {
+                        target[0] = -1.0;
+                        target[1] = 1.0;
+                    } else {
+                        target[0] = 1.0;
+                        target[1] = -1.0;
+                    }
+                }
             }
-            // example: add a small "shaping" term from board features
-            target[0] += computeRewardShaping(sr.boardFeatures);
+
+            // small shaping
+            double shaping = computeRewardShaping(sr.boardFeatures);
+            if (sr.mover.getColor() == Color.BLUE) {
+                target[0] += shaping;
+            } else {
+                target[1] += shaping;
+            }
+
             exList.add(new TrainingExample(sr.boardFeatures, target));
         }
         return exList;
     }
 
     private double computeRewardShaping(double[] features) {
-        // example: let's say the second-to-last feature is occupancy ratio
         int idx = features.length - 2;
         double ratio = features[idx];
-        return 0.1 * ratio; // scale
+        return 0.1 * ratio;
     }
 
     private double trainFromGameData(List<TrainingExample> examples) {
@@ -112,10 +133,10 @@ public class SelfPlayMinimaxTrainer {
     }
 
     private double validateNetwork() {
-        int valGames = 5;
+        int valGames = 3;
         double totalLoss = 0.0;
         for (int i = 0; i < valGames; i++) {
-            TakGame game = createValidationTakGame();
+            TakGame game = createTrainingTakGame(5); 
             List<TrainingExample> valStates = new ArrayList<>();
 
             while (!game.isGameEnded()) {
@@ -124,7 +145,7 @@ public class SelfPlayMinimaxTrainer {
                     double[] st = BoardToInputsConverter.convert(game.getBoard(), current);
                     current.makeMove(game);
                     if (current.getColor() == Color.BLUE) {
-                        valStates.add(new TrainingExample(st, new double[]{0.0}));
+                        valStates.add(new TrainingExample(st, new double[]{0.0, 0.0}));
                     }
                 } catch (Exception e) {
                     break;
@@ -133,19 +154,26 @@ public class SelfPlayMinimaxTrainer {
 
             Player winner = game.getWinner();
             for (TrainingExample ex : valStates) {
+                double[] target = new double[2];
                 if (winner == null) {
-                    ex.setTarget(new double[]{0.0});
+                    target[0] = 0.0; 
+                    target[1] = 0.0;
                 } else if (winner.getColor() == Color.BLUE) {
-                    ex.setTarget(new double[]{1.0});
+                    target[0] = 1.0;
+                    target[1] = -1.0;
                 } else {
-                    ex.setTarget(new double[]{-1.0});
+                    target[0] = -1.0;
+                    target[1] = 1.0;
                 }
+                ex.setTarget(target);
+
                 double[] out = nnTrainer.getNetwork().forward(ex.getInput());
                 double loss = 0.0;
-                for (int k = 0; k < ex.getTarget().length; k++) {
+                for (int k = 0; k < 2; k++) {
                     loss += Math.pow(ex.getTarget()[k] - out[k], 2);
                 }
-                totalLoss += (loss / ex.getTarget().length);
+                loss /= 2.0;
+                totalLoss += loss;
             }
         }
         return totalLoss / valGames;
@@ -163,14 +191,10 @@ public class SelfPlayMinimaxTrainer {
         return new TakGame(boardSize, Arrays.asList(nnPlayer, heuristic));
     }
 
-    private TakGame createValidationTakGame() {
-        // same as createTrainingTakGame(5), or you can define differently
-        return createTrainingTakGame(5);
-    }
-
     private static class StateRecord {
         double[] boardFeatures;
         Player mover;
+
         StateRecord(double[] feats, Player m) {
             boardFeatures = feats;
             mover = m;

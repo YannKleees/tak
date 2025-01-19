@@ -5,26 +5,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A dedicated manager for handling .txt file operations related to Neural Networks.
- * It adheres to the SOLID principles by encapsulating all file-related functionalities.
- *
- * Responsibilities:
- * - Saving neural network configurations and weights to .txt files.
- * - Loading neural network configurations and weights from .txt files.
- * - Managing metadata such as the number of games trained and performance outputs.
+ * Handles saving/loading a NeuralNetworkTrainer to/from a .txt file.
+ * 
+ * Only recommended for smaller networks. For bigger networks, consider a binary approach.
  */
 public class NeuralNetworkTxtManager {
 
-    /**
-     * Saves the neural network along with metadata to a specified .txt file.
-     *
-     * @param trainer        The NeuralNetworkTrainer instance to save.
-     * @param filePath       The path to the .txt file.
-     * @param numberOfGames  The number of games (or states) trained on.
-     * @param lastOutput     The last output or performance metric of the network.
-     * @throws IOException If an I/O error occurs during saving.
-     */
-    public static void saveTrainer(NeuralNetworkTrainer trainer, String filePath, int numberOfGames, double lastOutput) throws IOException {
+    public static void saveTrainer(NeuralNetworkTrainer trainer,
+                                   String filePath,
+                                   int numberOfGames,
+                                   double lastOutput) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
             // [Configuration]
             NeuralNetworkConfig cfg = trainer.getNetwork().getConfig();
@@ -44,11 +34,10 @@ public class NeuralNetworkTxtManager {
             writer.newLine();
             writer.newLine();
 
-            // [WeightsLayerX] and [BiasLayerX]
+            // [Weights] & [Biases]
             double[][][] weights = trainer.getNetwork().getWeights();
             double[][] biases = trainer.getNetwork().getBiases();
             for (int layerIndex = 0; layerIndex < weights.length; layerIndex++) {
-                // Weights
                 writer.write("[WeightsLayer" + layerIndex + "]");
                 writer.newLine();
                 for (double[] row : weights[layerIndex]) {
@@ -57,7 +46,6 @@ public class NeuralNetworkTxtManager {
                 }
                 writer.newLine();
 
-                // Biases
                 writer.write("[BiasLayer" + layerIndex + "]");
                 writer.newLine();
                 writer.write(joinArray(biases[layerIndex], " "));
@@ -75,21 +63,13 @@ public class NeuralNetworkTxtManager {
         }
     }
 
-    /**
-     * Loads the neural network and metadata from a specified .txt file.
-     *
-     * @param filePath The path to the .txt file.
-     * @return A NeuralNetworkLoadData instance containing the network and metadata.
-     * @throws IOException If an I/O error occurs during loading.
-     */
     public static NeuralNetworkLoadData loadTrainer(String filePath) throws IOException {
-        NeuralNetworkConfig config = null;
+        NeuralNetworkConfig config;
         double[][][] weights = null;
         double[][] biases = null;
         int numberOfGamesTrained = 0;
         double lastOutput = 0.0;
 
-        // Initialize variables to store configuration
         int inputSize = 0;
         int numHiddenLayers = 0;
         List<Integer> hiddenSizes = new ArrayList<>();
@@ -97,274 +77,159 @@ public class NeuralNetworkTxtManager {
         ActivationFunction activationFunction = ActivationFunction.TANH;
 
         int currentLayerIndex = -1;
-        List<Double> currentLayerBiases = new ArrayList<>();
         List<double[]> currentLayerWeights = new ArrayList<>();
+        List<Double> currentLayerBiases = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
-
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
                 if (line.isEmpty()) continue;
 
                 if (line.startsWith("[Configuration]")) {
-                    System.out.println("Parsing [Configuration] section...");
-                    // Read config lines until a blank or new bracket section
-                    while ((line = reader.readLine()) != null) {
+                    // parse config lines
+                    while ((line = reader.readLine()) != null && !line.startsWith("[")) {
+                        if (line == null) break;
                         line = line.trim();
-                        if (line.isEmpty() || line.startsWith("[")) break;
+                        if (line.isEmpty()) continue;
 
                         String[] parts = line.split("=");
-                        if (parts.length != 2) {
-                            System.out.println("Invalid config line: " + line);
-                            continue;
-                        }
-                        String key = parts[0];
-                        String value = parts[1];
+                        if (parts.length != 2) continue;
 
+                        String key = parts[0];
+                        String val = parts[1];
                         switch (key) {
                             case "inputSize":
-                                inputSize = Integer.parseInt(value);
-                                System.out.println("inputSize: " + inputSize);
+                                inputSize = Integer.parseInt(val);
                                 break;
                             case "numHiddenLayers":
-                                numHiddenLayers = Integer.parseInt(value);
-                                System.out.println("numHiddenLayers: " + numHiddenLayers);
+                                numHiddenLayers = Integer.parseInt(val);
                                 break;
                             case "outputSize":
-                                outputSize = Integer.parseInt(value);
-                                System.out.println("outputSize: " + outputSize);
+                                outputSize = Integer.parseInt(val);
                                 break;
                             case "activationFunction":
-                                activationFunction = ActivationFunction.valueOf(value);
-                                System.out.println("activationFunction: " + activationFunction);
+                                activationFunction = ActivationFunction.valueOf(val);
                                 break;
                             default:
                                 if (key.startsWith("hiddenSize")) {
-                                    hiddenSizes.add(Integer.parseInt(value));
-                                    System.out.println(key + ": " + value);
+                                    hiddenSizes.add(Integer.parseInt(val));
                                 }
                                 break;
                         }
                     }
-                    // Initialize arrays
-                    int totalLayers = numHiddenLayers + 1; // hidden + output
+
+                    int totalLayers = numHiddenLayers + 1;
                     weights = new double[totalLayers][][];
                     biases = new double[totalLayers][];
-                    System.out.println("Initialized weights and biases arrays for " + totalLayers + " layers.");
                 }
 
-                else if (line.startsWith("[WeightsLayer")) {
-                    // Assign weights for the previous layer if applicable
-                    if (currentLayerIndex != -1 && !currentLayerWeights.isEmpty()) {
-                        weights[currentLayerIndex] = currentLayerWeights.toArray(new double[0][]);
-                        System.out.println("Loaded Weights for Layer " + currentLayerIndex + " with " + weights[currentLayerIndex].length + " rows.");
-                        currentLayerWeights = new ArrayList<>();
-                    }
+                if (line == null) break;
 
-                    // Extract layer index
+                if (line.startsWith("[WeightsLayer")) {
+                    if (currentLayerIndex != -1 && !currentLayerWeights.isEmpty()) {
+                        weights[currentLayerIndex] =
+                            currentLayerWeights.toArray(new double[0][]);
+                        currentLayerWeights.clear();
+                    }
                     String idxStr = line.substring("[WeightsLayer".length(), line.indexOf("]"));
                     currentLayerIndex = Integer.parseInt(idxStr);
-                    currentLayerWeights = new ArrayList<>();
-                    System.out.println("Parsing [WeightsLayer" + currentLayerIndex + "]...");
                 }
-
                 else if (line.startsWith("[BiasLayer")) {
-                    // Assign weights for the current layer before parsing biases
                     if (currentLayerIndex != -1 && !currentLayerWeights.isEmpty()) {
-                        weights[currentLayerIndex] = currentLayerWeights.toArray(new double[0][]);
-                        System.out.println("Loaded Weights for Layer " + currentLayerIndex + " with " + weights[currentLayerIndex].length + " rows.");
-                        currentLayerWeights = new ArrayList<>();
+                        weights[currentLayerIndex] =
+                            currentLayerWeights.toArray(new double[0][]);
+                        currentLayerWeights.clear();
                     }
-
-                    // Extract bias layer index
                     String idxStr = line.substring("[BiasLayer".length(), line.indexOf("]"));
                     currentLayerIndex = Integer.parseInt(idxStr);
-                    currentLayerBiases = new ArrayList<>();
-                    System.out.println("Parsing [BiasLayer" + currentLayerIndex + "]...");
 
-                    // Read the next non-bracketed line containing biases
-                    while ((line = reader.readLine()) != null) {
+                    // read the next line of biases
+                    line = reader.readLine();
+                    if (line != null) {
                         line = line.trim();
-                        if (line.isEmpty() || line.startsWith("[")) {
-                            break;
-                        }
                         String[] tokens = line.split(" ");
+                        currentLayerBiases.clear();
                         for (String tok : tokens) {
-                            try {
-                                currentLayerBiases.add(Double.parseDouble(tok));
-                            } catch (NumberFormatException e) {
-                                System.out.println("Invalid bias value: " + tok);
-                                currentLayerBiases.add(0.0); // or handle appropriately
-                            }
+                            currentLayerBiases.add(Double.parseDouble(tok));
                         }
-                        // Assign the biases to biases[layerIndex]
                         biases[currentLayerIndex] = currentLayerBiases.stream().mapToDouble(Double::doubleValue).toArray();
-                        System.out.println("Loaded Biases for Layer " + currentLayerIndex + " with " + biases[currentLayerIndex].length + " neurons.");
-                        break; // Exit after reading biases
                     }
                 }
-
                 else if (line.startsWith("[Metadata]")) {
-                    // Assign weights for the last layer if applicable
                     if (currentLayerIndex != -1 && !currentLayerWeights.isEmpty()) {
-                        weights[currentLayerIndex] = currentLayerWeights.toArray(new double[0][]);
-                        System.out.println("Loaded Weights for Layer " + currentLayerIndex + " with " + weights[currentLayerIndex].length + " rows.");
-                        currentLayerWeights = new ArrayList<>();
+                        weights[currentLayerIndex] =
+                            currentLayerWeights.toArray(new double[0][]);
+                        currentLayerWeights.clear();
                     }
-
-                    // Now read metadata lines
-                    System.out.println("Parsing [Metadata] section...");
-                    while ((line = reader.readLine()) != null) {
+                    // read metadata lines
+                    while ((line = reader.readLine()) != null && !line.startsWith("[")) {
                         line = line.trim();
-                        if (line.isEmpty() || line.startsWith("[")) break;
+                        if (line.isEmpty()) continue;
                         String[] parts = line.split("=");
-                        if (parts.length != 2) {
-                            System.out.println("Invalid metadata line: " + line);
-                            continue;
-                        }
-                        String key = parts[0];
-                        String value = parts[1];
-                        switch (key) {
-                            case "numberOfGamesTrained":
-                                numberOfGamesTrained = Integer.parseInt(value);
-                                System.out.println("numberOfGamesTrained: " + numberOfGamesTrained);
-                                break;
-                            case "lastOutput":
-                                lastOutput = Double.parseDouble(value);
-                                System.out.println("lastOutput: " + lastOutput);
-                                break;
-                            default:
-                                System.out.println("Unknown metadata key: " + key);
-                                break;
+                        if (parts.length == 2) {
+                            String k = parts[0];
+                            String v = parts[1];
+                            if (k.equals("numberOfGamesTrained")) {
+                                numberOfGamesTrained = Integer.parseInt(v);
+                            } else if (k.equals("lastOutput")) {
+                                lastOutput = Double.parseDouble(v);
+                            }
                         }
                     }
-                    // End reading
+                    // done reading
                     break;
                 }
-
                 else {
-                    // Parse weights or biases
-                    if (currentLayerIndex >= 0 && weights != null && biases != null) {
-                        if (weights[currentLayerIndex] == null) {
-                            // Reading weight rows
-                            String[] tokens = line.split(" ");
-                            double[] row = new double[tokens.length];
-                            for (int i = 0; i < tokens.length; i++) {
-                                try {
-                                    row[i] = Double.parseDouble(tokens[i]);
-                                } catch (NumberFormatException e) {
-                                    System.out.println("Invalid weight value: " + tokens[i]);
-                                    row[i] = 0.0; // or handle appropriately
-                                }
-                            }
-                            currentLayerWeights.add(row);
-                        }
-                        // No need to handle biases here as they are parsed in [BiasLayerX] section
+                    // parse weight row
+                    String[] tokens = line.split(" ");
+                    double[] row = new double[tokens.length];
+                    for (int i = 0; i < tokens.length; i++) {
+                        row[i] = Double.parseDouble(tokens[i]);
                     }
+                    currentLayerWeights.add(row);
                 }
-            }
-
-            // Assign the last layer's weights if not already assigned
-            if (currentLayerIndex != -1 && !currentLayerWeights.isEmpty() && weights[currentLayerIndex] == null) {
-                weights[currentLayerIndex] = currentLayerWeights.toArray(new double[0][]);
-                System.out.println("Loaded Weights for Layer " + currentLayerIndex + " with " + weights[currentLayerIndex].length + " rows.");
-            }
-
-            // Build the NeuralNetworkConfig
-            NeuralNetworkConfig configFinal = new NeuralNetworkConfig(
-                    inputSize,
-                    hiddenSizes.stream().mapToInt(i -> i).toArray(),
-                    outputSize,
-                    activationFunction
-            );
-
-            // Build the neural net
-            NeuralNetwork net = new NeuralNetwork(configFinal);
-            net.setWeights(weights);
-            net.setBiases(biases);
-
-            // Validate dimensions
-            validateNetworkDimensions(net);
-
-            System.out.println("Neural network successfully loaded with configuration: ");
-            System.out.println("Input Size: " + inputSize);
-            System.out.println("Hidden Layers: " + hiddenSizes);
-            System.out.println("Output Size: " + outputSize);
-            System.out.println("Activation Function: " + activationFunction);
-
-            return new NeuralNetworkLoadData(net, numberOfGamesTrained, lastOutput);
             }
         }
 
-        /**
-         * Validates that the network's weights and biases match the configuration.
-         *
-         * @param net The NeuralNetwork instance to validate.
-         * @throws IOException If a mismatch is detected.
-         */
-        private static void validateNetworkDimensions(NeuralNetwork net) throws IOException {
-            NeuralNetworkConfig cfg = net.getConfig();
-            double[][][] weights = net.getWeights();
-            double[][] biases = net.getBiases();
-
-            int numLayers = cfg.getHiddenLayerSizes().length + 1; // hidden + output
-
-            if (weights.length != numLayers || biases.length != numLayers) {
-                throw new IOException("Mismatch in the number of layers. Expected " + numLayers + " layers.");
-            }
-
-            // Check each layer's dimensions
-            for (int layerIndex = 0; layerIndex < numLayers; layerIndex++) {
-                int expectedInputSize = (layerIndex == 0) ? cfg.getInputSize() : cfg.getHiddenLayerSizes()[layerIndex - 1];
-                int expectedOutputSize = (layerIndex < cfg.getHiddenLayerSizes().length) ? cfg.getHiddenLayerSizes()[layerIndex] : cfg.getOutputSize();
-
-                if (weights[layerIndex].length != expectedInputSize) {
-                    throw new IOException("Layer " + layerIndex + " weights have incorrect input size. Expected: " + expectedInputSize + ", Found: " + weights[layerIndex].length);
-                }
-
-                for (int i = 0; i < weights[layerIndex].length; i++) {
-                    if (weights[layerIndex][i].length != expectedOutputSize) {
-                        throw new IOException("Layer " + layerIndex + " weights at row " + i + " have incorrect output size. Expected: " + expectedOutputSize + ", Found: " + weights[layerIndex][i].length);
-                    }
-                }
-
-                if (biases[layerIndex] == null) {
-                    throw new IOException("Biases for Layer " + layerIndex + " are null.");
-                }
-
-                if (biases[layerIndex].length != expectedOutputSize) {
-                    throw new IOException("Layer " + layerIndex + " biases have incorrect size. Expected: " + expectedOutputSize + ", Found: " + biases[layerIndex].length);
-                }
-
-                System.out.println("Layer " + layerIndex + " validated successfully.");
-            }
+        // Assign last layer weights if needed
+        if (currentLayerIndex != -1 && !currentLayerWeights.isEmpty()) {
+            weights[currentLayerIndex] = currentLayerWeights.toArray(new double[0][]);
         }
 
-        /**
-         * Converts a double[] to a space-separated string.
-         */
-        private static String joinArray(double[] array, String delimiter) {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < array.length; i++) {
-                sb.append(array[i]);
-                if (i < array.length - 1) sb.append(delimiter);
-            }
-            return sb.toString();
+        NeuralNetworkConfig cfg = new NeuralNetworkConfig(
+            inputSize,
+            hiddenSizes.stream().mapToInt(i -> i).toArray(),
+            outputSize,
+            activationFunction
+        );
+        NeuralNetwork net = new NeuralNetwork(cfg);
+        net.setWeights(weights);
+        net.setBiases(biases);
+
+        // Validate dimensions if needed
+
+        return new NeuralNetworkLoadData(net, numberOfGamesTrained, lastOutput);
+    }
+
+    private static String joinArray(double[] array, String delimiter) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < array.length; i++) {
+            sb.append(array[i]);
+            if (i < array.length - 1) sb.append(delimiter);
         }
+        return sb.toString();
+    }
 
-        /**
-         * Data structure for loading the neural network and metadata.
-         */
-        public static class NeuralNetworkLoadData {
-            public NeuralNetwork network;
-            public int numberOfGamesTrained;
-            public double lastOutput;
+    public static class NeuralNetworkLoadData {
+        public NeuralNetwork network;
+        public int numberOfGamesTrained;
+        public double lastOutput;
 
-            public NeuralNetworkLoadData(NeuralNetwork network, int numberOfGamesTrained, double lastOutput) {
-                this.network = network;
-                this.numberOfGamesTrained = numberOfGamesTrained;
-                this.lastOutput = lastOutput;
-            }
+        public NeuralNetworkLoadData(NeuralNetwork network, int numberOfGamesTrained, double lastOutput) {
+            this.network = network;
+            this.numberOfGamesTrained = numberOfGamesTrained;
+            this.lastOutput = lastOutput;
         }
     }
+}

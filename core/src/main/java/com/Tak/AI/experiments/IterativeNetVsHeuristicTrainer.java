@@ -15,6 +15,9 @@ import com.Tak.Logic.models.Player;
 import com.Tak.Logic.models.Player.Color;
 import com.Tak.Logic.models.TakGame;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,12 +26,14 @@ import java.util.Random;
 /**
  * An iterative trainer that repeatedly runs multiple "rounds" of Net-vs-Heuristic training.
  * In each round:
- *   1) We run N training games (the net is always BLUE).
- *   2) We update the network using the data from those games.
- *   3) Optionally, we measure or print some progress (like final boards).
+ *   1) Run N training games (the net is always BLUE).
+ *   2) Collect training data from those games (both players).
+ *   3) Train the network for a few epochs.
+ *   4) Log training metrics.
  *
- * Modification: we add randomization to the first few moves to avoid
- * repeating the same openings. This is done in 'playOneGameCollectStates()'.
+ * Changes:
+ *   - randomOpeningPlies set to 3 (instead of 2).
+ *   - multiple training epochs on the game data to help the net learn.
  */
 public class IterativeNetVsHeuristicTrainer {
 
@@ -37,10 +42,14 @@ public class IterativeNetVsHeuristicTrainer {
     private final int gamesPerRound;
     private final int totalRounds;
     private final boolean printFinalBoard;  // If true, we'll print the final board each game
+    private final String summaryLogPath = "training_summary.csv"; // Path to save training summaries
 
-    // Define how many plies to randomize (2 plies = each side has 1 move).
-    private final int randomOpeningPlies = 2;
+    // Increase how many plies to randomize => 3 means each player gets 3 random moves
+    private final int randomOpeningPlies = 3;
     private final Random rnd = new Random();
+
+    // Let's do multiple epochs per round to ensure we fully train on the new data
+    private final int epochsPerRound = 3;
 
     /**
      * @param trainer         The network trainer to be improved repeatedly.
@@ -59,6 +68,22 @@ public class IterativeNetVsHeuristicTrainer {
         this.gamesPerRound = gamesPerRound;
         this.totalRounds = totalRounds;
         this.printFinalBoard = printFinalBoard;
+
+        // Initialize the summary log file with headers
+        initializeSummaryLog();
+    }
+
+    /**
+     * Initialize the summary log with CSV headers.
+     */
+    private void initializeSummaryLog() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(summaryLogPath))) {
+            writer.write("Round,AverageLoss");
+            writer.newLine();
+            System.out.println("Initialized training summary log at " + summaryLogPath);
+        } catch (IOException e) {
+            System.out.println("Failed to initialize summary log: " + e.getMessage());
+        }
     }
 
     /**
@@ -76,86 +101,82 @@ public class IterativeNetVsHeuristicTrainer {
 
             // Display average loss for the round
             System.out.printf("Finished Round %d. AvgLoss=%.4f\n", round, avgLoss);
-            // Optionally, additional metrics or evaluations can be added here
+
+            // Log the round summary
+            logRoundSummary(round, avgLoss);
         }
 
         System.out.println("\n=== Iterative Training Complete ===");
     }
 
     /**
-     * Runs 'gamesPerRound' training games vs. heuristic, updating the net after each game.
+     * Runs 'gamesPerRound' training games vs. heuristic, accumulating the game data,
+     * then trains the network multiple epochs on that dataset.
      *
      * @return the average training loss across all games in this round
      */
     private double runSingleRound() {
         double totalLoss = 0.0;
+        List<SelfPlayMinimaxTrainer.TrainingExample> allTrainingExamples = new ArrayList<>();
 
+        // Play games, collect data
         for (int i = 1; i <= gamesPerRound; i++) {
             System.out.println("\n--- Game " + i + " / " + gamesPerRound + " in this round ---");
-
-            // 1) Play one game with the net as BLUE and heuristic as GREEN
             List<TrainingGameRecord> gameData = playOneGameCollectStates();
-
-            // 2) Convert to training examples and train once per game
             List<SelfPlayMinimaxTrainer.TrainingExample> trainingExamples = labelData(gameData);
-
-            // 3) Train the network with the collected training examples
-            double loss = trainer.trainAll(trainingExamples);
-            totalLoss += loss;
-
-            // Log every 5 games (optional) to monitor progress
-            if (i % 5 == 0) {
-                System.out.printf("  Game %d/%d Loss=%.4f\n", i, gamesPerRound, loss);
-            }
+            allTrainingExamples.addAll(trainingExamples);
         }
 
-        return totalLoss / gamesPerRound;
+        // Now we train multiple epochs on all the data from this round
+        if (allTrainingExamples.isEmpty()) {
+            System.out.println("  No training data collected this round. Skipping training.");
+            return 0.0;
+        }
+
+        double totalEpochLoss = 0.0;
+        for (int epoch = 1; epoch <= epochsPerRound; epoch++) {
+            double epochLoss = trainer.trainAll(allTrainingExamples);
+            totalEpochLoss += epochLoss;
+            System.out.printf("  Epoch %d/%d Loss=%.4f\n", epoch, epochsPerRound, epochLoss);
+        }
+
+        totalLoss = totalEpochLoss / epochsPerRound;
+        return totalLoss;
     }
 
     /**
      * Plays a single game (BLUE=net, GREEN=heuristic),
-     * collecting board states for *BLUE moves only* so we can label them post-game.
+     * collecting board states for *both players* so we can label them post-game.
      *
-     * NOTE: We add randomization to the first few plies to avoid repeating the same openings.
-     *
-     * @return a list of (state, currentPlayer, finalTakGame) so we can label them later.
+     * We add randomization to the first few plies to avoid repeating the same openings.
      */
     private List<TrainingGameRecord> playOneGameCollectStates() {
-        // Create the net-based player (BLUE)
         Player netPlayer = new MinimaxAgent(
             Color.BLUE, 21, 21, 1, 3, false,
             new NeuralNetworkEvaluator(trainer.getNetwork())
         );
-        // Create the heuristic-based player (GREEN)
         Player heuristicPlayer = new MinimaxAgent(
-            Color.GREEN, 21, 21, 1, 3, false,
+            Color.GREEN, 21, 21, 1, 1, false,
             new HeuristicEvaluator()
         );
 
-        // Build the game with these two players
         TakGame game = new TakGame(boardSize, Arrays.asList(netPlayer, heuristicPlayer));
         List<TrainingGameRecord> records = new ArrayList<>();
 
         while (!game.isGameEnded()) {
             Player current = game.getCurrentPlayer();
-            int moveCount = game.getMoveCount(); // how many moves total so far
+            int moveCount = game.getMoveCount();
 
             if (moveCount < randomOpeningPlies * 2) {
-                // For the first few plies, pick a random move from all possible actions
-
-                // 1) Generate all action strings for 'current'
+                // random opening moves for the first 'randomOpeningPlies' plies each
                 List<String> actionStrings =
                     ActionGenerator.generatePossibleActions(game.getBoard(), current, moveCount);
-
-                // 2) Parse them into actual 'Action' objects
                 List<Action> allActions = parseActionStrings(actionStrings, current);
+
                 if (!allActions.isEmpty()) {
-                    // Pick one at random
                     Action randomAction = allActions.get(rnd.nextInt(allActions.size()));
                     try {
-                        // Execute it on the board
                         randomAction.execute(game.getBoard());
-                        // Increment move count, check end, switch player
                         game.incrementMoveCount();
                         game.checkWinConditions();
                         game.switchPlayer();
@@ -167,17 +188,11 @@ public class IterativeNetVsHeuristicTrainer {
                     System.out.println("No moves found for random opening. Breaking.");
                     break;
                 }
-
             } else {
-                // Once we've passed the random opening plies, use normal approach
-                // If current is the net player, we record the state first
-                if (current == netPlayer) {
-                    double[] state = BoardToInputsConverter.convert(game.getBoard(), netPlayer);
-                    records.add(new TrainingGameRecord(state, netPlayer, game));
-                }
+                // Store the state from the current player's perspective
+                double[] state = BoardToInputsConverter.convert(game.getBoard(), current);
+                records.add(new TrainingGameRecord(state, current, game));
 
-                // Let the player's normal makeMove(...) happen
-                // e.g. MinimaxAgent calls minimax
                 try {
                     current.makeMove(game);
                 } catch (InvalidMoveException | GameOverException e) {
@@ -187,7 +202,7 @@ public class IterativeNetVsHeuristicTrainer {
             }
         }
 
-        // Optionally print the final board state
+        // Optionally print final board
         if (printFinalBoard) {
             System.out.println("  Final Board State:");
             game.getBoard().printBoard();
@@ -207,7 +222,7 @@ public class IterativeNetVsHeuristicTrainer {
                 Action action = Action.fromString(actionStr, player.getColor());
                 actions.add(action);
             } catch (InvalidMoveException e) {
-                // ignore invalid
+                // Ignore invalid actions
             }
         }
         return actions;
@@ -217,8 +232,7 @@ public class IterativeNetVsHeuristicTrainer {
      * Takes the records from a single game and sets label = +1 if BLUE eventually won,
      * -1 if BLUE lost, 0 if tie. Then returns them as a standard list of training examples.
      *
-     * @param gameRecords The list of training records collected during the game.
-     * @return A list of labeled training examples for the ANN.
+     * We do it for each record's mover perspective.
      */
     private List<SelfPlayMinimaxTrainer.TrainingExample> labelData(List<TrainingGameRecord> gameRecords) {
         if (gameRecords.isEmpty()) {
@@ -231,18 +245,59 @@ public class IterativeNetVsHeuristicTrainer {
 
         List<SelfPlayMinimaxTrainer.TrainingExample> output = new ArrayList<>();
         for (TrainingGameRecord record : gameRecords) {
-            double[] target = new double[1];
+            double[] target = new double[2];
             if (winner == null) {
-                target[0] = 0.0; // tie
-            } else if (winner.getColor() == Color.BLUE) {
-                target[0] = 1.0; // net (BLUE) won
+                // Tie => 0 for both
+                target[0] = 0.0;
+                target[1] = 0.0;
             } else {
-                target[0] = -1.0; // net lost
+                boolean isMoverWinner = record.mover.equals(winner);
+                if (record.mover.getColor() == Color.BLUE) {
+                    // If mover is BLUE
+                    if (isMoverWinner) {
+                        target[0] = 1.0;   // BLUE's perspective
+                        target[1] = -1.0;  // GREEN's perspective
+                    } else {
+                        target[0] = -1.0;
+                        target[1] = 1.0;
+                    }
+                } else {
+                    // Mover is GREEN
+                    if (isMoverWinner) {
+                        target[0] = -1.0; 
+                        target[1] = 1.0;
+                    } else {
+                        target[0] = 1.0;
+                        target[1] = -1.0;
+                    }
+                }
             }
-            // (Optional) add a small shaping term if you like
+
+            // (Optional) add a small shaping term
+            double shaping = computeRewardShaping(record.boardState);
+
+            if (record.mover.getColor() == Color.BLUE) {
+                target[0] += shaping; // slightly shift BLUE's perspective
+            } else {
+                target[1] += shaping; // shift GREEN's perspective
+            }
+
             output.add(new SelfPlayMinimaxTrainer.TrainingExample(record.boardState, target));
         }
         return output;
+    }
+
+    /**
+     * Compute reward shaping based on board features.
+     * Example: let's say the second-to-last feature is occupancy ratio
+     *
+     * @param features The feature vector of the board state.
+     * @return A small shaping reward (0.1 * ratio).
+     */
+    private double computeRewardShaping(double[] features) {
+        int idx = features.length - 2;
+        double ratio = features[idx];
+        return 0.1 * ratio; // a small shaped reward
     }
 
     /**
@@ -258,6 +313,22 @@ public class IterativeNetVsHeuristicTrainer {
             this.boardState = state;
             this.mover = mover;
             this.takGame = g;
+        }
+    }
+
+    /**
+     * Log the summary of a training round to the CSV file.
+     *
+     * @param round    The current round number.
+     * @param avgLoss  The average loss for this round.
+     */
+    private void logRoundSummary(int round, double avgLoss) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(summaryLogPath, true))) {
+            writer.write(round + "," + avgLoss);
+            writer.newLine();
+            System.out.println("Logged Round " + round + " Summary.");
+        } catch (IOException e) {
+            System.out.println("Failed to log training summary: " + e.getMessage());
         }
     }
 }

@@ -1,17 +1,12 @@
 package com.Tak.AI.neuralnet;
 
 /**
- * <p>Handles the forward pass in a multi-layer feedforward neural network.</p>
+ * Handles the forward pass in a multi-layer feedforward neural network.
  */
 public class ForwardPropagator {
 
-    /**
-     * <p>Holds the outputs of each layer for backprop's benefit.</p>
-     * layerOutputs[0] => output of layer 0 (first hidden)
-     * layerOutputs[last] => final output
-     */
     public static class ForwardCache {
-        public double[][] layerOutputs; 
+        public double[][] layerOutputs;
     }
 
     public static double[] forward(double[] inputs,
@@ -78,15 +73,10 @@ public class ForwardPropagator {
                 return 1.0 / (1.0 + Math.exp(-value));
             case TANH:
                 return Math.tanh(value);
+            case RELU:
+                return Math.max(0, value);
             default:
                 return value;
         }
-    }
-
-    public static ForwardCache forwardWithIntermediate(double[] inputs,
-                                                       double[][][] weights,
-                                                       double[][] biases,
-                                                       ActivationFunction activationFunction) {
-        return forwardWithCache(inputs, weights, biases, activationFunction);
     }
 }

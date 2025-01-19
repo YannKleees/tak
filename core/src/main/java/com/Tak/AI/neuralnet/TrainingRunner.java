@@ -1,24 +1,31 @@
 package com.Tak.AI.neuralnet;
 
+/**
+ * Example main class that runs self-play training (or you can adapt it to iterative training).
+ */
 public class TrainingRunner {
 
     public static void main(String[] args) {
-        // 1) Create default trainer (hidden=20) now with RELU
+        // 1) Create default trainer: hidden=64, TANH, LR=0.001
         NeuralNetworkTrainer nnTrainer = NeuralNetworkInitializer.initializeTrainer();
-        System.out.println("Neural network initialized.");
+        System.out.println("Neural network initialized with TANH final layer, 64 hidden units.");
 
-        // 2) Customize training hyperparameters
+        // 2) Customize
         nnTrainer.setShuffleData(true);
         nnTrainer.setMiniBatchSize(32);
         nnTrainer.setLearningRateDecay(0.99);
         nnTrainer.setRegularizationRate(1e-4);
 
-        // 3) Set the number of training games, validation frequency, and patience
-        int numberOfGames = 10; 
-        int validationFrequency = 2;
-        int patience = 5;  
+        // 3) Decide whether you want iterative training vs. heuristic or self-play:
+        //    For iterative training:
+        //       IterativeNetVsHeuristicTrainer it = new IterativeNetVsHeuristicTrainer(nnTrainer, 5, 10, 3, false);
+        //       it.runIterativeTraining();
+        //
+        //    For self-play:
+        int numberOfGames = 20; 
+        int validationFrequency = 5;
+        int patience = 3;  
 
-        // 4) Create the self-play trainer
         SelfPlayMinimaxTrainer trainer = new SelfPlayMinimaxTrainer(
             nnTrainer,
             numberOfGames,
@@ -27,15 +34,15 @@ public class TrainingRunner {
         );
         System.out.println("Self-play trainer initialized.");
 
-        // Start training
+        // 4) Start training
         trainer.runTraining();
-        System.out.println("Training completed");
+        System.out.println("Training completed!");
 
-        // Save the trained network with metadata
-        String networkName = "RELU_Net"; 
-        String savePath = "networks/" + networkName + ".txt"; 
+        // 5) Save the network
+        String networkName = "TANH_Net";
+        String savePath = "networks/" + networkName + ".txt";
         nnTrainer.saveNetwork(savePath);
 
-        System.out.println("Training completed and network saved to " + savePath);
+        System.out.println("Network saved to " + savePath);
     }
 }

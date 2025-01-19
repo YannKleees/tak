@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -167,6 +168,25 @@ public class UIManager {
         windowStyle.titleFont = font;
         windowStyle.background = skin.newDrawable("window-background");
         skin.add("dialog", windowStyle);
+
+        // >>> ADDED CheckBoxStyle (Smaller box) <<<
+        CheckBox.CheckBoxStyle checkBoxStyle = new CheckBox.CheckBoxStyle();
+        // Re-use existing drawables, just smaller
+        Drawable off = skin.newDrawable("button-up", Color.LIGHT_GRAY);
+        off.setMinWidth(16f);
+        off.setMinHeight(16f);
+
+        Drawable on = skin.newDrawable("button-down", Color.BLUE);
+        on.setMinWidth(16f);
+        on.setMinHeight(16f);
+
+        checkBoxStyle.checkboxOff = off;
+        checkBoxStyle.checkboxOn = on;
+        checkBoxStyle.font = font;
+        checkBoxStyle.fontColor = Color.WHITE;
+
+        // Register it in the skin under name "default"
+        skin.add("default", checkBoxStyle, CheckBox.CheckBoxStyle.class);
     }
 
     /**

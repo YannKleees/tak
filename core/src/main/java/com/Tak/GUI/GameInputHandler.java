@@ -18,7 +18,6 @@ import com.badlogic.gdx.Gdx;
 import com.Tak.Logic.models.Board;
 import java.util.List;
 
-
 /**
  * The GameInputHandler class handles user input for placing and moving pieces on the board.
  */

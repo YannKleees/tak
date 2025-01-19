@@ -1,33 +1,32 @@
 package com.Tak.AI.neuralnet;
 
 import java.io.IOException;
-import com.Tak.AI.neuralnet.NeuralNetworkTxtManager;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
 /**
- * A trainer for a multi-layer NeuralNetwork,
- * providing single/batch training, plus optional mini-batching, shuffling,
- * learning rate decay, and save/load methods.
+ * Trainer for a multi-layer NeuralNetwork.
+ *
+ * Key changes:
+ *  - Lower default learning rate from 0.01 to 0.001.
+ *  - Encourage multiple epochs on each data batch (controlled externally).
+ *  - Shuffle data + mini-batch if desired.
  */
 public class NeuralNetworkTrainer {
 
     private NeuralNetwork network;
     private double learningRate;
 
-    // Metadata
     private int numberOfStatesTrained;
     private double lastOutput;
 
-    // (New) Options for advanced features
-    private boolean shuffleData = false;    // If true, shuffle data in trainAll
-    private int miniBatchSize = 0;         // If > 0, do mini-batches
-    private double lrDecayFactor = 1.0;    // e.g. 0.99 each epoch, or 1.0 to disable
+    private boolean shuffleData = true;       // By default, shuffle
+    private int miniBatchSize = 32;          // Default 32
+    private double lrDecayFactor = 1.0;
     private Random rnd = new Random();
 
-    // (New) L2 regularization parameter
-    private double regularizationRate = 0.0;
+    private double regularizationRate = 1e-4; // L2
 
     public NeuralNetworkTrainer(NeuralNetwork network, double learningRate) {
         this.network = network;
@@ -37,27 +36,34 @@ public class NeuralNetworkTrainer {
     }
 
     /**
-     * Trains the network on a single example and returns the loss.
+     * Train the network on a single (input, target) pair, returns MSE loss
      */
     public double train(double[] inputs, double[] targets) {
         if (network == null) {
             throw new IllegalStateException("NeuralNetwork is not initialized.");
         }
 
-        // Perform backprop with given regularization
+        double[] outputs = network.forward(inputs);
+
+        // Check dimension
+        if (outputs.length != targets.length) {
+            System.err.println("Error: Output length (" + outputs.length + ") != target length (" + targets.length + ").");
+            throw new IllegalArgumentException("Mismatch between network outputs and targets.");
+        }
+
+        // Backprop
         network.backpropagate(inputs, targets, learningRate, regularizationRate);
 
-        // Calculate MSE loss
-        double[] outputs = network.forward(inputs);
+        // Compute MSE
         double loss = 0.0;
         for (int i = 0; i < targets.length; i++) {
             loss += Math.pow(targets[i] - outputs[i], 2);
         }
         loss /= targets.length;
 
-        // Update metadata
         numberOfStatesTrained++;
         if (targets.length > 0) {
+            // Just record the first dimension for reference
             lastOutput = targets[0];
         }
 
@@ -65,9 +71,11 @@ public class NeuralNetworkTrainer {
     }
 
     /**
-     * (New) Shuffle and optionally do mini-batches. Return average loss.
+     * Train the network on an entire dataset, returning the average loss.
      */
     public double trainAll(List<SelfPlayMinimaxTrainer.TrainingExample> dataset) {
+        if (dataset.isEmpty()) return 0.0;
+
         if (shuffleData) {
             Collections.shuffle(dataset, rnd);
         }
@@ -83,9 +91,6 @@ public class NeuralNetworkTrainer {
         }
     }
 
-    /**
-     * (New) Perform mini-batch training on the dataset.
-     */
     private double trainMiniBatches(List<SelfPlayMinimaxTrainer.TrainingExample> dataset) {
         double totalLoss = 0.0;
         int count = 0;
@@ -103,28 +108,15 @@ public class NeuralNetworkTrainer {
             totalLoss += batchLoss;
             count++;
         }
-
         return totalLoss / count;
     }
 
-    public void trainBatch(List<double[]> inputBatch, List<double[]> targetBatch) {
-        for (int i = 0; i < inputBatch.size(); i++) {
-            train(inputBatch.get(i), targetBatch.get(i));
-        }
-    }
-
-    /**
-     * (New) Apply learning rate decay after each epoch (call once per epoch).
-     */
     public void applyLearningRateDecay() {
         if (lrDecayFactor < 1.0 && lrDecayFactor > 0.0) {
             this.learningRate *= lrDecayFactor;
         }
     }
 
-    /**
-     * Saves the network and metadata to a .txt file.
-     */
     public void saveNetwork(String filePath) {
         try {
             NeuralNetworkTxtManager.saveTrainer(this, filePath, numberOfStatesTrained, lastOutput);
@@ -135,9 +127,6 @@ public class NeuralNetworkTrainer {
         }
     }
 
-    /**
-     * Loads the network and metadata from a .txt file.
-     */
     public void loadNetwork(String filePath) {
         try {
             NeuralNetworkTxtManager.NeuralNetworkLoadData loadData = NeuralNetworkTxtManager.loadTrainer(filePath);
@@ -151,7 +140,9 @@ public class NeuralNetworkTrainer {
         }
     }
 
-    // -------------------- Getters / Setters / Misc. --------------------
+    // ------------------------------------------------------------------------
+    // Getters / Setters
+    // ------------------------------------------------------------------------
 
     public NeuralNetwork getNetwork() {
         return network;
