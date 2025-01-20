@@ -16,11 +16,10 @@ import com.Tak.Logic.models.Player.Color;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 
 /**
  * MinimaxAgent represents an AI player using the Minimax algorithm for decision-making.
- * 
- * (Optional) We removed the "worst forced move" logic to avoid messing up openings.
  */
 public class MinimaxAgent extends Player implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -75,10 +74,26 @@ public class MinimaxAgent extends Player implements Serializable {
 
     @Override
     public void makeMove(TakGame game) throws InvalidMoveException, GameOverException {
-        // Standard Minimax
         Board board = game.getBoard();
         int currentCount = game.getMoveCount();
 
+        // 5% chance to do a random move for added diversity:
+        if (Math.random() < 0.05) {
+            List<String> possibleMoves = ActionGenerator.generatePossibleActions(board, this, currentCount);
+            if (!possibleMoves.isEmpty()) {
+                System.out.println("MinimaxAgent: random move for diversity!");
+                String chosen = possibleMoves.get(new Random().nextInt(possibleMoves.size()));
+                Action randomAction = Action.fromString(chosen, this.getColor());
+                randomAction.execute(board);
+                game.incrementMoveCount();
+                game.checkWinConditions();
+                game.switchPlayer();
+                return;
+            }
+            // If no possible random moves, just proceed to minimax
+        }
+
+        // Standard Minimax if we skip or fail random moves:
         Action bestMove = minimaxAlgorithm.findBestMove(board, this, currentCount);
         if (bestMove != null) {
             bestMove.execute(board);

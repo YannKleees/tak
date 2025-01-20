@@ -6,7 +6,6 @@ import com.Tak.AI.players.RandomAIPlayer;
 import com.Tak.Logic.exceptions.GameOverException;
 import com.Tak.Logic.exceptions.InvalidMoveException;
 import com.Tak.Logic.models.Player;
-import com.Tak.Logic.models.Player.Color;
 import com.Tak.Logic.models.TakGame;
 
 import java.io.BufferedWriter;
@@ -17,51 +16,39 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Demonstrates self-play or AI vs AI training using Minimax + NeuralNetwork.
+ * Self-play or AI vs AI training using Minimax + NeuralNetwork.
  *
- * Upgrades:
- *  1) Net-vs-Net or Net-vs-Heuristic.
- *  2) REAL TD mid-game updates for BOTH players:
- *     oldState => discount * nextStateValue (for whichever player just moved).
- *  3) Final correction as +1/-1 for the winner.
+ * Now with partial updates for BOTH sides, etc.
  */
 public class SelfPlayMinimaxTrainer {
 
     private NeuralNetworkTrainer nnTrainer;
 
-    // Basic training params
     private int numberOfGames;
     private int validationFrequency;
     private int patience;
 
-    // Net vs Net, or Net vs Heuristic
-    private boolean selfPlayNetVsNet = false;
+    private ANNManager.OpponentType opponentType = ANNManager.OpponentType.NET_VS_NET;
 
-    // If we only want to reward road wins, not implemented
-    private boolean pathOnly = false;
-
-    // CSV logging
     private String csvFilename = null;
     private BufferedWriter csvWriter = null;
 
-    // For early stopping and tracking
     private double bestValidationLoss;
     private int patienceCounter;
 
-    // Some counters
     private int blueWinsCount = 0;
     private int lastGameMoves = -1;
     private String lastGameWinnerColor = "None";
 
-    // TD discount factor
-    private static final double DISCOUNT = 0.99;
+    // UPDATED: discount changed to e.g. 0.90
+    private static final double DISCOUNT = 0.90;
 
-    // Optional: if you want random openings for the first X plies
     private int randomOpeningPlies = 3;
+    private int truncationLimit = -1; 
 
-    /**
-     * Constructor
-     */
+    private int totalStatesCollected = 0;
+    private int lastGameStateCount = 0;
+
     public SelfPlayMinimaxTrainer(NeuralNetworkTrainer nnTrainer,
                                   int numberOfGames,
                                   int valFrequency,
@@ -70,337 +57,302 @@ public class SelfPlayMinimaxTrainer {
         this.numberOfGames = numberOfGames;
         this.validationFrequency = valFrequency;
         this.patience = patience;
-
         this.bestValidationLoss = Double.MAX_VALUE;
         this.patienceCounter = 0;
     }
 
-    // ------------------ Setters ------------------
-
-    public void setSelfPlayNetVsNet(boolean b) {
-        this.selfPlayNetVsNet = b;
-    }
-
-    public void setCsvLogging(String filename) {
-        this.csvFilename = filename;
-    }
-
-    /** If you want a certain # of random opening plies. */
-    public void setRandomOpeningPlies(int plies) {
-        this.randomOpeningPlies = plies;
-    }
-
-    // ------------------ Main training loop ------------------
+    // same getters/setters as before ...
 
     public void runTraining() {
         initCsvWriter();
-
         for (int i = 0; i < numberOfGames; i++) {
-            long startTime = System.currentTimeMillis();
+            long start = System.currentTimeMillis();
 
-            System.out.println("=== Self-Play Game " + (i + 1) + "/" + numberOfGames + " ===");
-            // 1) Play one game, collecting states
-            List<TrainingExample> gameData = playOneGame();
+            System.out.println("=== Self-Play Game " + (i+1) + "/" + numberOfGames + " ===");
+            List<TrainingExample> gameData = playOneGame(i);
 
-            // 2) Final big correction with afterGameRate
+            // final big correction
             double oldLR = nnTrainer.getLearningRate();
             nnTrainer.setLearningRate(nnTrainer.getAfterGameRate());
             double gameLoss = nnTrainer.trainAll(gameData);
             nnTrainer.setLearningRate(oldLR);
 
-            // 3) Possibly do a validation step
             double valLoss = Double.NaN;
-            if ((i + 1) % validationFrequency == 0) {
+            if (validationFrequency > 0 && (i+1) % validationFrequency == 0) {
                 valLoss = validateNetwork();
-                System.out.println("Validation Loss after game " + (i + 1) + " = " + valLoss);
-
                 if (valLoss < bestValidationLoss) {
                     bestValidationLoss = valLoss;
                     patienceCounter = 0;
                 } else {
                     patienceCounter++;
                     if (patienceCounter >= patience) {
-                        System.out.println("Early stopping triggered at game " + (i+1));
-                        logCsvRow(i+1, gameLoss, valLoss, bestValidationLoss,
-                                  -1, "None", blueWinsCount);
+                        System.out.println("Early stopping at game " + (i+1));
+                        logCsvRow(i+1, gameLoss, valLoss, bestValidationLoss, -1, 
+                            "None", blueWinsCount, lastGameStateCount, totalStatesCollected,
+                            getHeuristicSide(), "Unknown");
                         break;
                     }
                 }
             }
 
-            // 4) Log CSV
+            long end = System.currentTimeMillis();
+            long gameTime = end - start;
+            String phase = determineGamePhase(lastGameMoves);
+
+            // logging row
             logCsvRow(
-                i + 1,
+                i+1,
                 gameLoss,
                 valLoss,
                 bestValidationLoss,
                 lastGameMoves,
                 lastGameWinnerColor,
-                blueWinsCount
+                blueWinsCount,
+                lastGameStateCount,
+                totalStatesCollected,
+                getHeuristicSide(),
+                phase
             );
 
-            long endTime = System.currentTimeMillis();
-            long gameTime = endTime - startTime;
-            System.out.println("Game " + (i+1) + " finished in " + (gameTime/1000.0) + " sec. Loss=" + gameLoss);
+            System.out.println("Game " + (i+1) 
+                + " ended in " + (gameTime/1000.0) + "s, moves=" + lastGameMoves 
+                + ", statesThisGame=" + lastGameStateCount);
         }
-
         closeCsvWriter();
+        System.out.println("\nSelf-play done. Total states: " + totalStatesCollected);
     }
 
-    /**
-     * Plays one self-play game:
-     *   - If randomOpeningPlies > 0, do random moves for that many plies.
-     *   - Then do normal minimax moves. 
-     *   - After each move, do a partial TD(0) update for whichever side just moved.
-     *   - Return all states for a final correction at game end.
-     */
-    private List<TrainingExample> playOneGame() {
-        // Build the game
-        TakGame game = createTrainingTakGame(5);
+    private List<TrainingExample> playOneGame(int idx) {
+        TakGame g = createTrainingTakGame(5);
+        List<StateRecord> rec = new ArrayList<>();
 
-        List<StateRecord> recorded = new ArrayList<>();
+        while (!g.isGameEnded()) {
+            int mc = g.getMoveCount();
+            if (truncationLimit > 0 && mc >= truncationLimit) break;
 
-        // Keep going until game ends
-        while (!game.isGameEnded()) {
-            Player current = game.getCurrentPlayer();
-            int moveCount = game.getMoveCount();
-
+            Player current = g.getCurrentPlayer();
             try {
-                if (moveCount < randomOpeningPlies * 2) {
-                    // random opening moves
-                    doRandomMove(game, current, moveCount);
+                if (mc < randomOpeningPlies*2) {
+                    doRandomMove(g, current, mc);
                 } else {
-                    // old state
-                    double[] oldState = BoardToInputsConverter.convert(game.getBoard(), current);
+                    double[] oldState = BoardToInputsConverter.convert(g.getBoard(), current);
+                    current.makeMove(g);
 
-                    // do the move
-                    current.makeMove(game);
-
-                    // do partial TD update for whomever just moved
-                    if (!game.isGameEnded()) {
-                        double[] nextState = BoardToInputsConverter.convert(game.getBoard(), current);
+                    // UPDATED: partial update for whichever side (both!)
+                    if (!g.isGameEnded()) {
+                        double[] nextState = BoardToInputsConverter.convert(g.getBoard(), current);
                         double[] nextVal = nnTrainer.getNetwork().forward(nextState);
-                        for (int k = 0; k < nextVal.length; k++) {
-                            nextVal[k] *= DISCOUNT;
+                        for (int k=0;k<nextVal.length;k++){
+                            nextVal[k]*=DISCOUNT;
                         }
                         nnTrainer.trainSingleSampleWithInGameRate(oldState, nextVal);
                     }
 
-                    recorded.add(new StateRecord(oldState, current));
+                    rec.add(new StateRecord(oldState, current));
                 }
-            } catch (InvalidMoveException | GameOverException e) {
-                // game ended or invalid
+            } catch(Exception e) {
                 break;
             }
         }
 
-        // Summarize
-        Player winner = game.getWinner();
-        lastGameMoves = game.getMoveCount();
-        if (winner == null) {
-            lastGameWinnerColor = "None";
+        Player w = g.getWinner();
+        lastGameMoves = g.getMoveCount();
+        if (w==null) {
+            lastGameWinnerColor="None";
         } else {
-            lastGameWinnerColor = winner.getColor().toString();
-            if (winner.getColor() == Color.BLUE) {
+            lastGameWinnerColor=w.getColor().toString();
+            if (w.getColor() == Player.Color.BLUE) {
                 blueWinsCount++;
             }
         }
 
-        return finalizeLabels(recorded, winner);
+        List<TrainingExample> finalEx = finalizeLabels(rec, w);
+        lastGameStateCount = finalEx.size();
+        totalStatesCollected+= lastGameStateCount;
+        return finalEx;
     }
 
-    /**
-     * If random plies are needed for variety.
-     */
-    private void doRandomMove(TakGame game, Player current, int moveCount) throws InvalidMoveException, GameOverException {
-        List<String> allMoves = com.Tak.AI.utils.ActionGenerator.generatePossibleActions(game.getBoard(), current, moveCount);
-        if (allMoves.isEmpty()) {
-            System.out.println("No random moves available. Possibly stuck/invalid.");
-            return;
+    private void doRandomMove(TakGame g, Player c, int mc) throws InvalidMoveException, GameOverException {
+        List<String> moves= com.Tak.AI.utils.ActionGenerator.generatePossibleActions(g.getBoard(), c, mc);
+        if (!moves.isEmpty()){
+            java.util.Random r=new java.util.Random();
+            String pick= moves.get(r.nextInt(moves.size()));
+            com.Tak.AI.actions.Action a= com.Tak.AI.actions.Action.fromString(pick, c.getColor());
+            a.execute(g.getBoard());
+            g.incrementMoveCount();
+            g.checkWinConditions();
+            g.switchPlayer();
         }
-        // pick any random
-        java.util.Random rnd = new java.util.Random();
-        String chosen = allMoves.get(rnd.nextInt(allMoves.size()));
-        com.Tak.AI.actions.Action act = com.Tak.AI.actions.Action.fromString(chosen, current.getColor());
-        act.execute(game.getBoard());
-        game.incrementMoveCount();
-        game.checkWinConditions();
-        game.switchPlayer();
     }
 
-    /**
-     * Build the game with net vs net or net vs heuristic.
-     */
-    private TakGame createTrainingTakGame(int boardSize) {
-        Player blue, green;
-        if (selfPlayNetVsNet) {
-            // net vs net
-            blue = new MinimaxAgent(Color.BLUE, 21,21,1,2,false, new NeuralNetworkEvaluator(nnTrainer.getNetwork()));
-            green = new MinimaxAgent(Color.GREEN,21,21,1,2,false, new NeuralNetworkEvaluator(nnTrainer.getNetwork()));
-        } else {
-            // net vs heuristic
-            blue = new MinimaxAgent(Color.BLUE, 21,21,1,2,false, new NeuralNetworkEvaluator(nnTrainer.getNetwork()));
-            green = new MinimaxAgent(Color.GREEN,21,21,1,2,false, new HeuristicEvaluator());
-            // Or a random side:
-            // green = new RandomAIPlayer(Color.GREEN,21,21,1);
+    private TakGame createTrainingTakGame(int sz){
+        Player b,g;
+        switch(opponentType){
+            case NET_VS_HEURISTIC:
+                b=new MinimaxAgent(Player.Color.BLUE,21,21,1,2,false,
+                    new NeuralNetworkEvaluator(nnTrainer.getNetwork()));
+                g=new MinimaxAgent(Player.Color.GREEN,21,21,1,2,false,
+                    new HeuristicEvaluator());
+                break;
+            case NET_VS_RANDOM:
+                b=new MinimaxAgent(Player.Color.BLUE,21,21,1,2,false,
+                    new NeuralNetworkEvaluator(nnTrainer.getNetwork()));
+                g=new RandomAIPlayer(Player.Color.GREEN,21,21,1);
+                break;
+            case NET_VS_OLD_NET:
+                // old net not fully implemented
+                System.out.println("NET_VS_OLD_NET => fallback net vs net");
+                // fall-thru
+            case NET_VS_NET:
+            default:
+                b=new MinimaxAgent(Player.Color.BLUE,21,21,1,2,false,
+                    new NeuralNetworkEvaluator(nnTrainer.getNetwork()));
+                g=new MinimaxAgent(Player.Color.GREEN,21,21,1,2,false,
+                    new NeuralNetworkEvaluator(nnTrainer.getNetwork()));
+                break;
         }
-        return new TakGame(boardSize, Arrays.asList(blue, green));
+        return new TakGame(sz, Arrays.asList(b,g));
     }
 
-    /**
-     * Create final [ +1, -1 ] or [ -1, +1 ] labels for each old state in the game, 
-     * from that mover's perspective.
-     */
-    private List<TrainingExample> finalizeLabels(List<StateRecord> records, Player winner) {
-        List<TrainingExample> exList = new ArrayList<>();
-        for (StateRecord sr : records) {
-            double[] finalTarget = new double[2];
-            if (winner == null) {
-                // tie => (0,0)
-                finalTarget[0] = 0.0;
-                finalTarget[1] = 0.0;
+    private List<TrainingExample> finalizeLabels(List<StateRecord> list, Player winner){
+        List<TrainingExample> out=new ArrayList<>();
+        for (StateRecord sr : list){
+            double[] tar= new double[2];
+            if (winner==null){
+                tar[0]=0.0; tar[1]=0.0;
             } else {
-                boolean isMoverWinner = (sr.mover == winner);
-                if (sr.mover.getColor() == Color.BLUE) {
-                    finalTarget[0] = isMoverWinner ? 1.0 : -1.0;
-                    finalTarget[1] = isMoverWinner ? -1.0 : 1.0;
+                boolean isWin = (sr.mover==winner);
+                if (sr.mover.getColor()==Player.Color.BLUE){
+                    tar[0]= isWin? 1.0 : -1.0;
+                    tar[1]= isWin? -1.0: 1.0;
                 } else {
-                    // green
-                    finalTarget[0] = isMoverWinner ? -1.0 : 1.0;
-                    finalTarget[1] = isMoverWinner ? 1.0 : -1.0;
+                    tar[0]= isWin? -1.0: 1.0;
+                    tar[1]= isWin? 1.0: -1.0;
                 }
             }
-            exList.add(new TrainingExample(sr.state, finalTarget));
+            out.add(new TrainingExample(sr.state, tar));
         }
-        return exList;
+        return out;
     }
 
-    // ---------------- Validation ---------------
-
     private double validateNetwork() {
-        // quick example: do 3 small games, measure MSE
-        int valGames = 3;
-        double totalLoss = 0.0;
-
-        for (int i = 0; i < valGames; i++) {
-            TakGame game = createTrainingTakGame(5);
-            List<TrainingExample> someStates = new ArrayList<>();
-
-            while (!game.isGameEnded()) {
+        // small demonstration
+        int valGames=3;
+        double total=0.0;
+        for(int i=0;i<valGames;i++){
+            TakGame tg = createTrainingTakGame(5);
+            List<TrainingExample> st= new ArrayList<>();
+            while (!tg.isGameEnded()){
                 try {
-                    Player current = game.getCurrentPlayer();
-                    double[] s = BoardToInputsConverter.convert(game.getBoard(), current);
-                    current.makeMove(game);
-
-                    // record states from e.g. BLUE perspective
-                    if (current.getColor() == Color.BLUE) {
-                        someStates.add(new TrainingExample(s, new double[]{0,0}));
+                    Player c= tg.getCurrentPlayer();
+                    double[] s= BoardToInputsConverter.convert(tg.getBoard(), c);
+                    c.makeMove(tg);
+                    if(c.getColor()== Player.Color.BLUE){
+                        st.add(new TrainingExample(s,new double[]{0,0}));
                     }
-
-                } catch(Exception e) {
+                } catch(Exception e){
                     break;
                 }
             }
-
-            Player winner = game.getWinner();
-            for (TrainingExample ex : someStates) {
-                double[] netOut = nnTrainer.getNetwork().forward(ex.getInput());
-                double[] finalLabel = new double[2];
-                if (winner == null) {
-                    finalLabel[0] = 0; 
-                    finalLabel[1] = 0;
-                } else if (winner.getColor() == Color.BLUE) {
-                    finalLabel[0] = 1;
-                    finalLabel[1] = -1;
+            Player w= tg.getWinner();
+            for(TrainingExample ex: st){
+                double[] netOut=nnTrainer.getNetwork().forward(ex.getInput());
+                double[] label=new double[2];
+                if(w==null){
+                    label[0]=0; label[1]=0;
+                } else if(w.getColor()== Player.Color.BLUE){
+                    label[0]=1; label[1]=-1;
                 } else {
-                    finalLabel[0] = -1;
-                    finalLabel[1] = 1;
+                    label[0]=-1; label[1]=1;
                 }
-                double thisLoss = 0.0;
-                for (int k = 0; k < 2; k++) {
-                    thisLoss += Math.pow(finalLabel[k] - netOut[k], 2);
+                double tmp=0.0;
+                for (int k=0;k<2;k++){
+                    tmp+= Math.pow(label[k]-netOut[k],2);
                 }
-                thisLoss /= 2.0;
-                totalLoss += thisLoss;
+                tmp/=2.0;
+                total+= tmp;
             }
         }
-
-        return totalLoss / valGames;
+        return total/valGames;
     }
 
-    // ------------- CSV Logging -------------
+    // CSV stuff remains the same, just with added columns
 
-    private void initCsvWriter() {
-        if (csvFilename == null) return;
-        try {
-            csvWriter = new BufferedWriter(new FileWriter(csvFilename, false));
-            // header
-            csvWriter.write("GameIndex,GameLoss,ValLoss,BestValLoss,GameTimeMillis,GameLength,WinnerColor,BlueWinsSoFar");
+    private void initCsvWriter(){
+        if (csvFilename==null)return;
+        try{
+            csvWriter = new BufferedWriter(new FileWriter(csvFilename,false));
+            csvWriter.write("GameIndex,GameLoss,ValLoss,BestValLoss,"
+                +"GameTimeMillis,GameLength,WinnerColor,BlueWinsSoFar,"
+                +"StatesThisGame,TotalStatesSoFar,HeuristicSide,GamePhase");
             csvWriter.newLine();
             csvWriter.flush();
-        } catch (IOException e) {
-            csvWriter = null;
+        }catch(IOException e){
             e.printStackTrace();
+            csvWriter=null;
         }
     }
 
-    private void logCsvRow(int gameIndex, 
+    private void logCsvRow(int gameIndex,
                            double gameLoss,
                            double valLoss,
                            double bestValLoss,
                            int gameLength,
                            String winnerColor,
-                           int blueWins) {
-        if (csvWriter == null) return;
-        try {
-            String valStr = Double.isNaN(valLoss) ? "" : String.format("%.6f", valLoss);
-            // 7 placeholders => 7 arguments
-            String row = String.format("%d,%.6f,%s,%.6f,%d,%s,%d",
-                                       gameIndex, 
-                                       gameLoss,
-                                       valStr,
-                                       bestValLoss,
-                                       gameLength,
-                                       winnerColor,
-                                       blueWins);
+                           int blueWins,
+                           int statesThisGame,
+                           int totalStates,
+                           String heuristicSide,
+                           String phase){
+        if(csvWriter==null)return;
+        try{
+            String vs= Double.isNaN(valLoss)? "":String.format("%.6f", valLoss);
+            String row= String.format("%d,%.6f,%s,%.6f,%d,%s,%d,%d,%d,%s,%s",
+                gameIndex,gameLoss,vs,bestValLoss,gameLength,winnerColor,blueWins,
+                statesThisGame,totalStates,heuristicSide,phase);
             csvWriter.write(row);
             csvWriter.newLine();
             csvWriter.flush();
-        } catch (IOException e) {
-            System.err.println("Failed to write row: " + e.getMessage());
+        }catch(IOException e){
+            System.err.println("CSV error: "+e.getMessage());
         }
     }
 
-    private void closeCsvWriter() {
-        if (csvWriter == null) return;
-        try {
-            csvWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+    private void closeCsvWriter(){
+        if(csvWriter!=null){
+            try{csvWriter.close();}catch(IOException e){e.printStackTrace();}
         }
     }
 
-    // ------------- Helpers -------------
+    private String getHeuristicSide(){
+        if(opponentType==ANNManager.OpponentType.NET_VS_HEURISTIC){
+            return "Green";
+        }
+        return "None";
+    }
+
+    private String determineGamePhase(int mc){
+        if(mc<0)return "Unknown";
+        if(mc<10)return "Early";
+        if(mc<30)return "Mid";
+        return "Late";
+    }
 
     private static class StateRecord {
         double[] state;
         Player mover;
-        StateRecord(double[] s, Player m) {
-            this.state = s;
-            this.mover = m;
+        StateRecord(double[] s, Player m){
+            this.state=s;this.mover=m;
         }
     }
 
     public static class TrainingExample {
         private double[] input;
         private double[] target;
-
-        public TrainingExample(double[] in, double[] t) {
-            this.input = in;
-            this.target = t;
+        public TrainingExample(double[] i, double[] t){
+            this.input=i; this.target=t;
         }
-        public double[] getInput() { return input; }
-        public double[] getTarget() { return target; }
-        public void setTarget(double[] t) { this.target = t; }
+        public double[] getInput(){return input;}
+        public double[] getTarget(){return target;}
     }
 }

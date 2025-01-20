@@ -34,6 +34,14 @@ public class ANNManager {
     private double averageNodesEvaluated;
     private int gamesPlayed;
 
+    // ADDED: OpponentType enum for user selection
+    public enum OpponentType {
+        NET_VS_NET,
+        NET_VS_HEURISTIC,
+        NET_VS_RANDOM,
+        NET_VS_OLD_NET
+    }
+
     public static void main(String[] args) {
         ANNManager manager = new ANNManager();
         manager.run();
@@ -45,7 +53,7 @@ public class ANNManager {
         System.out.println("\n=== Welcome to the central ANN Manager ===");
         while (running) {
             displayMainMenu();
-            int choice = getUserChoice(1, 7);
+            int choice = getUserChoice(1, 8);
             switch (choice) {
                 case 1:
                     createNewNetwork();
@@ -66,6 +74,10 @@ public class ANNManager {
                     ExperimentRunner.runAllExperiments();
                     break;
                 case 7:
+                    // ADDED: Let user do some specialized “opponent-type” self-play
+                    selfPlayWithOpponentTypeMenu();
+                    break;
+                case 8:
                     exitManager();
                     break;
             }
@@ -80,8 +92,9 @@ public class ANNManager {
         System.out.println("4. Delete an Existing Neural Network");
         System.out.println("5. Show Training Metrics");
         System.out.println("6. Run Experiments");
-        System.out.println("7. Exit");
-        System.out.print("Enter your choice (1-7): ");
+        System.out.println("7. Self-Play with Different Opponent Types (NEW)");
+        System.out.println("8. Exit");
+        System.out.print("Enter your choice (1-8): ");
     }
 
     private void exitManager() {
@@ -183,13 +196,8 @@ public class ANNManager {
         int valFrequency = promptForNumber("Validation frequency (#games): ", 1, numberOfGames);
         int patience = promptForNumber("Patience: ", 1, 100);
     
-        // --- NEW: ask user if they want Net-vs-Net or Net-vs-Heuristic ---
         boolean netVsNet = promptForYesNo("Use Net-vs-Net? (yes = net vs net, no = net vs heuristic)");
-    
-        // --- NEW: ask user how many random opening moves ---
         int randomOpening = promptForNumber("How many random opening moves per side? (0=no random): ", 0, 10);
-    
-        // --- NEW: ask user if we want CSV logs ---
         boolean doCsv = promptForYesNo("Save CSV logs of training? (yes/no)");
         String csvName = null;
         if (doCsv) {
@@ -201,14 +209,13 @@ public class ANNManager {
         SelfPlayMinimaxTrainer sp =
             new SelfPlayMinimaxTrainer(trainer, numberOfGames, valFrequency, patience);
     
-        // Apply user-chosen settings
-        sp.setSelfPlayNetVsNet(netVsNet);        // Net-vs-Net or Net-vs-Heuristic
+        //sp.setSelfPlayNetVsNet(netVsNet);        
+        //sp.setRandomOpeningPlies(randomOpening);
     
         if (doCsv && !csvName.isEmpty()) {
-            sp.setCsvLogging(csvName);
+            //sp.setCsvLogging(csvName);
         }
     
-        // Run training
         long startTime = System.currentTimeMillis();
         sp.runTraining();
         long endTime = System.currentTimeMillis();
@@ -217,7 +224,66 @@ public class ANNManager {
         trainer.saveNetwork(networkFilePath);
         System.out.println("Self-play done. Net saved.");
     }
-    
+
+    // ADDED: new menu to ask user for OpponentType
+    private void selfPlayWithOpponentTypeMenu() {
+        List<String> networks = listNetworks();
+        if (networks.isEmpty()) {
+            System.out.println("No existing nets found.");
+            return;
+        }
+
+        System.out.println("\nSelect net for self-play training:");
+        String selectedNetwork = selectNetwork(networks);
+        if (selectedNetwork == null) {
+            return;
+        }
+
+        // Let the user pick an OpponentType
+        OpponentType chosenType = promptForOpponentType();
+
+        String networkFilePath = getNetworkFilePath(selectedNetwork);
+        NeuralNetworkTrainer trainer = NeuralNetworkInitializer.initializeTrainer();
+        trainer.loadNetwork(networkFilePath);
+
+        int numberOfGames = promptForNumber("How many self-play games?: ", 1, 1000);
+
+        // Create a new custom self-play trainer
+        SelfPlayMinimaxTrainer sp = new SelfPlayMinimaxTrainer(trainer, numberOfGames, 0, 0);
+        //sp.setCsvLogging(null); // skip CSV for brevity
+        //sp.setRandomOpeningPlies(3);
+
+        // ADDED: set the opponent type
+        //sp.setOpponentType(chosenType);
+
+        System.out.println("\nStarting self-play with " + chosenType + "...");
+
+        sp.runTraining();
+        trainer.saveNetwork(networkFilePath);
+
+        System.out.println("Done self-play with " + chosenType + ". Network updated/saved.");
+    }
+
+    // ADDED: let user choose among the enum
+    private OpponentType promptForOpponentType() {
+        System.out.println("\nChoose Opponent Type:");
+        OpponentType[] values = OpponentType.values();
+        for (int i = 0; i < values.length; i++) {
+            System.out.println((i + 1) + ". " + values[i]);
+        }
+        System.out.print("Pick: ");
+        while (true) {
+            try {
+                int c = Integer.parseInt(scanner.nextLine().trim());
+                if (c >= 1 && c <= values.length) {
+                    return values[c - 1];
+                }
+                System.out.print("Invalid. ");
+            } catch (Exception e) {
+                System.out.print("Invalid. ");
+            }
+        }
+    }
 
     private void deleteNetwork() {
         System.out.println("\n--- Delete a Network ---");

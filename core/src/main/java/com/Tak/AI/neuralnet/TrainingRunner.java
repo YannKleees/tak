@@ -1,5 +1,7 @@
 package com.Tak.AI.neuralnet;
 
+import com.Tak.AI.experiments.IterativeNetVsHeuristicTrainer;
+
 /**
  * Example main class that runs self-play training (or you can adapt it to iterative training).
  */
@@ -22,9 +24,9 @@ public class TrainingRunner {
         //       it.runIterativeTraining();
         //
         //    For self-play:
-        int numberOfGames = 20; 
+        int numberOfGames = 20;
         int validationFrequency = 5;
-        int patience = 3;  
+        int patience = 3;
 
         SelfPlayMinimaxTrainer trainer = new SelfPlayMinimaxTrainer(
             nnTrainer,
@@ -32,7 +34,12 @@ public class TrainingRunner {
             validationFrequency,
             patience
         );
-        System.out.println("Self-play trainer initialized.");
+
+        // Example: switch to Net-vs-Random
+        //trainer.setOpponentType(ANNManager.OpponentType.NET_VS_RANDOM);
+
+        // Possibly set truncation
+        // trainer.setTruncationLimit(30);
 
         // 4) Start training
         trainer.runTraining();
