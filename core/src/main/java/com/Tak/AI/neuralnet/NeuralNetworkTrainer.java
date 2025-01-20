@@ -49,22 +49,24 @@ public class NeuralNetworkTrainer {
      */
     public double train(double[] inputs, double[] targets) {
         double[] outputs = network.forward(inputs);
-        if(outputs.length != targets.length){
+        if (outputs.length != targets.length) {
             throw new IllegalArgumentException("Mismatch output/target length");
         }
 
-        network.backpropagate(inputs, targets,
-                              learningRate, regularizationRate, momentum);
+        network.backpropagate(
+            inputs, targets,
+            learningRate, regularizationRate, momentum
+        );
 
         // MSE
-        double loss=0;
-        for(int i=0; i<targets.length; i++){
-            loss += Math.pow(targets[i] - outputs[i],2);
+        double loss = 0;
+        for (int i = 0; i < targets.length; i++) {
+            loss += Math.pow(targets[i] - outputs[i], 2);
         }
         loss /= targets.length;
 
         numberOfStatesTrained++;
-        if(targets.length>0){
+        if (targets.length > 0) {
             lastOutput = targets[0];
         }
         return loss;
@@ -72,9 +74,10 @@ public class NeuralNetworkTrainer {
 
     /**
      * A convenience for partial updates mid-game using inGameRate.
-     * This forcibly sets learningRate = inGameRate, then reverts.
+     * This forcibly sets learningRate = inGameRate, calls train(...),
+     * then reverts to the old learningRate.
      */
-    public double trainSingleSampleWithInGameRate(double[] inputs, double[] targets){
+    public double trainSingleSampleWithInGameRate(double[] inputs, double[] targets) {
         double oldLR = this.learningRate;
         this.learningRate = inGameRate;
         double loss = train(inputs, targets);
@@ -84,37 +87,35 @@ public class NeuralNetworkTrainer {
 
     /**
      * For a final big correction, you might do:
-     *   setLearningRate(afterGameRate)
-     *   trainAll(...)
-     *   setLearningRate(baseLearningRate)
-     * Or use a dedicated method similarly to the inGame approach above.
+     *    setLearningRate(afterGameRate), then trainAll(...),
+     *    then revert to base learning rate
+     * or use the approach in SelfPlayMinimaxTrainer to do it automatically.
      */
-
-    public double trainAll(List<SelfPlayMinimaxTrainer.TrainingExample> data){
-        if(data.isEmpty()) return 0.0;
-        if(shuffleData){
+    public double trainAll(List<SelfPlayMinimaxTrainer.TrainingExample> data) {
+        if (data.isEmpty()) return 0.0;
+        if (shuffleData) {
             Collections.shuffle(data, rnd);
         }
 
-        if(miniBatchSize>0 && miniBatchSize<data.size()){
+        if (miniBatchSize > 0 && miniBatchSize < data.size()) {
             return trainMiniBatches(data);
         } else {
-            double total=0;
-            for(SelfPlayMinimaxTrainer.TrainingExample ex : data){
+            double total = 0;
+            for (SelfPlayMinimaxTrainer.TrainingExample ex : data) {
                 total += train(ex.getInput(), ex.getTarget());
             }
-            return total/data.size();
+            return total / data.size();
         }
     }
 
-    private double trainMiniBatches(List<SelfPlayMinimaxTrainer.TrainingExample> data){
-        double totalLoss=0.0;
-        int count=0;
+    private double trainMiniBatches(List<SelfPlayMinimaxTrainer.TrainingExample> data) {
+        double totalLoss = 0.0;
+        int count = 0;
 
-        for(int start=0; start<data.size(); start+=miniBatchSize){
-            int end = Math.min(start+miniBatchSize, data.size());
-            double batchLoss=0.0;
-            for(int i=start; i<end; i++){
+        for (int start = 0; start < data.size(); start += miniBatchSize) {
+            int end = Math.min(start + miniBatchSize, data.size());
+            double batchLoss = 0.0;
+            for (int i = start; i < end; i++) {
                 batchLoss += train(data.get(i).getInput(), data.get(i).getTarget());
             }
             batchLoss /= (end - start);
@@ -125,53 +126,83 @@ public class NeuralNetworkTrainer {
     }
 
     // Basic save / load
-    public void saveNetwork(String filePath){
+    public void saveNetwork(String filePath) {
         try {
             NeuralNetworkTxtManager.saveTrainer(this, filePath, numberOfStatesTrained, lastOutput);
             System.out.println("Network + metadata saved to " + filePath);
-        } catch(IOException e){
+        } catch (IOException e) {
             System.err.println("Failed to save network: " + e.getMessage());
         }
     }
 
-    public void loadNetwork(String filePath){
-        try{
+    public void loadNetwork(String filePath) {
+        try {
             NeuralNetworkTxtManager.NeuralNetworkLoadData d = NeuralNetworkTxtManager.loadTrainer(filePath);
             this.network = d.network;
             this.numberOfStatesTrained = d.numberOfGamesTrained;
             this.lastOutput = d.lastOutput;
             System.out.println("Loaded network from " + filePath);
-        } catch(IOException e){
+        } catch (IOException e) {
             System.err.println("Failed to load: " + e.getMessage());
         }
     }
 
     // getters / setters
 
-    public NeuralNetwork getNetwork(){ return network; }
+    public NeuralNetwork getNetwork() {
+        return network;
+    }
 
-    public double getLearningRate(){ return learningRate; }
-    public void setLearningRate(double lr){ this.learningRate = lr; }
+    public double getLearningRate() {
+        return learningRate;
+    }
+    public void setLearningRate(double lr) {
+        this.learningRate = lr;
+    }
 
-    public double getMomentum() { return momentum; }
-    public void setMomentum(double m) { this.momentum = m; }
+    public double getMomentum() {
+        return momentum;
+    }
+    public void setMomentum(double m) {
+        this.momentum = m;
+    }
 
-    public double getInGameRate(){ return inGameRate; }
-    public void setInGameRate(double igr){ this.inGameRate = igr; }
+    public double getInGameRate() {
+        return inGameRate;
+    }
+    public void setInGameRate(double igr) {
+        this.inGameRate = igr;
+    }
 
-    public double getAfterGameRate(){ return afterGameRate; }
-    public void setAfterGameRate(double agr){ this.afterGameRate = agr; }
+    public double getAfterGameRate() {
+        return afterGameRate;
+    }
+    public void setAfterGameRate(double agr) {
+        this.afterGameRate = agr;
+    }
 
-    public int getNumberOfStatesTrained(){ return numberOfStatesTrained; }
-    public double getLastOutput(){ return lastOutput; }
+    public int getNumberOfStatesTrained() {
+        return numberOfStatesTrained;
+    }
+    public double getLastOutput() {
+        return lastOutput;
+    }
 
-    public void setShuffleData(boolean s){ this.shuffleData = s; }
-    public void setMiniBatchSize(int b){ this.miniBatchSize = b; }
-    public void setLearningRateDecay(double f){ this.lrDecayFactor = f; }
-    public void setRegularizationRate(double r){ this.regularizationRate = r; }
+    public void setShuffleData(boolean s) {
+        this.shuffleData = s;
+    }
+    public void setMiniBatchSize(int b) {
+        this.miniBatchSize = b;
+    }
+    public void setLearningRateDecay(double f) {
+        this.lrDecayFactor = f;
+    }
+    public void setRegularizationRate(double r) {
+        this.regularizationRate = r;
+    }
 
-    public void applyLearningRateDecay(){
-        if(lrDecayFactor<1.0 && lrDecayFactor>0.0){
+    public void applyLearningRateDecay() {
+        if (lrDecayFactor < 1.0 && lrDecayFactor > 0.0) {
             this.learningRate *= lrDecayFactor;
         }
     }
