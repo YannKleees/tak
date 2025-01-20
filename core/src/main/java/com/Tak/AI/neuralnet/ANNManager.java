@@ -28,7 +28,7 @@ public class ANNManager {
 
     private boolean running = true;
 
-    // Example metrics to track (you can expand or reorganize as needed).
+    // Example metrics
     private double averageGameLength;
     private double netWinRate;
     private double averageNodesEvaluated;
@@ -39,16 +39,12 @@ public class ANNManager {
         manager.run();
     }
 
-    /**
-     * Main menu loop for user interaction.
-     */
     public void run() {
         ensureNetworksDirectory();
 
         System.out.println("\n=== Welcome to the central ANN Manager ===");
         while (running) {
             displayMainMenu();
-            // We have 7 menu items: 1..6, plus 7=Exit
             int choice = getUserChoice(1, 7);
             switch (choice) {
                 case 1:
@@ -67,7 +63,6 @@ public class ANNManager {
                     showMetrics();
                     break;
                 case 6:
-                    // Delegate to our separate ExperimentRunner
                     ExperimentRunner.runAllExperiments();
                     break;
                 case 7:
@@ -77,9 +72,6 @@ public class ANNManager {
         }
     }
 
-    /**
-     * Displays the main menu options, now with a 7th item for experiments.
-     */
     private void displayMainMenu() {
         System.out.println("\n--- Main Menu ---");
         System.out.println("1. Create a New Neural Network");
@@ -98,158 +90,116 @@ public class ANNManager {
         running = false;
     }
 
-    // ------------------------------------------------------------------------
-    // 1) Create a New Network
-    // ------------------------------------------------------------------------
     private void createNewNetwork() {
         System.out.println("\n--- Create a New Neural Network ---");
         String networkName;
         while (true) {
-            System.out.print("Enter a unique name for the new neural network: ");
+            System.out.print("Enter a unique name: ");
             networkName = scanner.nextLine().trim();
             if (networkName.isEmpty()) {
-                System.out.println("Network name cannot be empty. Please try again.");
+                System.out.println("Name cannot be empty.");
                 continue;
             }
             if (networkExists(networkName)) {
-                System.out.println("A network with this name already exists. Please choose a different name.");
+                System.out.println("Network exists. Pick another name.");
             } else {
                 break;
             }
         }
 
-        // Prompt user for # of hidden layers
-        int numHiddenLayers = promptForNumber("Enter the number of hidden layers: ", 1, 10);
-
-        // Prompt for size of each hidden layer
+        int numHiddenLayers = promptForNumber("Number of hidden layers: ", 1, 10);
         int[] hiddenLayerSizes = new int[numHiddenLayers];
         for (int i = 0; i < numHiddenLayers; i++) {
             hiddenLayerSizes[i] = promptForNumber(
-                "Enter the number of neurons in hidden layer " + (i + 1) + ": ",
-                1, 1000
+                "Neurons in hidden layer " + (i + 1) + ": ", 1, 1000
             );
         }
 
-        // Prompt for activation function
         ActivationFunction activationFunction = promptForActivationFunction();
-
-        // Build the trainer
         NeuralNetworkTrainer trainer =
             NeuralNetworkInitializer.initializeTrainer(hiddenLayerSizes, activationFunction);
 
-        // Save the new network
         String networkFilePath = getNetworkFilePath(networkName);
         trainer.saveNetwork(networkFilePath);
-        System.out.println("New neural network '" + networkName + "' created and saved to '" + networkFilePath + "'.");
+        System.out.println("New net '" + networkName + "' created and saved to '" + networkFilePath + "'.");
     }
 
-    // ------------------------------------------------------------------------
-    // 2) Iterative Training vs. Heuristic
-    // ------------------------------------------------------------------------
     private void iterativeTrainingMenu() {
         System.out.println("\n--- Iterative Training vs. Heuristic ---");
-        // List existing networks
         List<String> networks = listNetworks();
         if (networks.isEmpty()) {
-            System.out.println("No existing neural networks found. Please create a new one first.");
+            System.out.println("No existing nets found.");
             return;
         }
 
-        // Pick a network
         System.out.println("\nSelect the network (BLUE) to iteratively train vs. Heuristic (GREEN):");
         String selectedNetwork = selectNetwork(networks);
         if (selectedNetwork == null) {
             return;
         }
 
-        // Load it
-        String networkFilePath = getNetworkFilePath(selectedNetwork);
-        NeuralNetworkTrainer trainer = NeuralNetworkInitializer.initializeTrainer();  // default constructor
-        trainer.loadNetwork(networkFilePath);
-
-        // Prompt for iterative training parameters
-        int totalRounds = promptForNumber("Enter total training rounds: ", 1, 1000);
-        int gamesPerRound = promptForNumber("Enter # training games per round: ", 1, 10000);
-        boolean printBoard = promptForYesNo("Print final board after each game? (yes/no): ");
-        int boardSize = promptForNumber("Enter board size (e.g., 5 for 5x5): ", 3, 10);
-
-        // Run the iterative trainer
-        IterativeNetVsHeuristicTrainer iterativeTrainer =
-            new IterativeNetVsHeuristicTrainer(
-                trainer,
-                boardSize,
-                gamesPerRound,
-                totalRounds,
-                printBoard
-            );
-
-        long startTime = System.currentTimeMillis();
-        iterativeTrainer.runIterativeTraining();
-        long endTime = System.currentTimeMillis();
-        long duration = endTime - startTime;
-        double seconds = duration / 1000.0;
-
-        // Example: update local metrics if you like
-        System.out.printf("Finished iterative training in %.2f seconds.\n", seconds);
-
-        // Save updated net
-        trainer.saveNetwork(networkFilePath);
-        System.out.println("Network '" + selectedNetwork + "' updated and saved.");
-    }
-
-    // ------------------------------------------------------------------------
-    // 3) Self-Play Training
-    // ------------------------------------------------------------------------
-    private void selfPlayTrainingMenu() {
-        System.out.println("\n--- Self-Play Training ---");
-        List<String> networks = listNetworks();
-        if (networks.isEmpty()) {
-            System.out.println("No existing neural networks found. Please create a new one first.");
-            return;
-        }
-
-        System.out.println("\nSelect the network to use for self-play training:");
-        String selectedNetwork = selectNetwork(networks);
-        if (selectedNetwork == null) {
-            return;
-        }
-
-        // Load it
         String networkFilePath = getNetworkFilePath(selectedNetwork);
         NeuralNetworkTrainer trainer = NeuralNetworkInitializer.initializeTrainer();
         trainer.loadNetwork(networkFilePath);
 
-        // Ask how many self-play games to run
-        int numberOfGames = promptForNumber("How many self-play training games to run: ", 1, 50000);
-        int valFrequency = promptForNumber("Validation frequency (# games between validations): ", 1, numberOfGames);
-        int patience = promptForNumber("Patience (stop if no improvement for X validations): ", 1, 100);
+        int totalRounds = promptForNumber("Total rounds: ", 1, 1000);
+        int gamesPerRound = promptForNumber("Games per round: ", 1, 10000);
+        boolean printBoard = promptForYesNo("Print final board each game? (yes/no): ");
+        int boardSize = promptForNumber("Board size (e.g. 5): ", 3, 10);
 
-        // Build SelfPlayMinimaxTrainer
-        SelfPlayMinimaxTrainer selfPlay = new SelfPlayMinimaxTrainer(trainer, numberOfGames, valFrequency, patience);
+        IterativeNetVsHeuristicTrainer it =
+            new IterativeNetVsHeuristicTrainer(
+                trainer, boardSize, gamesPerRound, totalRounds, printBoard
+            );
 
         long startTime = System.currentTimeMillis();
-        selfPlay.runTraining();
+        it.runIterativeTraining();
         long endTime = System.currentTimeMillis();
-        double seconds = (endTime - startTime) / 1000.0;
-        System.out.printf("Self-play training took %.2f seconds.\n", seconds);
+        System.out.printf("Finished in %.2f sec.\n", (endTime - startTime)/1000.0);
 
-        // Optionally gather some additional stats here
-        // e.g. averageGameLength = ...
-        // netWinRate = ...
-
-        // Save updated net
         trainer.saveNetwork(networkFilePath);
-        System.out.println("\nSelf-play training done. Network '" + selectedNetwork + "' saved.");
+        System.out.println("Network updated and saved.");
     }
 
-    // ------------------------------------------------------------------------
-    // 4) Delete Network
-    // ------------------------------------------------------------------------
+    private void selfPlayTrainingMenu() {
+        System.out.println("\n--- Self-Play Training ---");
+        List<String> networks = listNetworks();
+        if (networks.isEmpty()) {
+            System.out.println("No existing nets found.");
+            return;
+        }
+
+        System.out.println("\nSelect net for self-play training:");
+        String selectedNetwork = selectNetwork(networks);
+        if (selectedNetwork == null) {
+            return;
+        }
+
+        String networkFilePath = getNetworkFilePath(selectedNetwork);
+        NeuralNetworkTrainer trainer = NeuralNetworkInitializer.initializeTrainer();
+        trainer.loadNetwork(networkFilePath);
+
+        int numberOfGames = promptForNumber("How many self-play games?: ", 1, 50000);
+        int valFrequency = promptForNumber("Validation frequency (#games): ", 1, numberOfGames);
+        int patience = promptForNumber("Patience: ", 1, 100);
+
+        SelfPlayMinimaxTrainer sp =
+            new SelfPlayMinimaxTrainer(trainer, numberOfGames, valFrequency, patience);
+
+        long startTime = System.currentTimeMillis();
+        sp.runTraining();
+        long endTime = System.currentTimeMillis();
+        System.out.printf("Self-play took %.2f sec.\n", (endTime - startTime)/1000.0);
+
+        trainer.saveNetwork(networkFilePath);
+        System.out.println("Self-play done. Net saved.");
+    }
+
     private void deleteNetwork() {
         System.out.println("\n--- Delete a Network ---");
         List<String> networks = listNetworks();
         if (networks.isEmpty()) {
-            System.out.println("No existing neural networks found. Nothing to delete.");
+            System.out.println("None found.");
             return;
         }
 
@@ -258,56 +208,38 @@ public class ANNManager {
             return;
         }
 
-        // Confirm
-        System.out.print("Are you sure you want to delete '" + selectedNetwork + "'? (yes/no): ");
-        String confirmation = scanner.nextLine().trim().toLowerCase();
-        if (!confirmation.equals("yes") && !confirmation.equals("y")) {
-            System.out.println("Deletion canceled.");
+        System.out.print("Sure to delete '" + selectedNetwork + "'? (yes/no): ");
+        String conf = scanner.nextLine().trim().toLowerCase();
+        if (!conf.equals("yes") && !conf.equals("y")) {
+            System.out.println("Canceled.");
             return;
         }
 
-        // Delete the file
-        String networkFilePath = getNetworkFilePath(selectedNetwork);
-        File f = new File(networkFilePath);
+        String filePath = getNetworkFilePath(selectedNetwork);
+        File f = new File(filePath);
         if (f.delete()) {
-            System.out.println("Network '" + selectedNetwork + "' deleted.");
+            System.out.println("Deleted " + selectedNetwork);
         } else {
             System.out.println("Failed to delete. Try again.");
         }
     }
 
-    // ------------------------------------------------------------------------
-    // 5) Show Training Metrics
-    // ------------------------------------------------------------------------
     private void showMetrics() {
         System.out.println("\n--- Current Metrics ---");
         System.out.printf("Games played: %d\n", gamesPlayed);
-        System.out.printf("Average game length: %.2f\n", averageGameLength);
+        System.out.printf("Avg game length: %.2f\n", averageGameLength);
         System.out.printf("Net win rate: %.2f\n", netWinRate);
-        System.out.printf("Average nodes evaluated: %.2f\n", averageNodesEvaluated);
-        // Add any other relevant info you track
+        System.out.printf("Avg nodes evaluated: %.2f\n", averageNodesEvaluated);
     }
 
-    // ------------------------------------------------------------------------
-    // 6) Run Experiments
-    // ------------------------------------------------------------------------
-    private void runExperiments() {
-        // We simply delegate to the separate class
-        ExperimentRunner.runAllExperiments();
-    }
-
-    // ------------------------------------------------------------------------
-    // Internal Utility Methods
-    // ------------------------------------------------------------------------
+    // Utilities
 
     private void ensureNetworksDirectory() {
-        File networksDirectory = new File(NETWORKS_DIR);
-        if (!networksDirectory.exists()) {
-            boolean created = networksDirectory.mkdir();
-            if (created) {
-                System.out.println("Created 'networks' directory to store neural networks.");
-            } else {
-                System.out.println("Failed to create 'networks' directory. Exiting.");
+        File dir = new File(NETWORKS_DIR);
+        if (!dir.exists()) {
+            boolean created = dir.mkdir();
+            if (!created) {
+                System.out.println("Failed to create networks folder.");
                 System.exit(0);
             }
         }
@@ -323,90 +255,77 @@ public class ANNManager {
     }
 
     private ActivationFunction promptForActivationFunction() {
-        System.out.println("\nSelect an Activation Function (recommended: TANH or RELU):");
+        System.out.println("\nChoose activation function:");
         ActivationFunction[] funcs = ActivationFunction.values();
         for (int i = 0; i < funcs.length; i++) {
             System.out.println((i + 1) + ". " + funcs[i]);
         }
-        System.out.print("Enter your choice (1-" + funcs.length + "): ");
+        System.out.print("Pick: ");
         while (true) {
             try {
-                int choice = Integer.parseInt(scanner.nextLine().trim());
-                if (choice >= 1 && choice <= funcs.length) {
-                    return funcs[choice - 1];
+                int c = Integer.parseInt(scanner.nextLine().trim());
+                if (c >= 1 && c <= funcs.length) {
+                    return funcs[c - 1];
                 }
-                System.out.print("Invalid. Enter a number between 1 and " + funcs.length + ": ");
-            } catch (NumberFormatException e) {
-                System.out.print("Invalid. Enter a number between 1 and " + funcs.length + ": ");
+                System.out.print("Invalid. ");
+            } catch (Exception e) {
+                System.out.print("Invalid. ");
             }
         }
     }
 
     private List<String> listNetworks() {
         File dir = new File(NETWORKS_DIR);
-        File[] files = dir.listFiles((d, name) -> name.endsWith(NETWORK_FILE_EXTENSION));
+        File[] files = dir.listFiles((d,n)->n.endsWith(NETWORK_FILE_EXTENSION));
 
-        List<String> networks = new ArrayList<>();
+        List<String> nets = new ArrayList<>();
         if (files != null) {
             for (File f : files) {
-                String fileName = f.getName();
-                String netName = fileName.substring(0, fileName.length() - NETWORK_FILE_EXTENSION.length());
-                networks.add(netName);
+                String nm = f.getName();
+                nm = nm.substring(0, nm.length() - NETWORK_FILE_EXTENSION.length());
+                nets.add(nm);
             }
         }
-
-        if (networks.isEmpty()) {
-            System.out.println("No networks found in '" + NETWORKS_DIR + "'.");
-            return networks;
+        if (nets.isEmpty()) {
+            System.out.println("No networks found in " + NETWORKS_DIR);
+            return nets;
         }
 
-        System.out.println("\nAvailable Networks:");
-        for (int i = 0; i < networks.size(); i++) {
-            String nm = networks.get(i);
-            String path = getNetworkFilePath(nm);
-            // Attempt to load quickly for metadata
-            NeuralNetworkTrainer tmp = NeuralNetworkInitializer.initializeTrainer();
-            tmp.loadNetwork(path);
-            System.out.println((i + 1) + ". " + nm
-                + " | StatesTrained=" + tmp.getNumberOfStatesTrained()
-                + " | LastOutput=" + tmp.getLastOutput());
+        System.out.println("\nAvailable:");
+        for (int i = 0; i < nets.size(); i++) {
+            System.out.println((i+1) + ". " + nets.get(i));
         }
-
-        return networks;
+        return nets;
     }
 
     private String selectNetwork(List<String> nets) {
         if (nets.isEmpty()) return null;
-        System.out.println("Enter the number of the network (0 to cancel): ");
+        System.out.println("Enter # (0=cancel): ");
         while (true) {
             String in = scanner.nextLine().trim();
-            int choice;
+            int ch;
             try {
-                choice = Integer.parseInt(in);
-            } catch (NumberFormatException e) {
-                System.out.print("Invalid. Enter a number between 0 and " + nets.size() + ": ");
+                ch = Integer.parseInt(in);
+            } catch(Exception e) {
                 continue;
             }
-            if (choice == 0) {
-                System.out.println("Canceled.");
+            if (ch == 0) {
                 return null;
-            } else if (choice >= 1 && choice <= nets.size()) {
-                return nets.get(choice - 1);
-            } else {
-                System.out.print("Invalid. Enter a number between 0 and " + nets.size() + ": ");
             }
+            if (ch >= 1 && ch <= nets.size()) {
+                return nets.get(ch-1);
+            }
+            System.out.print("Invalid. ");
         }
     }
 
     private int getUserChoice(int min, int max) {
         while (true) {
             try {
-                int ch = Integer.parseInt(scanner.nextLine().trim());
-                if (ch >= min && ch <= max) return ch;
-                System.out.print("Invalid. Enter a number " + min + ".." + max + ": ");
-            } catch (NumberFormatException e) {
-                System.out.print("Invalid. Enter a number " + min + ".." + max + ": ");
-            }
+                int c = Integer.parseInt(scanner.nextLine().trim());
+                if (c >= min && c <= max) return c;
+            } catch(Exception e) { }
+            System.out.printf("Invalid. Enter %d..%d: ", min, max);
         }
     }
 
@@ -416,42 +335,38 @@ public class ANNManager {
             try {
                 int val = Integer.parseInt(scanner.nextLine().trim());
                 if (val >= min && val <= max) return val;
-            } catch (NumberFormatException ignored) {}
+            } catch(Exception e){}
             System.out.print("Invalid. " + prompt);
         }
     }
 
     private boolean promptForYesNo(String prompt) {
         System.out.print(prompt + " ");
-        while (true) {
-            String resp = scanner.nextLine().trim().toLowerCase();
-            if (resp.equals("yes") || resp.equals("y")) return true;
-            if (resp.equals("no") || resp.equals("n")) return false;
+        while(true) {
+            String ans = scanner.nextLine().trim().toLowerCase();
+            if (ans.equals("y") || ans.equals("yes")) return true;
+            if (ans.equals("n") || ans.equals("no")) return false;
             System.out.print("Please enter yes or no: ");
         }
     }
 
-    // ------------------------------------------------------------------------
-    // (Metrics example) If you want to attach a new game result:
-    //   recordGameResult(gameLength, winner, totalNodesEvaluated)
-    // ------------------------------------------------------------------------
+    /**
+     * Example for recording post-game stats:
+     */
     public void recordGameResult(int moves, Player winner, int nodesEvaluated) {
         gamesPlayed++;
-        double oldAvgLen = averageGameLength;
-        averageGameLength = (oldAvgLen * (gamesPlayed - 1) + moves) / gamesPlayed;
+        double oldAvg = averageGameLength;
+        averageGameLength = ((oldAvg * (gamesPlayed -1)) + moves) / gamesPlayed;
 
-        double oldAvgNodes = averageNodesEvaluated;
-        averageNodesEvaluated = (oldAvgNodes * (gamesPlayed - 1) + nodesEvaluated) / gamesPlayed;
+        double oldNodes = averageNodesEvaluated;
+        averageNodesEvaluated = ((oldNodes * (gamesPlayed -1)) + nodesEvaluated) / gamesPlayed;
 
-        // E.g. if we always consider "BLUE" as the net's color:
         if (winner != null && winner.getColor() == Color.BLUE) {
-            // net won
-            double oldWinRate = netWinRate;
-            netWinRate = (oldWinRate * (gamesPlayed - 1) + 1.0) / gamesPlayed;
+            double oldWin = netWinRate;
+            netWinRate = ((oldWin * (gamesPlayed -1)) + 1) / gamesPlayed;
         } else {
-            // net lost or draw
-            double oldWinRate = netWinRate;
-            netWinRate = (oldWinRate * (gamesPlayed - 1) + 0.0) / gamesPlayed;
+            double oldWin = netWinRate;
+            netWinRate = ((oldWin * (gamesPlayed -1)) + 0) / gamesPlayed;
         }
     }
 }
