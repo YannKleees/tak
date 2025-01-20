@@ -138,7 +138,11 @@ public class HeuristicEvaluator implements IEvaluationFunction, Serializable {
             + capstoneScore
             + flatStoneScore;
 
-        return score;
+        // Method 1: Using Math.max and Math.min
+        double clampedScore = Math.max(-1, Math.min(1, score));
+
+
+        return clampedScore;
     }
 
     /**
