@@ -31,10 +31,10 @@ import java.util.Random;
  *   3) Train the network for a few epochs.
  *   4) Log training metrics.
  *
- * Changes from the default version:
- *   - randomOpeningPlies set to 3.
+ * Enhanced:
+ *   - randomOpeningPlies set to 3 by default.
  *   - multiple training epochs on the game data.
- *   - (Optionally) do an immediate small backprop (inGameRate) after each move. (See ADDED FEATURE block)
+ *   - TRUE TD-like mid-game updates: oldState -> nextState's predicted value * discount.
  */
 public class IterativeNetVsHeuristicTrainer {
 
@@ -51,9 +51,11 @@ public class IterativeNetVsHeuristicTrainer {
     // We do multiple epochs per round on the aggregated dataset
     private final int epochsPerRound = 3;
 
-    // ADDED FEATURE: If you want to do partial “TD-like” updates during the game,
-    // define a small inGameRate vs. afterGameRate in your NeuralNetworkTrainer:
+    // If you want to do partial “TD-like” updates during the game:
     private final boolean doMidGameUpdates = true;
+
+    // A discount factor for TD updates
+    private static final double DISCOUNT = 0.99;
 
     public IterativeNetVsHeuristicTrainer(NeuralNetworkTrainer trainer,
                                           int boardSize,
@@ -94,14 +96,14 @@ public class IterativeNetVsHeuristicTrainer {
     }
 
     private double runSingleRound() {
-        double totalLoss = 0.0;
+        double totalEpochLoss = 0.0;
         List<SelfPlayMinimaxTrainer.TrainingExample> allTrainingExamples = new ArrayList<>();
 
         for (int i = 1; i <= gamesPerRound; i++) {
             System.out.println("\n--- Game " + i + " / " + gamesPerRound + " in this round ---");
             List<TrainingGameRecord> gameData = playOneGameCollectStates();
-            List<SelfPlayMinimaxTrainer.TrainingExample> trainingExamples = labelData(gameData);
-            allTrainingExamples.addAll(trainingExamples);
+            List<SelfPlayMinimaxTrainer.TrainingExample> labeled = labelData(gameData);
+            allTrainingExamples.addAll(labeled);
         }
 
         if (allTrainingExamples.isEmpty()) {
@@ -109,7 +111,7 @@ public class IterativeNetVsHeuristicTrainer {
             return 0.0;
         }
 
-        double totalEpochLoss = 0.0;
+        // multiple epochs on the combined dataset
         for (int epoch = 1; epoch <= epochsPerRound; epoch++) {
             double epochLoss = trainer.trainAll(allTrainingExamples);
             totalEpochLoss += epochLoss;
@@ -121,7 +123,8 @@ public class IterativeNetVsHeuristicTrainer {
 
     /**
      * Plays one game: net(BLUE) vs heuristic(GREEN).
-     * Collect states for final batch training. Optionally do small partial updates each turn (inGameRate).
+     * Collect states for final batch training. Also do small partial updates each turn (inGameRate),
+     * but now with real TD logic: oldState -> discount * nextStateValue
      */
     private List<TrainingGameRecord> playOneGameCollectStates() {
         Player netPlayer = new MinimaxAgent(
@@ -142,44 +145,36 @@ public class IterativeNetVsHeuristicTrainer {
 
             // random openings for first few plies
             if (moveCount < randomOpeningPlies * 2) {
-                List<String> actionStrings =
-                    ActionGenerator.generatePossibleActions(game.getBoard(), current, moveCount);
-                List<Action> allActions = parseActionStrings(actionStrings, current);
-
-                if (!allActions.isEmpty()) {
-                    Action randomAction = allActions.get(rnd.nextInt(allActions.size()));
-                    try {
-                        randomAction.execute(game.getBoard());
-                        game.incrementMoveCount();
-                        game.checkWinConditions();
-                        game.switchPlayer();
-                    } catch (InvalidMoveException e) {
-                        System.out.println("  Error during random opening: " + e.getMessage());
-                        break;
-                    }
-                } else {
-                    System.out.println("No moves found for random opening. Breaking.");
-                    break;
-                }
+                randomOpeningMove(game, current, moveCount);
             } else {
-                // Store the state from the current player's perspective
-                double[] state = BoardToInputsConverter.convert(game.getBoard(), current);
-                records.add(new TrainingGameRecord(state, current, game));
+                // Store the old state from the current player's perspective
+                double[] oldState = BoardToInputsConverter.convert(game.getBoard(), current);
 
-                // ADDED FEATURE: If doMidGameUpdates = true, do a partial “TD-like” update using
-                // the net's *current* estimate as target. (We use the trainer's inGameRate.)
-                if (doMidGameUpdates && current.getColor() == Color.BLUE) {
-                    // Example for BLUE only; or do it for both if you prefer:
-                    double[] netOut = trainer.getNetwork().forward(state);
-                    trainer.trainSingleSampleWithInGameRate(state, netOut);
-                }
-
+                // Let the current player move
                 try {
                     current.makeMove(game);
                 } catch (InvalidMoveException | GameOverException e) {
-                    System.out.println("  An error occurred during normal move: " + e.getMessage());
+                    System.out.println("  Error during normal move: " + e.getMessage());
                     break;
                 }
+
+                // If game not ended, we do a partial TD update:
+                if (!game.isGameEnded() && doMidGameUpdates && current.getColor() == Color.BLUE) {
+                    // next state from the same player's perspective, or from next player's?
+                    // Usually we do "bootstrap" from the same player's next turn perspective:
+                    double[] nextState = BoardToInputsConverter.convert(game.getBoard(), current);
+                    double[] nextVal = trainer.getNetwork().forward(nextState);
+
+                    // Multiply nextVal by discount
+                    for (int k = 0; k < nextVal.length; k++) {
+                        nextVal[k] *= DISCOUNT;
+                    }
+                    // Now train oldState -> nextVal
+                    trainer.trainSingleSampleWithInGameRate(oldState, nextVal);
+                }
+
+                // Record the state for final label
+                records.add(new TrainingGameRecord(oldState, current, game));
             }
         }
 
@@ -188,10 +183,27 @@ public class IterativeNetVsHeuristicTrainer {
             game.getBoard().printBoard();
             System.out.println();
         }
-
-        // ADDED FEATURE: If you want a final “afterGameRate” fix-up for the last board states,
-        // that will happen in labelData() + trainAll() in runSingleRound.
         return records;
+    }
+
+    private void randomOpeningMove(TakGame game, Player current, int moveCount) {
+        List<String> actionStrings =
+            ActionGenerator.generatePossibleActions(game.getBoard(), current, moveCount);
+        List<Action> allActions = parseActionStrings(actionStrings, current);
+
+        if (!allActions.isEmpty()) {
+            Action randomAction = allActions.get(rnd.nextInt(allActions.size()));
+            try {
+                randomAction.execute(game.getBoard());
+                game.incrementMoveCount();
+                game.checkWinConditions();
+                game.switchPlayer();
+            } catch (InvalidMoveException e) {
+                System.out.println("  Error during random opening: " + e.getMessage());
+            }
+        } else {
+            System.out.println("No moves found for random opening. Breaking.");
+        }
     }
 
     private List<Action> parseActionStrings(List<String> actionStrings, Player player) {
@@ -208,19 +220,14 @@ public class IterativeNetVsHeuristicTrainer {
     }
 
     /**
-     * After the game, figure out who won and set the final +1/-1 labels accordingly.
-     * Optionally ignore non-path wins or do partial pathOnly logic if you like.
+     * After the game, figure out who won and set the final +/-1 labels accordingly,
+     * plus any shaping. This is the "final correction."
      */
     private List<SelfPlayMinimaxTrainer.TrainingExample> labelData(List<TrainingGameRecord> gameRecords) {
-        if (gameRecords.isEmpty()) {
-            return new ArrayList<>();
-        }
+        if (gameRecords.isEmpty()) return new ArrayList<>();
 
         TakGame finalGame = gameRecords.get(gameRecords.size() - 1).takGame;
         Player winner = finalGame.getWinner();
-
-        // If you only want to reward path wins, you can check finalGame.getWinReason() if your code supports it.
-        // boolean pathOnly = false; // Example toggle
 
         List<SelfPlayMinimaxTrainer.TrainingExample> output = new ArrayList<>();
         for (TrainingGameRecord record : gameRecords) {
@@ -235,13 +242,11 @@ public class IterativeNetVsHeuristicTrainer {
                     target[0] = isMoverWinner ? 1.0 : -1.0;
                     target[1] = isMoverWinner ? -1.0 : 1.0;
                 } else {
-                    // mover is GREEN
                     target[0] = isMoverWinner ? -1.0 : 1.0;
                     target[1] = isMoverWinner ? 1.0 : -1.0;
                 }
             }
-
-            // Example of small shaping
+            // Keep or remove shaping if you want
             double shaping = computeRewardShaping(record.boardState);
             if (record.mover.getColor() == Color.BLUE) {
                 target[0] += shaping;
@@ -254,6 +259,7 @@ public class IterativeNetVsHeuristicTrainer {
         return output;
     }
 
+    // Example shaping function
     private double computeRewardShaping(double[] features) {
         int idx = features.length - 2;
         double ratio = features[idx];

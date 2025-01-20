@@ -194,6 +194,7 @@ public class NeuralNetworkTrainer {
     public void setMiniBatchSize(int b) {
         this.miniBatchSize = b;
     }
+
     public void setLearningRateDecay(double f) {
         this.lrDecayFactor = f;
     }
