@@ -172,7 +172,24 @@ public class ANNManager {
 
         trainer.saveNetwork(networkFilePath);
         System.out.println("Network updated and saved.");
+
+        // -------------------------------------------------------------
+        // ADDED for Over/Under-fitting checks:
+        // We now retrieve final train/validation loss from the trainer
+        double finalTrainLoss = it.getFinalTrainLoss(); // or whatever your trainer calls it
+        double finalValLoss   = it.getFinalValLoss();   // if you do have a validation step
+
+        // Heuristic approach to detect overfitting vs underfitting:
+        if (finalTrainLoss < finalValLoss * 0.8) {
+            System.out.println("WARNING: Potential overfitting (training loss << validation loss).");
+        } else if (finalTrainLoss > finalValLoss * 1.2) {
+            System.out.println("WARNING: Potential underfitting (training loss >> validation loss).");
+        } else {
+            System.out.println("Looks okay (training vs validation loss are relatively close).");
+        }
+        // -------------------------------------------------------------
     }
+
 
     private void selfPlayTrainingMenu() {
         System.out.println("\n--- Self-Play Training ---");
@@ -181,21 +198,21 @@ public class ANNManager {
             System.out.println("No existing nets found.");
             return;
         }
-    
+
         System.out.println("\nSelect net for self-play training:");
         String selectedNetwork = selectNetwork(networks);
         if (selectedNetwork == null) {
             return;
         }
-    
+
         String networkFilePath = getNetworkFilePath(selectedNetwork);
         NeuralNetworkTrainer trainer = NeuralNetworkInitializer.initializeTrainer();
         trainer.loadNetwork(networkFilePath);
-    
+
         int numberOfGames = promptForNumber("How many self-play games?: ", 1, 50000);
         int valFrequency = promptForNumber("Validation frequency (#games): ", 1, numberOfGames);
         int patience = promptForNumber("Patience: ", 1, 100);
-    
+
         boolean netVsNet = promptForYesNo("Use Net-vs-Net? (yes = net vs net, no = net vs heuristic)");
         int randomOpening = promptForNumber("How many random opening moves per side? (0=no random): ", 0, 10);
         boolean doCsv = promptForYesNo("Save CSV logs of training? (yes/no)");
@@ -204,23 +221,23 @@ public class ANNManager {
             System.out.print("Enter CSV filename (e.g. MyTraining.csv): ");
             csvName = scanner.nextLine().trim();
         }
-    
+
         // Create the trainer
         SelfPlayMinimaxTrainer sp =
             new SelfPlayMinimaxTrainer(trainer, numberOfGames, valFrequency, patience);
-    
-        //sp.setSelfPlayNetVsNet(netVsNet);        
+
+        //sp.setSelfPlayNetVsNet(netVsNet);
         //sp.setRandomOpeningPlies(randomOpening);
-    
+
         if (doCsv && !csvName.isEmpty()) {
             //sp.setCsvLogging(csvName);
         }
-    
+
         long startTime = System.currentTimeMillis();
         sp.runTraining();
         long endTime = System.currentTimeMillis();
         System.out.printf("Self-play took %.2f sec.\n", (endTime - startTime)/1000.0);
-    
+
         trainer.saveNetwork(networkFilePath);
         System.out.println("Self-play done. Net saved.");
     }

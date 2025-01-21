@@ -1,19 +1,20 @@
 package com.Tak.AI.experiments;
 
+import com.Tak.AI.actions.Action;
 import com.Tak.AI.evaluation.HeuristicEvaluator;
+import com.Tak.AI.evaluation.IEvaluationFunction;
 import com.Tak.AI.neuralnet.BoardToInputsConverter;
 import com.Tak.AI.neuralnet.NeuralNetworkEvaluator;
 import com.Tak.AI.neuralnet.NeuralNetworkTrainer;
 import com.Tak.AI.neuralnet.SelfPlayMinimaxTrainer;
 import com.Tak.AI.players.MinimaxAgent;
-import com.Tak.AI.actions.Action;
 import com.Tak.AI.utils.ActionGenerator;
 import com.Tak.Logic.exceptions.GameOverException;
 import com.Tak.Logic.exceptions.InvalidMoveException;
-import com.Tak.Logic.models.Board;
 import com.Tak.Logic.models.Player;
 import com.Tak.Logic.models.Player.Color;
 import com.Tak.Logic.models.TakGame;
+import com.Tak.Logic.utils.Logger;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -26,12 +27,14 @@ import java.util.Random;
 /**
  * An iterative trainer that repeatedly runs multiple "rounds" of Net-vs-Heuristic training.
  * In each round:
- *   1) Run N training games (the net is always BLUE).
- *   2) Collect training data from those games (both players).
+ *   1) We run N training games. **Half** of them net is BLUE, half net is GREEN.
+ *   2) Collect training data from those games.
  *   3) Train the network for a few epochs.
  *   4) Log training metrics.
  */
 public class IterativeNetVsHeuristicTrainer {
+
+    private static final String TAG = "IterativeNetVsHeuristicTrainer";
 
     private final NeuralNetworkTrainer trainer;
     private final int boardSize;
@@ -54,11 +57,23 @@ public class IterativeNetVsHeuristicTrainer {
     // UPDATED: discount factor reduced to 0.90 (instead of 0.99)
     private static final double DISCOUNT = 0.90;
 
-    public IterativeNetVsHeuristicTrainer(NeuralNetworkTrainer trainer,
-                                          int boardSize,
-                                          int gamesPerRound,
-                                          int totalRounds,
-                                          boolean printFinalBoard) {
+    // --------------------------------------------------------------------
+    // ADDED: finalTrainLoss, finalValLoss, plus getters
+    // --------------------------------------------------------------------
+    private double finalTrainLoss = 0.0;
+    private double finalValLoss   = 0.0;
+
+    public double getFinalTrainLoss() { return finalTrainLoss; }
+    public double getFinalValLoss()   { return finalValLoss; }
+    // --------------------------------------------------------------------
+
+    public IterativeNetVsHeuristicTrainer(
+        NeuralNetworkTrainer trainer,
+        int boardSize,
+        int gamesPerRound,
+        int totalRounds,
+        boolean printFinalBoard
+    ) {
         this.trainer = trainer;
         this.boardSize = boardSize;
         this.gamesPerRound = gamesPerRound;
@@ -72,39 +87,72 @@ public class IterativeNetVsHeuristicTrainer {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(summaryLogPath))) {
             writer.write("Round,AverageLoss");
             writer.newLine();
-            System.out.println("Initialized training summary log at " + summaryLogPath);
+            Logger.log(TAG, "Initialized training summary log at " + summaryLogPath);
         } catch (IOException e) {
-            System.out.println("Failed to initialize summary log: " + e.getMessage());
+            Logger.log(TAG, "Failed to initialize summary log: " + e.getMessage());
         }
     }
 
     public void runIterativeTraining() {
-        System.out.println("\n=== Starting Iterative Net-vs-Heuristic Training ===");
+        Logger.log(TAG, "\n=== Starting Iterative Net-vs-Heuristic Training ===");
         for (int round = 1; round <= totalRounds; round++) {
-            System.out.println("\n--- Round " + round + " / " + totalRounds + " ---");
+            Logger.log(TAG, String.format("\n--- Round %d / %d ---", round, totalRounds));
 
             double avgLoss = runSingleRound();
-            System.out.printf("Finished Round %d. AvgLoss=%.4f\n", round, avgLoss);
+            Logger.log(TAG, String.format("Finished Round %d. AvgLoss=%.4f", round, avgLoss));
+
+            // compute a small validation loss
+            double valLoss = computeValidationLoss();
+            Logger.log(TAG, String.format("Validation Loss=%.4f", valLoss));
+
+            // store these in finalTrainLoss/finalValLoss
+            this.finalTrainLoss = avgLoss;
+            this.finalValLoss   = valLoss;
+
+            // quick check for over/under-fitting
+            if (avgLoss < valLoss * 0.8) {
+                Logger.log(TAG, "WARNING: Potential overfitting (trainLoss << valLoss).");
+            } else if (avgLoss > valLoss * 1.2) {
+                Logger.log(TAG, "WARNING: Potential underfitting (trainLoss >> valLoss).");
+            } else {
+                Logger.log(TAG, "Train vs Val Loss are close => Possibly OK.");
+            }
 
             logRoundSummary(round, avgLoss);
         }
 
-        System.out.println("\n=== Iterative Training Complete ===");
+        Logger.log(TAG, "\n=== Iterative Training Complete ===");
     }
 
+    /**
+     * In a single round, we do `gamesPerRound` games.
+     * Half the games => net is BLUE, heuristic is GREEN.
+     * The other half => net is GREEN, heuristic is BLUE.
+     */
     private double runSingleRound() {
         double totalEpochLoss = 0.0;
         List<SelfPlayMinimaxTrainer.TrainingExample> allTrainingExamples = new ArrayList<>();
 
-        for (int i = 1; i <= gamesPerRound; i++) {
-            System.out.println("\n--- Game " + i + " / " + gamesPerRound + " ---");
-            List<TrainingGameRecord> gameData = playOneGameCollectStates();
+        int half = gamesPerRound / 2;  // integer division
+        int remainder = gamesPerRound % 2;
+
+        // net as BLUE for the first `half + remainder` games
+        for (int i = 1; i <= (half + remainder); i++) {
+            Logger.log(TAG, String.format("\n--- Game %d / %d (Net=BLUE) ---", i, gamesPerRound));
+            List<TrainingGameRecord> gameData = playOneGameCollectStates(/* netAsBlue= */ true);
+            List<SelfPlayMinimaxTrainer.TrainingExample> labeled = labelData(gameData);
+            allTrainingExamples.addAll(labeled);
+        }
+        // net as GREEN for the remaining `half` games
+        for (int i = (half + remainder) + 1; i <= gamesPerRound; i++) {
+            Logger.log(TAG, String.format("\n--- Game %d / %d (Net=GREEN) ---", i, gamesPerRound));
+            List<TrainingGameRecord> gameData = playOneGameCollectStates(/* netAsBlue= */ false);
             List<SelfPlayMinimaxTrainer.TrainingExample> labeled = labelData(gameData);
             allTrainingExamples.addAll(labeled);
         }
 
         if (allTrainingExamples.isEmpty()) {
-            System.out.println("No training data collected this round. Skipping training.");
+            Logger.log(TAG, "No training data collected this round. Skipping training.");
             return 0.0;
         }
 
@@ -112,27 +160,37 @@ public class IterativeNetVsHeuristicTrainer {
         for (int epoch = 1; epoch <= epochsPerRound; epoch++) {
             double epochLoss = trainer.trainAll(allTrainingExamples);
             totalEpochLoss += epochLoss;
-            System.out.printf("  Epoch %d/%d Loss=%.4f\n", epoch, epochsPerRound, epochLoss);
+            Logger.log(TAG, String.format("  Epoch %d/%d Loss=%.4f", epoch, epochsPerRound, epochLoss));
         }
 
         return totalEpochLoss / epochsPerRound;
     }
 
     /**
-     * Play one game: net(BLUE) vs heuristic(GREEN).
+     * 1 game: net vs heuristic. We decide net's color based on `netAsBlue`.
      * Collect states for final batch training.
      * Also do partial updates each turn (inGameRate).
      */
-    private List<TrainingGameRecord> playOneGameCollectStates() {
+    private List<TrainingGameRecord> playOneGameCollectStates(boolean netAsBlue) {
+        // Build the net-based MinimaxAgent
         Player netPlayer = new MinimaxAgent(
-            Color.BLUE, 21, 21, 1, 2, false,
+            netAsBlue ? Color.BLUE : Color.GREEN,   // net color
+            21, 21, 1,
+            2, // search depth
+            false,
             new NeuralNetworkEvaluator(trainer.getNetwork())
         );
+
+        // Build the heuristic-based MinimaxAgent
         Player heuristicPlayer = new MinimaxAgent(
-            Color.GREEN, 21, 21, 1, 2, false,
+            netAsBlue ? Color.GREEN : Color.BLUE,   // heuristic color is the opposite
+            21, 21, 1,
+            2,
+            false,
             new HeuristicEvaluator()
         );
 
+        // Initialize the game with netPlayer, heuristicPlayer
         TakGame game = new TakGame(boardSize, Arrays.asList(netPlayer, heuristicPlayer));
         List<TrainingGameRecord> records = new ArrayList<>();
 
@@ -151,7 +209,7 @@ public class IterativeNetVsHeuristicTrainer {
                 try {
                     current.makeMove(game);
                 } catch (InvalidMoveException | GameOverException e) {
-                    System.out.println("Error during move: " + e.getMessage());
+                    Logger.log(TAG, "Error during move: " + e.getMessage());
                     break;
                 }
 
@@ -171,9 +229,9 @@ public class IterativeNetVsHeuristicTrainer {
         }
 
         if (printFinalBoard) {
-            System.out.println("  Final Board State:");
+            Logger.log(TAG, "  Final Board State:");
             game.getBoard().printBoard();
-            System.out.println();
+            Logger.log(TAG, "");
         }
 
         return records;
@@ -190,10 +248,10 @@ public class IterativeNetVsHeuristicTrainer {
                 game.checkWinConditions();
                 game.switchPlayer();
             } catch (InvalidMoveException e) {
-                System.out.println("Error in random opening: " + e.getMessage());
+                Logger.log(TAG, "Error in random opening: " + e.getMessage());
             }
         } else {
-            System.out.println("No moves found for random opening.");
+            Logger.log(TAG, "No moves found for random opening.");
         }
     }
 
@@ -223,6 +281,7 @@ public class IterativeNetVsHeuristicTrainer {
         for (TrainingGameRecord rec : gameRecords) {
             double[] target = new double[2];
             if (winner == null) {
+                // tie
                 target[0] = 0.0;
                 target[1] = 0.0;
             } else {
@@ -248,7 +307,7 @@ public class IterativeNetVsHeuristicTrainer {
     }
 
     private double computeRewardShaping(double[] features) {
-        // same as your example
+        // example shaping approach: last 2 features store ratio?
         int idx = features.length - 2;
         double ratio = features[idx];
         return 0.1 * ratio;
@@ -269,9 +328,80 @@ public class IterativeNetVsHeuristicTrainer {
         try (BufferedWriter w = new BufferedWriter(new FileWriter(summaryLogPath, true))) {
             w.write(round + "," + avgLoss);
             w.newLine();
-            System.out.println("Logged Round " + round + " Summary.");
+            Logger.log(TAG, "Logged Round " + round + " Summary.");
         } catch (IOException e) {
-            System.out.println("Failed to log summary: " + e.getMessage());
+            Logger.log(TAG, "Failed to log summary: " + e.getMessage());
         }
+    }
+
+    // --------------------------------------------------------------------------
+    // Minimal "computeValidationLoss()" method for checking net vs. heuristic
+    // --------------------------------------------------------------------------
+    private double computeValidationLoss() {
+        int valGames = 3;
+        double totalLoss = 0.0;
+        int count = 0;
+
+        for (int i = 0; i < valGames; i++) {
+            // net(blue) vs. heuristic(green) as a quick check
+            Player netPlayer = new MinimaxAgent(
+                Color.BLUE, 21, 21, 1, 2, false,
+                new NeuralNetworkEvaluator(trainer.getNetwork())
+            );
+            Player heuristicPlayer = new MinimaxAgent(
+                Color.GREEN, 21, 21, 1, 2, false,
+                new HeuristicEvaluator()
+            );
+
+            TakGame game = new TakGame(boardSize, Arrays.asList(netPlayer, heuristicPlayer));
+
+            // collect states from net's perspective
+            List<double[]> statesBlue = new ArrayList<>();
+
+            while (!game.isGameEnded()) {
+                Player current = game.getCurrentPlayer();
+                if (current.getColor() == Color.BLUE) {
+                    double[] st = BoardToInputsConverter.convert(game.getBoard(), current);
+                    statesBlue.add(st);
+                }
+
+                try {
+                    current.makeMove(game);
+                } catch (Exception e) {
+                    Logger.log(TAG, "Error during validation move: " + e.getMessage());
+                    break;
+                }
+            }
+
+            // final outcome => label states
+            Player winner = game.getWinner();
+            for (double[] st : statesBlue) {
+                double[] target = new double[2];
+                if (winner == null) {
+                    // tie
+                    target[0] = 0;
+                    target[1] = 0;
+                } else if (winner.getColor() == Color.BLUE) {
+                    target[0] = 1;
+                    target[1] = -1;
+                } else {
+                    target[0] = -1;
+                    target[1] = 1;
+                }
+
+                // forward pass => measure MSE
+                double[] out = trainer.getNetwork().forward(st);
+                double mse = 0.0;
+                for (int k = 0; k < 2; k++){
+                    mse += Math.pow(target[k] - out[k], 2);
+                }
+                mse /= 2.0;
+                totalLoss += mse;
+                count++;
+            }
+        }
+
+        if (count == 0) return 0.0;
+        return totalLoss / count;
     }
 }
