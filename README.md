@@ -113,7 +113,7 @@ On your turn, you may either place a piece or move a stack.
 
 #### Selecting a Piece
 
-- Use the **hotbar** on the left side of the screen to select a piece type (flat stone, standing stone, or capstone).
+- Use the **hotbar** in the middle of the screen to select a piece type (flat stone, standing stone, or capstone).
 - The available pieces are shown along with the remaining count.
 
 #### Placing a Piece
@@ -129,6 +129,9 @@ On your turn, you may either place a piece or move a stack.
   - **Example**: Enter `1,1` to drop one piece on the first square and one on the next.
 
 ### Notes
+
+## What you can do
+- You can play against a Minimax Heurisitic Agent or against an Agent that uses a ANN. You can also train nets     using two different trainers.
 
 - **First Two Moves**: Only flat stones can be placed, and they must be your opponent's stones.
 - **Piece Limits**: Keep an eye on the remaining pieces displayed next to the hotbar.
@@ -146,7 +149,6 @@ On your turn, you may either place a piece or move a stack.
 
 #### Clone the Repository
 
-```bash
 git clone https://github.com/yourusername/TakGame.git
 cd TakGame
 
