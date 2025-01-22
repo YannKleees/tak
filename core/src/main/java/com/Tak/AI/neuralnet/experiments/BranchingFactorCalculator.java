@@ -1,4 +1,4 @@
-package com.Tak.AI.experiments;
+package com.Tak.AI.neuralnet.experiments;
 
 import com.Tak.AI.actions.Action;
 import com.Tak.AI.utils.ActionGenerator;
