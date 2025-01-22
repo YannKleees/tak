@@ -280,33 +280,35 @@ public class TakGame implements Serializable {
      */
     public synchronized void placePiece(int x, int y, Piece.PieceType pieceType, Player pieceOwner)
         throws InvalidMoveException, GameOverException {
-        if (isGameEnded) {
-            throw new GameOverException("The game has already ended.");
-        }
-
-        board.placePiece(x, y, new Piece(pieceType, pieceOwner));
-        pieceOwner.decrementPiece(pieceType);
-
-        incrementMoveCount();
-
-        // Check for repeated board state after placing a piece
-        String boardStateHash = getBoardStateHash();
-        //if (previousBoardStates.contains(boardStateHash)) {
-            //Logger.log("TakGame", "Repeated board state detected after placing a piece. Declaring a tie.");
-            //endGameAsTie();
-            //return;
-
-        checkWinConditions();
-
-        // Check for maximum move count to prevent infinite loops
-        if (moveCount >= MAX_MOVES && !isGameEnded) {
-            Logger.log("TakGame", "Maximum move count reached. Declaring a tie to prevent infinite loop.");
-            endGameAsTie();
-            return;
-        }
-
-        switchPlayer();
+    if (isGameEnded) {
+        throw new GameOverException("The game has already ended.");
     }
+
+    // Enforce rule: First two moves must be a flat stone of the opponent's color
+    if (moveCount < 2) {
+        if (pieceType != Piece.PieceType.FLAT_STONE) {
+            throw new InvalidMoveException("Only flat stones allowed in the first two moves.");
+        }
+        // Force the stone to be owned by the opponent instead
+        pieceOwner = pieceOwner.getOpponent();
+    }
+
+    // Now do the usual place logic
+    board.placePiece(x, y, new Piece(pieceType, pieceOwner));
+    pieceOwner.decrementPiece(pieceType);
+
+    incrementMoveCount();
+    checkWinConditions();
+
+    // Check for max moves or repeated states, etc.
+    if (moveCount >= MAX_MOVES && !isGameEnded) {
+        Logger.log("TakGame", "Maximum move count reached. Declaring a tie to prevent infinite loop.");
+        endGameAsTie();
+        return;
+    }
+
+    switchPlayer();
+}
 
     /**
      * Increments the move count.

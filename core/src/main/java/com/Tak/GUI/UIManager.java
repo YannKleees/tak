@@ -455,7 +455,7 @@ public class UIManager {
         Player targetPlayer;
         if (takGame.getMoveCount() < 2) {
             // First two moves => place opponent’s pieces
-            targetPlayer = takGame.getOpponentPlayer();
+            targetPlayer = takGame.getCurrentPlayer();
 
             // Hide standing/capstone
             standingStoneImage.setVisible(false);
