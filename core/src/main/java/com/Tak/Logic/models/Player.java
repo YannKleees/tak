@@ -4,8 +4,8 @@ package com.Tak.Logic.models;
 import java.util.Objects;
 import java.io.Serializable;
 
-import com.Tak.Logic.exceptions.GameOverException;
-import com.Tak.Logic.exceptions.InvalidMoveException;
+import com.Tak.Logic.utils.GameOverException;
+import com.Tak.Logic.utils.InvalidMoveException;
 import com.Tak.Logic.utils.Logger;
 
 /**

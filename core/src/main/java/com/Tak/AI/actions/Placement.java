@@ -1,10 +1,10 @@
 package com.Tak.AI.actions;
 
-import com.Tak.Logic.exceptions.InvalidMoveException;
 import com.Tak.Logic.models.Board;
 import com.Tak.Logic.models.Piece;
 import com.Tak.Logic.models.PieceStack;
 import com.Tak.Logic.models.Player;
+import com.Tak.Logic.utils.InvalidMoveException;
 import com.Tak.Logic.utils.Logger;
 
 import java.io.Serializable;

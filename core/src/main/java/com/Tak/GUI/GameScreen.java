@@ -3,22 +3,22 @@ package com.Tak.GUI;
 
 import com.Tak.AI.evaluation.HeuristicEvaluator;
 import com.Tak.AI.evaluation.IEvaluationFunction;
-import com.Tak.AI.neuralnet.NeuralNetworkEvaluator;
-import com.Tak.AI.neuralnet.NeuralNetworkInitializer;
-import com.Tak.AI.neuralnet.NeuralNetworkTrainer;
-import com.Tak.AI.neuralnet.SelfPlayMinimaxTrainer;
-import com.Tak.AI.experiments.IterativeNetVsHeuristicTrainer;
+import com.Tak.AI.neuralnet.net.NeuralNetworkEvaluator;
+import com.Tak.AI.neuralnet.net.NeuralNetworkInitializer;
+import com.Tak.AI.neuralnet.trainer.IterativeNetVsHeuristicTrainer;
+import com.Tak.AI.neuralnet.trainer.NeuralNetworkTrainer;
+import com.Tak.AI.neuralnet.trainer.SelfPlayMinimaxTrainer;
 import com.Tak.AI.players.MinimaxAgent;
 import com.Tak.AI.players.RandomAIPlayer;
 import com.Tak.GUI.UIManager.DropCountsCallback;
-import com.Tak.Logic.exceptions.GameOverException;
-import com.Tak.Logic.exceptions.InvalidMoveException;
 import com.Tak.Logic.models.Direction;
 import com.Tak.Logic.models.GameMode;
 import com.Tak.Logic.models.Piece;
 import com.Tak.Logic.models.Piece.PieceType;
 import com.Tak.Logic.models.Player;
 import com.Tak.Logic.models.TakGame;
+import com.Tak.Logic.utils.GameOverException;
+import com.Tak.Logic.utils.InvalidMoveException;
 import com.Tak.Logic.utils.Logger;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -128,7 +128,7 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
 
         if (useAI) {
             // Human vs AI
-            Player humanPlayer = new com.Tak.Logic.players.HumanPlayer(Player.Color.BLUE, 21, 1, 1);
+            Player humanPlayer = new com.Tak.Logic.models.HumanPlayer(Player.Color.BLUE, 21, 1, 1);
             aiPlayer = new MinimaxAgent(Player.Color.GREEN, 21, 1, 1, 3);
 
             humanPlayer.setOpponent(aiPlayer);
@@ -139,8 +139,8 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
             Logger.log("GameScreen", "Initialized Human vs AI: BLUE vs GREEN");
         } else {
             // Human vs Human
-            Player p1 = new com.Tak.Logic.players.HumanPlayer(Player.Color.BLUE, 21, 1, 1);
-            Player p2 = new com.Tak.Logic.players.HumanPlayer(Player.Color.GREEN, 21, 1, 1);
+            Player p1 = new com.Tak.Logic.models.HumanPlayer(Player.Color.BLUE, 21, 1, 1);
+            Player p2 = new com.Tak.Logic.models.HumanPlayer(Player.Color.GREEN, 21, 1, 1);
 
             p1.setOpponent(p2);
             p2.setOpponent(p1);

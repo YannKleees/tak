@@ -3,11 +3,11 @@ package com.Tak.AI.experiments;
 
 import com.Tak.AI.players.MinimaxAgent;
 import com.Tak.AI.players.RandomAIPlayer;
-import com.Tak.Logic.exceptions.GameOverException;
-import com.Tak.Logic.exceptions.InvalidMoveException;
 import com.Tak.Logic.models.Player;
 import com.Tak.Logic.models.TakGame;
 import com.Tak.Logic.models.Player.Color;
+import com.Tak.Logic.utils.GameOverException;
+import com.Tak.Logic.utils.InvalidMoveException;
 
 import java.util.List;
 import java.util.ArrayList;

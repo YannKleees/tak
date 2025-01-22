@@ -1,6 +1,6 @@
 package com.Tak.Logic.models;
 
-import com.Tak.Logic.exceptions.InvalidMoveException;
+import com.Tak.Logic.utils.InvalidMoveException;
 import com.Tak.Logic.utils.Logger;
 
 import java.util.ArrayList;

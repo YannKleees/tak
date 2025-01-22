@@ -7,8 +7,8 @@ import java.util.Objects;
 import com.Tak.Logic.validators.MoveExecutor;
 import com.Tak.Logic.validators.MoveValidator;
 import com.Tak.AI.actions.Action;
-import com.Tak.Logic.exceptions.InvalidMoveException;
 import com.Tak.Logic.models.Player.Color;
+import com.Tak.Logic.utils.InvalidMoveException;
 import com.Tak.Logic.utils.Logger;
 
 /**

@@ -2,9 +2,8 @@ package com.Tak.Logic.models;
 
 import com.Tak.AI.players.MinimaxAgent;
 import com.Tak.AI.players.RandomAIPlayer;
-import com.Tak.Logic.exceptions.GameOverException;
-import com.Tak.Logic.exceptions.InvalidMoveException;
-import com.Tak.Logic.players.HumanPlayer;
+import com.Tak.Logic.utils.GameOverException;
+import com.Tak.Logic.utils.InvalidMoveException;
 import com.Tak.Logic.utils.Logger;
 import com.Tak.Logic.validators.MoveExecutor;
 import com.Tak.Logic.validators.MoveValidator;

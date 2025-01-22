@@ -1,12 +1,12 @@
 // File: core/src/main/java/com/Tak/GUI/GameInputHandler.java
 package com.Tak.GUI;
 
-import com.Tak.Logic.exceptions.GameOverException;
-import com.Tak.Logic.exceptions.InvalidMoveException;
 import com.Tak.Logic.models.Direction;
 import com.Tak.Logic.models.Piece;
 import com.Tak.Logic.models.Player;
 import com.Tak.Logic.models.TakGame;
+import com.Tak.Logic.utils.GameOverException;
+import com.Tak.Logic.utils.InvalidMoveException;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.PerspectiveCamera;

@@ -2,12 +2,13 @@ package com.Tak.AI.players;
 
 import com.Tak.AI.actions.Action;
 import com.Tak.AI.utils.ActionGenerator;
-import com.Tak.Logic.exceptions.GameOverException;
-import com.Tak.Logic.exceptions.InvalidMoveException;
 import com.Tak.Logic.models.Board;
 import com.Tak.Logic.models.Piece;
 import com.Tak.Logic.models.Player;
 import com.Tak.Logic.models.TakGame;
+import com.Tak.Logic.utils.GameOverException;
+import com.Tak.Logic.utils.InvalidMoveException;
+
 import java.util.List;
 import java.util.Random;
 

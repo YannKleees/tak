@@ -4,11 +4,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.Tak.Logic.exceptions.InvalidMoveException;
 import com.Tak.Logic.models.Board;
 import com.Tak.Logic.models.Direction;
 import com.Tak.Logic.models.Piece;
 import com.Tak.Logic.models.Player;
+import com.Tak.Logic.utils.InvalidMoveException;
 
 /**
  * The Action class represents a generic action in the Tak game.
