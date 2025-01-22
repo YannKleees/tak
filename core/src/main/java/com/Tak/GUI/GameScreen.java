@@ -45,62 +45,58 @@ import java.util.List;
 
 /**
  * The GameScreen class handles the main game screen, coordinating between
- * the renderer, UI, input handler, and includes a "Training" tab on the top-right.
+ * the renderer, UI, input handler, and includes a "Training" tab on the right side.
  *
- * This version includes:
- *  - AI selection (Random / Minimax)
- *  - Evaluator selection (Heuristic / NeuralNet)
- *  - Training tab with mode selection (Iterative vs. Self-Play),
- *    continuing from existing nets, smaller scroll area, etc.
+ * Key points:
+ *  - "Back to Main Menu", "Rules", "Training Tab" are placed at top-right
+ *  - AI selection (if any AI is present) is placed at bottom-right
+ *  - The training panel is also on the right side, toggled by the "Training Tab" button
  */
 public class GameScreen implements Screen, GameInputHandler.UICallback {
 
-    private TakGameMain game;
-    public int boardSize = 5;  // default board size if we build a new TakGame
-    public TakGame takGame;    // the actual game logic
+    private final TakGameMain game;
+    public int boardSize = 5;  
+    public TakGame takGame;    
 
+    // Camera / rendering
     public PerspectiveCamera camera;
     public CameraInputController camController;
     private GameRenderer renderer;
+    private ShapeRenderer shapeRenderer;
+
+    // UI
     private UIManager uiManager;
     private GameInputHandler inputHandler;
+    private Table mainGameTable; // normal in-game UI container
 
-    public Piece.PieceType selectedPieceType;
-    private boolean isAIMoving = false;
-    private TextButton rulesButton;
-    private ShapeRenderer shapeRenderer;
     private boolean useAI;
     private GameMode gameMode;
-    private Player aiPlayer;   // if Human vs AI
+    private Player aiPlayer;  // if Human vs AI
 
-    // The main table for normal in-game UI
-    private Table mainGameTable;
+    // Piece selection
+    public Piece.PieceType selectedPieceType;
+    private boolean isAIMoving = false;
 
-    // ----------------------------------------------------------------------
-    //  TRAINING TAB UI
-    // ----------------------------------------------------------------------
+    // Buttons at top-right
+    private TextButton backButton;
+    private TextButton rulesButton;
+    private TextButton trainingTabButton; // toggles the training tab
+
+    // Training Tab UI
     private Table trainingTable;
-    private TextButton trainingTabButton;
-
-    // Fields for iterative vs. heuristic
     private TextField gamesPerRoundField;
     private TextField totalRoundsField;
-
-    // Fields for self-play
     private TextField selfPlayGamesField;
     private TextField valFreqField;
     private TextField patienceField;
-
     private TextField boardSizeField;
     private TextArea trainingLogArea;
     private TextButton startTrainingButton;
-
-    // For "Continue from existing net?"
     private CheckBox continueCheckBox;
     private SelectBox<String> existingNetSelect;
 
     /**
-     * Constructor #1: Builds a new TakGame internally for a chosen GameMode (e.g., Human vs AI).
+     * Constructor: Builds a new TakGame internally for the chosen GameMode.
      */
     public GameScreen(TakGameMain game, GameMode gameMode) {
         this.game = game;
@@ -110,7 +106,7 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
     }
 
     /**
-     * Constructor #2: Accepts an existing TakGame (e.g. for AI vs AI).
+     * Constructor: Accepts an existing TakGame (e.g., for AI vs AI).
      */
     public GameScreen(TakGameMain game, TakGame existingGame) {
         this.game = game;
@@ -120,10 +116,8 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
         createFromExistingGame();
     }
 
-    /**
-     * Build a new TakGame internally (Human vs AI or Human vs Human).
-     */
-    public void create() {
+    private void create() {
+        // Build TakGame with either Human vs AI or Human vs Human
         List<Player> players = new ArrayList<>();
 
         if (useAI) {
@@ -135,18 +129,15 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
             aiPlayer.setOpponent(humanPlayer);
             players.add(humanPlayer);
             players.add(aiPlayer);
-
             Logger.log("GameScreen", "Initialized Human vs AI: BLUE vs GREEN");
         } else {
             // Human vs Human
             Player p1 = new com.Tak.Logic.models.HumanPlayer(Player.Color.BLUE, 21, 1, 1);
             Player p2 = new com.Tak.Logic.models.HumanPlayer(Player.Color.GREEN, 21, 1, 1);
-
             p1.setOpponent(p2);
             p2.setOpponent(p1);
             players.add(p1);
             players.add(p2);
-
             Logger.log("GameScreen", "Initialized Human vs Human: BLUE vs GREEN");
         }
 
@@ -154,10 +145,8 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
         initCommonParts();
     }
 
-    /**
-     * If an existing TakGame is provided, skip building players.
-     */
     private void createFromExistingGame() {
+        // We already have takGame from the constructor
         initCommonParts();
     }
 
@@ -192,29 +181,28 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
         inputHandler = new GameInputHandler(camera, takGame, renderer, uiManager, this);
         Gdx.input.setInputProcessor(new InputMultiplexer(uiManager.getStage(), inputHandler, camController));
 
-        // Main table for game UI
+        // Main in-game table
         mainGameTable = new Table();
         mainGameTable.setFillParent(true);
         uiManager.getStage().addActor(mainGameTable);
 
-        // Common UI
-        addRulesButton();
-        addBackButton();
+        // Add top-right buttons: Back, Rules, Training Tab
+        addTopRightButtons();
 
-        // If there's an AI in the game, let's show the AI selection
+        // If there's an AI in the game, place the AI selection in bottom-right
         if (detectAnyAI()) {
             addAISelectionDropdown();
         }
 
-        // Add the "Training Tab"
+        // Add the "Training Tab" UI, also on the right
         addTrainingTabUI();
 
-        // Make sure hotbar colors reflect current turn
+        // Update hotbar colors
         uiManager.updateHotbarColors();
     }
 
     /**
-     * Check if any of the players is an AI.
+     * Checks if there's an AI in the players
      */
     private boolean detectAnyAI() {
         for (Player p : takGame.getPlayers()) {
@@ -226,48 +214,60 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
     }
 
     /**
-     * Places a "Rules" button in the top-left corner.
+     * Creates a vertical column at the top-right containing:
+     * 1) "Back to Main Menu"
+     * 2) "Rules"
+     * 3) "Training Tab"
      */
-    private void addRulesButton() {
-        rulesButton = new TextButton("Rules", uiManager.getSkin());
-        Table table = new Table();
-        table.top().left();
-        table.setFillParent(true);
-
-        table.add(rulesButton).pad(10);
-        uiManager.getStage().addActor(table);
-
-        rulesButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                showRulesDialog();
-            }
-        });
-    }
-
-    /**
-     * "Back to Main Menu" in the bottom-left.
-     */
-    private void addBackButton() {
-        TextButton backButton = new TextButton("Back to Main Menu", uiManager.getSkin());
-        Table backButtonTable = new Table();
-        backButtonTable.bottom().left();
-        backButtonTable.setFillParent(true);
-
-        backButtonTable.add(backButton).pad(10).width(150).height(40);
-        uiManager.getStage().addActor(backButtonTable);
-
+    private void addTopRightButtons() {
+        // "Back to Main Menu"
+        backButton = new TextButton("Back", uiManager.getSkin());
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 game.setScreen(new MainMenuScreen(game));
             }
         });
+
+        // "Rules"
+        rulesButton = new TextButton("Rules", uiManager.getSkin());
+        rulesButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showRulesDialog();
+            }
+        });
+
+        // "Training Tab" (toggles training UI)
+        trainingTabButton = new TextButton("Training Tab", uiManager.getSkin());
+
+        // We'll just toggle visibility
+        trainingTabButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                boolean isVisible = trainingTable.isVisible();
+                trainingTable.setVisible(!isVisible);
+
+                // Optionally hide the mainGameTable so the board is visible behind training panel
+                mainGameTable.setVisible(isVisible);
+            }
+        });
+
+        // Add them in a vertical table at top-right
+        Table topRightButtons = new Table();
+        topRightButtons.top().right();
+        topRightButtons.setFillParent(true);
+
+        topRightButtons.add(backButton).pad(5).width(110).height(35).row();
+        topRightButtons.add(rulesButton).pad(5).width(110).height(35).row();
+        topRightButtons.add(trainingTabButton).pad(5).width(110).height(35).row();
+
+        uiManager.getStage().addActor(topRightButtons);
     }
 
     /**
-     * Lets the user pick AI type (RandomAI or Minimax), Minimax Depth,
-     * Evaluator (Heuristic or NeuralNetwork), and network file if NeuralNet.
+     * Places the AI selection in the bottom-right corner.
+     * Allows picking AI type, depth, evaluator, and network.
      */
     private void addAISelectionDropdown() {
         final SelectBox<String> aiSelectBox = new SelectBox<>(uiManager.getSkin());
@@ -285,24 +285,23 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
         final SelectBox<String> networkSelectBox = new SelectBox<>(uiManager.getSkin());
         Array<String> netFiles = listNetworkFiles();
         networkSelectBox.setItems(netFiles);
-        networkSelectBox.setVisible(false); // hidden unless "NeuralNetwork" is chosen
+        networkSelectBox.setVisible(false);
 
         Table dropdownTable = new Table();
         dropdownTable.bottom().right();
         dropdownTable.setFillParent(true);
 
-        // Layout
-        dropdownTable.add(new Label("AI Type:", uiManager.getSkin())).pad(5);
-        dropdownTable.add(aiSelectBox).width(150).height(30).pad(5).row();
+        dropdownTable.add(new Label("AI Type:", uiManager.getSkin())).pad(3);
+        dropdownTable.add(aiSelectBox).width(120).height(30).pad(3).row();
 
-        dropdownTable.add(new Label("Minimax Depth:", uiManager.getSkin())).pad(5);
-        dropdownTable.add(depthSelectBox).width(150).height(30).pad(5).row();
+        dropdownTable.add(new Label("Minimax Depth:", uiManager.getSkin())).pad(3);
+        dropdownTable.add(depthSelectBox).width(120).height(30).pad(3).row();
 
-        dropdownTable.add(new Label("Evaluator:", uiManager.getSkin())).pad(5);
-        dropdownTable.add(evalSelectBox).width(150).height(30).pad(5).row();
+        dropdownTable.add(new Label("Evaluator:", uiManager.getSkin())).pad(3);
+        dropdownTable.add(evalSelectBox).width(120).height(30).pad(3).row();
 
-        dropdownTable.add(new Label("Network File:", uiManager.getSkin())).pad(5);
-        dropdownTable.add(networkSelectBox).width(150).height(30).pad(5).row();
+        dropdownTable.add(new Label("Network File:", uiManager.getSkin())).pad(3);
+        dropdownTable.add(networkSelectBox).width(120).height(30).pad(3).row();
 
         uiManager.getStage().addActor(dropdownTable);
 
@@ -312,14 +311,10 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
             public void changed(ChangeEvent event, Actor actor) {
                 String selectedAI = aiSelectBox.getSelected();
                 depthSelectBox.setVisible("MinimaxAgent".equals(selectedAI));
-
-                // Re-invoke logic
-                changeAIBehavior(
-                    selectedAI,
-                    evalSelectBox.getSelected(),
-                    networkSelectBox.getSelected(),
-                    depthSelectBox.getSelected()
-                );
+                changeAIBehavior(selectedAI,
+                                 evalSelectBox.getSelected(),
+                                 networkSelectBox.getSelected(),
+                                 depthSelectBox.getSelected());
             }
         });
 
@@ -328,62 +323,52 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
             public void changed(ChangeEvent event, Actor actor) {
                 String evalChoice = evalSelectBox.getSelected();
                 networkSelectBox.setVisible("NeuralNetwork".equals(evalChoice));
-
-                changeAIBehavior(
-                    aiSelectBox.getSelected(),
-                    evalChoice,
-                    networkSelectBox.getSelected(),
-                    depthSelectBox.getSelected()
-                );
+                changeAIBehavior(aiSelectBox.getSelected(),
+                                 evalChoice,
+                                 networkSelectBox.getSelected(),
+                                 depthSelectBox.getSelected());
             }
         });
 
         networkSelectBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                changeAIBehavior(
-                    aiSelectBox.getSelected(),
-                    evalSelectBox.getSelected(),
-                    networkSelectBox.getSelected(),
-                    depthSelectBox.getSelected()
-                );
+                changeAIBehavior(aiSelectBox.getSelected(),
+                                 evalSelectBox.getSelected(),
+                                 networkSelectBox.getSelected(),
+                                 depthSelectBox.getSelected());
             }
         });
 
         depthSelectBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                changeAIBehavior(
-                    aiSelectBox.getSelected(),
-                    evalSelectBox.getSelected(),
-                    networkSelectBox.getSelected(),
-                    depthSelectBox.getSelected()
-                );
+                changeAIBehavior(aiSelectBox.getSelected(),
+                                 evalSelectBox.getSelected(),
+                                 networkSelectBox.getSelected(),
+                                 depthSelectBox.getSelected());
             }
         });
     }
 
     /**
-     * Gets a list of .txt network files in networks/ folder.
+     * Returns a list of .txt networks from /networks folder
      */
     private Array<String> listNetworkFiles() {
         Array<String> fileNames = new Array<>();
         FileHandle dirHandle = Gdx.files.local("networks");
         if (!dirHandle.exists()) {
-            // fallback
             fileNames.add("TrainedModel.txt");
             return fileNames;
         }
-
         FileHandle[] files = dirHandle.list();
-        if (files != null && files.length > 0) {
+        if (files != null) {
             for (FileHandle fh : files) {
                 if (fh.extension().equalsIgnoreCase("txt")) {
                     fileNames.add(fh.name());
                 }
             }
         }
-
         if (fileNames.size == 0) {
             fileNames.add("TrainedModel.txt");
         }
@@ -391,11 +376,13 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
     }
 
     /**
-     * Switch AI type (Random vs Minimax),
-     * evaluator (Heuristic vs NeuralNetwork),
-     * depth, and network file for Minimax.
+     * Switch AI type, depth, evaluator, etc.
      */
-    private void changeAIBehavior(String aiType, String evalType, String networkFile, int depth) {
+    private void changeAIBehavior(String aiType,
+                                  String evalType,
+                                  String networkFile,
+                                  int depth) {
+        // Identify AI player
         if (aiPlayer == null) {
             for (Player p : takGame.getPlayers()) {
                 if (p instanceof MinimaxAgent || p instanceof RandomAIPlayer) {
@@ -404,16 +391,14 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
                 }
             }
         }
-
         if (aiPlayer == null) {
-            Logger.log("GameScreen", "No AI found or current AI not recognized.");
+            Logger.log("GameScreen", "No AI found in players.");
             return;
         }
 
-        Player newAI;
         // 1) If user picked "RandomAI"
         if ("RandomAI".equals(aiType)) {
-            newAI = new RandomAIPlayer(
+            Player newAI = new RandomAIPlayer(
                 aiPlayer.getColor(),
                 aiPlayer.getRemainingPieces(PieceType.FLAT_STONE),
                 aiPlayer.getRemainingPieces(PieceType.STANDING_STONE),
@@ -425,7 +410,7 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
             return;
         }
 
-        // 2) If Minimax
+        // 2) Minimax
         IEvaluationFunction evaluator;
         if ("Heuristic".equals(evalType)) {
             evaluator = new HeuristicEvaluator();
@@ -436,14 +421,14 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
                 NeuralNetworkTrainer trainer = NeuralNetworkInitializer.initializeTrainer();
                 trainer.loadNetwork(filePath);
                 evaluator = new NeuralNetworkEvaluator(trainer.getNetwork());
-                Logger.log("GameScreen", "Loaded NeuralNetwork from " + filePath);
+                Logger.log("GameScreen", "Loaded NeuralNet from " + filePath);
             } catch (Exception e) {
                 Logger.log("GameScreen", "Failed to load network: " + e.getMessage());
                 evaluator = new HeuristicEvaluator(); // fallback
             }
         }
 
-        newAI = new MinimaxAgent(
+        Player newAI = new MinimaxAgent(
             aiPlayer.getColor(),
             aiPlayer.getRemainingPieces(PieceType.FLAT_STONE),
             aiPlayer.getRemainingPieces(PieceType.STANDING_STONE),
@@ -455,63 +440,38 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
 
         Logger.log("GameScreen",
             "Switched AI -> Minimax, depth=" + depth
-                + ", eval=" + evalType
-                + (evalType.equals("NeuralNetwork") ? " file=" + networkFile : ""));
+            + ", eval=" + evalType
+            + (evalType.equals("NeuralNetwork") ? " file=" + networkFile : ""));
 
         takGame.replacePlayer(aiPlayer, newAI);
         aiPlayer = newAI;
     }
-
     /**
      * Basic text explaining the game rules.
      */
     private String getRulesText() {
         return "1. Players take turns placing tiles on the board.\n"
              + "2. Movement is orthogonal. Only the top tile can move.\n"
-             + "3. Road victory or flat victory.\n"
-             + "4. Etc...";
+             + "3. You can stack pieces and move the stacks\n"
+             + "4. Road victory or flat victory.\n"
+             + "5.for more information read the ReadMe file";
     }
-
-    // ------------------------------------------------------------------------
-    // ADVANCED TRAINING TAB
-    // ------------------------------------------------------------------------
     /**
-     * Adds an advanced training tab UI to the top-right corner.
-     * Now includes:
-     *  - "Training Mode": (Iterative vs. Self-Play)
-     *  - "Continue from existing net?" checkbox + dropdown
-     *  - SaveAs text field
-     *  - Start/Stop
-     *  - Smaller scroll area
+     * Training Tab UI on the right side, toggled by the "Training Tab" button.
      */
     private void addTrainingTabUI() {
-        // 1) Create the button that toggles the training panel
-        trainingTabButton = new TextButton("Training Tab", uiManager.getSkin());
-
-        // Make a top-right table for alignment
-        Table topRightTable = new Table();
-        topRightTable.top().right();
-        topRightTable.defaults().pad(5).align(Align.right);
-        topRightTable.setFillParent(true);
-
-        // Place the "Training Tab" button
-        topRightTable.add(trainingTabButton).width(120).height(40);
-        uiManager.getStage().addActor(topRightTable);
-
-        // 2) The training table itself
+        // The training table
         trainingTable = new Table(uiManager.getSkin());
-        // Make a slightly translucent dark background
         trainingTable.setBackground(uiManager.getSkin().newDrawable("button-up", new Color(0,0,0,0.7f)));
         trainingTable.pad(15);
-        trainingTable.setVisible(false);
-        trainingTable.center();  // <--- center alignment inside the table
+        trainingTable.setVisible(false);  // hidden by default
 
         // Title
         Label trainingTitle = new Label("Neural Net Training", uiManager.getSkin());
         trainingTitle.setColor(Color.YELLOW);
         trainingTable.add(trainingTitle).colspan(2).padBottom(10).row();
 
-        // (A) Training Mode
+        // Mode
         Label modeLabel = new Label("Training Mode:", uiManager.getSkin());
         final SelectBox<String> modeSelectBox = new SelectBox<>(uiManager.getSkin());
         modeSelectBox.setItems("Iterative vs Heuristic", "Self-Play");
@@ -519,54 +479,51 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
         trainingTable.add(modeLabel).pad(5).right();
         trainingTable.add(modeSelectBox).pad(5).row();
 
-        // (B) Iterative-specific fields
+        // Iterative fields
         Label gamesLabel = new Label("Games Per Round:", uiManager.getSkin());
         gamesPerRoundField = new TextField("10", uiManager.getSkin());
         Label roundsLabel = new Label("Total Rounds:", uiManager.getSkin());
         totalRoundsField = new TextField("3", uiManager.getSkin());
-
         trainingTable.add(gamesLabel).pad(5).right();
         trainingTable.add(gamesPerRoundField).width(60).row();
         trainingTable.add(roundsLabel).pad(5).right();
         trainingTable.add(totalRoundsField).width(60).row();
 
-        // (C) Self-play table (hidden if iterative)
+        // Self-play sub-table
+        final Table selfPlayTable = new Table(uiManager.getSkin());
         Label selfPlayGamesLabel = new Label("Number of Games:", uiManager.getSkin());
         selfPlayGamesField = new TextField("20", uiManager.getSkin());
-
         Label valFreqLabel = new Label("Validation Freq:", uiManager.getSkin());
         valFreqField = new TextField("5", uiManager.getSkin());
-
         Label patienceLabel = new Label("Patience:", uiManager.getSkin());
         patienceField = new TextField("3", uiManager.getSkin());
 
-        final Table selfPlayTable = new Table(uiManager.getSkin());
         selfPlayTable.add(selfPlayGamesLabel).pad(5).right();
         selfPlayTable.add(selfPlayGamesField).width(60).row();
         selfPlayTable.add(valFreqLabel).pad(5).right();
         selfPlayTable.add(valFreqField).width(60).row();
         selfPlayTable.add(patienceLabel).pad(5).right();
         selfPlayTable.add(patienceField).width(60).row();
-
         selfPlayTable.setVisible(false);
-        // Add the selfPlay table to main
         trainingTable.add(selfPlayTable).colspan(2).row();
 
-        // (D) Board Size
+        // Board size
         Label bszLabel = new Label("Board Size:", uiManager.getSkin());
         boardSizeField = new TextField("5", uiManager.getSkin());
         trainingTable.add(bszLabel).pad(5).right();
         trainingTable.add(boardSizeField).width(60).row();
 
-        // (E) "Continue from existing net?"
+        // "Continue from existing net?"
         continueCheckBox = new CheckBox(" Continue from Existing Net?", uiManager.getSkin());
         trainingTable.add(continueCheckBox).colspan(2).pad(5).left().row();
 
-        // A sub-table to pick an existing net
         final Label existingLabel = new Label("Existing Net:", uiManager.getSkin());
         existingLabel.setVisible(false);
         existingNetSelect = new SelectBox<>(uiManager.getSkin());
         existingNetSelect.setVisible(false);
+
+        // Fill from /networks
+        existingNetSelect.setItems(listExistingNetworks());
 
         final Table continueTable = new Table(uiManager.getSkin());
         continueTable.add(existingLabel).pad(5).right();
@@ -574,7 +531,6 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
         continueTable.setVisible(false);
         trainingTable.add(continueTable).colspan(2).row();
 
-        // Checkbox toggles the table
         continueCheckBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
@@ -585,13 +541,13 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
             }
         });
 
-        // (F) "Save network as"
+        // "Save network as"
         Label saveNameLabel = new Label("Save Net As:", uiManager.getSkin());
         final TextField saveNameField = new TextField("MyNewNetwork", uiManager.getSkin());
         trainingTable.add(saveNameLabel).pad(5).right();
         trainingTable.add(saveNameField).width(100).row();
 
-        // (G) Start/Stop
+        // Start/Stop
         startTrainingButton = new TextButton("Start Training", uiManager.getSkin());
         final TextButton stopTrainingButton = new TextButton("Stop", uiManager.getSkin());
         stopTrainingButton.setVisible(false);
@@ -601,7 +557,7 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
         btnTable.add(stopTrainingButton);
         trainingTable.add(btnTable).colspan(2).padTop(10).row();
 
-        // (H) Log area, smaller + no visible scroll bar
+        // Log area
         Label logLabel = new Label("Training Log:", uiManager.getSkin());
         trainingTable.add(logLabel).colspan(2).padTop(10).row();
 
@@ -609,60 +565,44 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
         trainingLogArea.setDisabled(true);
         trainingLogArea.setPrefRows(6);
 
-        // Create the scroll pane
         ScrollPane scrollPane = new ScrollPane(trainingLogArea, uiManager.getSkin());
         scrollPane.setFlickScroll(true);
         scrollPane.setFadeScrollBars(false);
-
-        // Hide scrollbars, only mouse-wheel
-        ScrollPane.ScrollPaneStyle spStyle = uiManager.getSkin().get(ScrollPane.ScrollPaneStyle.class);
-        spStyle.vScrollKnob = null;
-        spStyle.vScroll = null;
-        spStyle.hScrollKnob = null;
-        spStyle.hScroll = null;
-
-        scrollPane.setScrollingDisabled(true, false); // allow vertical only
+        scrollPane.setScrollingDisabled(true, false);
         scrollPane.setOverscroll(false, false);
 
         trainingTable.add(scrollPane).colspan(2).minHeight(150).maxHeight(220).width(300).pad(5);
 
-        // 3) Put the trainingTable in its own container on top-right
+        // Instead of top-right, place the training panel near center:
         Table trainingPanelContainer = new Table();
-        trainingPanelContainer.top().right();
+        trainingPanelContainer.center();    // <-- Align center horizontally/vertically
         trainingPanelContainer.setFillParent(true);
-        // slight offset so it doesn't overlap the top-right button
-        trainingPanelContainer.add(trainingTable).padTop(60).padRight(10);
+
+        // If you just want it *below the top row of buttons* but still center horizontally,
+        // you could do .top() + padTop(130). E.g.:
+        //
+        // trainingPanelContainer.top().center();
+        // trainingPanelContainer.padTop(130);
+
+        trainingPanelContainer.add(trainingTable).width(700).height(800);
+        trainingTable.setBackground(uiManager.getSkin().newDrawable("button-up", new Color(0,0,0,0.8f)));
+
         uiManager.getStage().addActor(trainingPanelContainer);
 
-        // 4) Listeners
-        // Toggle the entire training panel
-        trainingTabButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                boolean isVisible = trainingTable.isVisible();
-                trainingTable.setVisible(!isVisible);
-                // Optionally hide the mainGameTable
-                mainGameTable.setVisible(isVisible);
-            }
-        });
-
-        // Switch mode => hide iterative or self-play
+        // Mode selection toggles iterative vs self-play
         modeSelectBox.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 String mode = modeSelectBox.getSelected();
                 boolean isIterative = mode.equals("Iterative vs Heuristic");
-
                 gamesLabel.setVisible(isIterative);
                 gamesPerRoundField.setVisible(isIterative);
                 roundsLabel.setVisible(isIterative);
                 totalRoundsField.setVisible(isIterative);
-
                 selfPlayTable.setVisible(!isIterative);
             }
         });
 
-        // Start button
         startTrainingButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -671,13 +611,12 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
 
                 int bsz = Integer.parseInt(boardSizeField.getText().trim());
                 String saveName = saveNameField.getText().trim();
-
                 boolean continuing = continueCheckBox.isChecked();
                 String existingFile = existingNetSelect.getSelected();
 
-                stopTrainingButton.setVisible(true);
+                stopTrainingButton.setVisible(false);
 
-                // Run in background thread
+                // run in background
                 new Thread(() -> {
                     if (isIterative) {
                         int gpr = Integer.parseInt(gamesPerRoundField.getText().trim());
@@ -689,14 +628,11 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
                         int pat = Integer.parseInt(patienceField.getText().trim());
                         runSelfPlayTraining(spGames, valFreq, pat, bsz, saveName, continuing, existingFile);
                     }
-
-                    // Hide stop button after done
                     Gdx.app.postRunnable(() -> stopTrainingButton.setVisible(false));
                 }).start();
             }
         });
 
-        // Stop button (demo only)
         stopTrainingButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -704,7 +640,6 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
             }
         });
     }
-
     /**
      * Lists the .txt networks in your /networks folder
      * for the "Continue from existing?" dropdown.
@@ -722,30 +657,21 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
         }
         return arr;
     }
-
-    private void runIterativeTraining(int gamesPerRound,
-                                      int totalRounds,
-                                      int bsz,
-                                      String networkName,
-                                      boolean continuing,
-                                      String existingFile) {
+    private void runIterativeTraining(int gamesPerRound, int totalRounds, int bsz,
+                                      String networkName, boolean continuing, String existingFile) {
         try {
             logToTrainingArea("Starting ITERATIVE training... (vs Heuristic)");
             NeuralNetworkTrainer nnTrainer;
             if (continuing) {
-                // Load existing
                 String path = "networks/" + existingFile;
                 nnTrainer = NeuralNetworkInitializer.initializeTrainer();
                 nnTrainer.loadNetwork(path);
                 logToTrainingArea("Continuing from: " + path);
             } else {
-                // Fresh
                 nnTrainer = NeuralNetworkInitializer.initializeTrainer();
             }
-
             IterativeNetVsHeuristicTrainer trainer =
                 new IterativeNetVsHeuristicTrainer(nnTrainer, bsz, gamesPerRound, totalRounds, false);
-
             trainer.runIterativeTraining();
 
             String path = "networks/" + networkName + ".txt";
@@ -757,13 +683,9 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
         }
     }
 
-    private void runSelfPlayTraining(int numberOfGames,
-                                     int valFrequency,
-                                     int patience,
-                                     int bsz,
-                                     String networkName,
-                                     boolean continuing,
-                                     String existingFile) {
+    private void runSelfPlayTraining(int numberOfGames, int valFrequency, int patience,
+                                     int bsz, String networkName,
+                                     boolean continuing, String existingFile) {
         try {
             logToTrainingArea("Starting SELF-PLAY training...");
             NeuralNetworkTrainer nnTrainer;
@@ -775,7 +697,6 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
             } else {
                 nnTrainer = NeuralNetworkInitializer.initializeTrainer();
             }
-
             SelfPlayMinimaxTrainer selfPlay =
                 new SelfPlayMinimaxTrainer(nnTrainer, numberOfGames, valFrequency, patience);
             selfPlay.runTraining();
@@ -796,7 +717,7 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
     }
 
     // ------------------------------------------------------------------------
-    // Standard LibGDX Screen methods
+    // Screen overrides
     // ------------------------------------------------------------------------
     @Override
     public void render(float delta) {
@@ -812,6 +733,7 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
         uiManager.getStage().act(delta);
         uiManager.getStage().draw();
 
+        // If not ended, maybe handle AI
         if (!takGame.isGameEnded()) {
             Player current = takGame.getCurrentPlayer();
             if (current instanceof MinimaxAgent || current instanceof RandomAIPlayer) {
@@ -823,8 +745,7 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
     private void handleAIMove() {
         if (isAIMoving) return;
         isAIMoving = true;
-
-        // Temporarily disable user input
+        // disable input
         Gdx.input.setInputProcessor(null);
 
         Timer.schedule(new Timer.Task() {
@@ -850,16 +771,17 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
                 } catch (InvalidMoveException | GameOverException e) {
                     Logger.log("GameScreen", "AI error: " + e.getMessage());
                 } finally {
+                    // re-enable if next is human
                     Player next = takGame.getCurrentPlayer();
-                    // Re-enable user input if next player is human
                     if (!(next instanceof MinimaxAgent || next instanceof RandomAIPlayer)) {
-                        Gdx.input.setInputProcessor(new InputMultiplexer(
-                            uiManager.getStage(), inputHandler, camController));
+                        Gdx.input.setInputProcessor(
+                            new InputMultiplexer(uiManager.getStage(), inputHandler, camController)
+                        );
                     }
                     isAIMoving = false;
                 }
             }
-        }, 0.5f); // slight delay
+        }, 0.5f);
     }
 
     @Override
@@ -871,13 +793,6 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
     }
 
     @Override
-    public void dispose() {
-        renderer.dispose();
-        uiManager.dispose();
-        shapeRenderer.dispose();
-    }
-
-    @Override
     public void show() { }
     @Override
     public void hide() { }
@@ -885,6 +800,13 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
     public void pause() { }
     @Override
     public void resume() { }
+
+    @Override
+    public void dispose() {
+        renderer.dispose();
+        uiManager.dispose();
+        shapeRenderer.dispose();
+    }
 
     // -----------------------------------------------------------------------
     // UICallback from GameInputHandler
@@ -904,12 +826,12 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
         String message;
         if (winner != null) {
             message = winner.getColor() + " wins!\nFinal Scores:\n"
-                + "BLUE: " + takGame.getPlayer1().getScore() + "\n"
-                + "GREEN: " + takGame.getPlayer2().getScore();
+                    + "BLUE: " + takGame.getPlayer1().getScore() + "\n"
+                    + "GREEN: " + takGame.getPlayer2().getScore();
         } else {
             message = "It's a tie!\n"
-                + "BLUE: " + takGame.getPlayer1().getScore() + "\n"
-                + "GREEN: " + takGame.getPlayer2().getScore();
+                    + "BLUE: " + takGame.getPlayer1().getScore() + "\n"
+                    + "GREEN: " + takGame.getPlayer2().getScore();
         }
 
         Dialog dialog = new Dialog("Game Over", uiManager.getSkin(), "dialog") {
@@ -953,8 +875,16 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
 
     private void showRulesDialog() {
         Dialog dialog = new Dialog("Rules", uiManager.getSkin(), "dialog");
-        dialog.text(getRulesText());
-        dialog.button("OK");
+        Label rulesLabel = new Label(getRulesText(), uiManager.getSkin());
+        rulesLabel.setWrap(true);
+        rulesLabel.setFontScale(1.1f);
+
+        ScrollPane scrollPane = new ScrollPane(rulesLabel, uiManager.getSkin());
+        scrollPane.setFadeScrollBars(false);
+        scrollPane.setScrollingDisabled(true, false);
+
+        dialog.getContentTable().add(scrollPane).width(500).height(300).pad(10).row();
+        dialog.button("Close");
         dialog.show(uiManager.getStage());
     }
 
@@ -984,12 +914,11 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
      * Toggles the selection of a piece type from the hotbar.
      */
     public void toggleSelection(Piece.PieceType pieceType) {
-        // Restrict first two moves to FLAT_STONE only
+        // First two moves => only FLAT_STONE
         if (takGame.getMoveCount() < 2 && pieceType != Piece.PieceType.FLAT_STONE) {
             showErrorDialog("Only flat stones in the first two moves.");
             return;
         }
-        // Check if we have any left
         int remain = takGame.getCurrentPlayer().getRemainingPieces(pieceType);
         if (remain <= 0) {
             showErrorDialog("No remaining " + pieceType + " left!");
@@ -1010,7 +939,7 @@ public class GameScreen implements Screen, GameInputHandler.UICallback {
     }
 
     /**
-     * Refreshes UI states after new game or continue.
+     * Refreshes UI states after new game or continue
      */
     public void updateAfterGameReset() {
         renderer.updatePieceInstances();

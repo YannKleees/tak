@@ -46,8 +46,8 @@ public class MainMenuScreen implements Screen {
         skin = createBasicSkin();
 
         // Create the title label
-        titleLabel = new Label("TAK", skin, "title"); // Use the title style for the label
-        titleLabel.setAlignment(Align.center); // Center the text (optional)
+        titleLabel = new Label("TAK", skin, "title"); 
+        titleLabel.setAlignment(Align.center);
 
         // Create buttons
         startGameButton = new TextButton("Start Game", skin);
@@ -59,11 +59,11 @@ public class MainMenuScreen implements Screen {
         table.setFillParent(true);
         table.center();
 
-        // Add the title label to the table
-        table.add(titleLabel).padBottom(30); // Add some padding below the title
-        table.row(); // Move to the next row
+        // Add the title label
+        table.add(titleLabel).padBottom(30);
+        table.row();
 
-        // Add buttons to the table
+        // Add buttons
         table.add(startGameButton).width(200).height(60).pad(10);
         table.row();
         table.add(rulesButton).width(200).height(60).pad(10);
@@ -76,29 +76,26 @@ public class MainMenuScreen implements Screen {
         // Set input processor
         Gdx.input.setInputProcessor(stage);
 
-        // Add listeners to buttons
+        // Add listeners
         addButtonListeners();
     }
 
     /**
      * Creates a basic skin programmatically for UI elements.
-     * For scalability, consider using external skin files with texture atlases.
-     *
-     * @return The created skin.
      */
     private Skin createBasicSkin() {
         Skin skin = new Skin();
 
-        // Create a default font
+        // Default font
         BitmapFont font = new BitmapFont();
         skin.add("default-font", font);
 
-        // Create a larger font for the title
+        // Larger font for the title
         BitmapFont titleFont = new BitmapFont();
-        titleFont.getData().setScale(3); // Scale the font size to make it larger
-        skin.add("title-font", titleFont); // Add the title font to the skin
+        titleFont.getData().setScale(3);
+        skin.add("title-font", titleFont);
 
-        // Create button textures
+        // Button textures
         Pixmap pixmapUp = new Pixmap(200, 60, Pixmap.Format.RGBA8888);
         pixmapUp.setColor(Color.GRAY);
         pixmapUp.fill();
@@ -112,28 +109,28 @@ public class MainMenuScreen implements Screen {
         pixmapUp.dispose();
         pixmapDown.dispose();
 
-        // Create a TextButton style
+        // TextButton style
         TextButton.TextButtonStyle textButtonStyle = new TextButton.TextButtonStyle();
         textButtonStyle.up = skin.newDrawable("button-up");
         textButtonStyle.down = skin.newDrawable("button-down", Color.DARK_GRAY);
         textButtonStyle.font = skin.getFont("default-font");
         skin.add("default", textButtonStyle);
 
-        // Create a Label style
+        // Label style
         Label.LabelStyle labelStyle = new Label.LabelStyle();
         labelStyle.font = skin.getFont("default-font");
         skin.add("default", labelStyle);
 
-        // Create a Label style for the title
+        // Label style for title
         Label.LabelStyle titleStyle = new Label.LabelStyle();
         titleStyle.font = skin.getFont("title-font");
-        skin.add("title", titleStyle); // Add the title style to the skin
+        skin.add("title", titleStyle);
 
-        // Window style (used for Dialog)
+        // Window style (Dialog)
         Window.WindowStyle windowStyle = new Window.WindowStyle();
         windowStyle.background = skin.newDrawable("button-up", Color.DARK_GRAY);
         windowStyle.titleFont = skin.getFont("default-font");
-        skin.add("dialog", windowStyle); // Register the "dialog" style
+        skin.add("dialog", windowStyle);
 
         return skin;
     }
@@ -142,7 +139,6 @@ public class MainMenuScreen implements Screen {
      * Adds listeners to the Start Game, Rules, and Exit buttons.
      */
     private void addButtonListeners() {
-        // Listener for Start Game button
         startGameButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -150,7 +146,6 @@ public class MainMenuScreen implements Screen {
             }
         });
 
-        // Listener for Rules button
         rulesButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -158,7 +153,6 @@ public class MainMenuScreen implements Screen {
             }
         });
 
-        // Listener for Exit button
         exitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -175,9 +169,9 @@ public class MainMenuScreen implements Screen {
             @Override
             protected void result(Object object) {
                 if (object.equals("human")) {
-                    game.setScreen(new GameScreen(game, GameMode.HUMAN_VS_HUMAN)); // Start the GameScreen without AI
+                    game.setScreen(new GameScreen(game, GameMode.HUMAN_VS_HUMAN));
                 } else if (object.equals("ai")) {
-                    game.setScreen(new GameScreen(game, GameMode.HUMAN_VS_AI)); // Start the GameScreen with AI
+                    game.setScreen(new GameScreen(game, GameMode.HUMAN_VS_AI));
                 }
             }
         };
@@ -192,26 +186,32 @@ public class MainMenuScreen implements Screen {
      */
     private void showGameRules() {
         Dialog dialog = new Dialog("Game Rules", skin, "dialog");
-        dialog.text(getRulesText());
-        dialog.button("OK");
+
+        // Use a label with wrapping
+        Label rulesLabel = new Label(getRulesText(), skin);
+        rulesLabel.setWrap(true);
+        rulesLabel.setFontScale(1.1f); // Slightly larger
+
+        // Put it in a scroll pane
+        ScrollPane scrollPane = new ScrollPane(rulesLabel, skin);
+        scrollPane.setFadeScrollBars(false);
+        scrollPane.setScrollingDisabled(true, false);
+
+        dialog.getContentTable().add(scrollPane).width(500).height(300).pad(10).row();
+        dialog.button("Close");
         dialog.show(stage);
     }
 
     /**
      * Retrieves the game rules text.
-     *
-     * @return The game rules.
      */
     private String getRulesText() {
-        return "1. Players take turns placing tiles on the board. No standing tiles or cap (hat) tiles can be placed during the first round.\n"
-             + "2. Players can stack flat tiles or standing tiles on top of flat tiles. Cap tiles cannot be stacked on top of other tiles.\n"
-             + "3. Cap tiles can flatten standing tiles, turning them into flat tiles.\n"
-             + "4. Movement is orthogonal (along rows or columns). Only the top tile of a stack can be moved. Multiple tiles can be moved, but at least one must be placed on each square along the path.\n"
-             + "5. Victory Conditions:\n"
-             + "   - Road Victory: Create a continuous orthogonal line of flat or cap tiles connecting one side of the board to the opposite side.\n"
-             + "   - Flat Victory: If the board is full and no road victory is achieved, the player with the most visible flat tiles wins.\n"
-             + "6. Each turn, players must either place a tile or move a tile/stack. Only cap tiles can flatten standing tiles and become part of a road.\n"
-             + "7. The game ends when one of the victory conditions is met.";
+        return "1. Players take turns placing tiles on the board. No standing or cap tiles in the first round.\n"
+             + "2. You can stack your piece on top only if the top piece is flat or standing. Cap tiles can flatten a standing tile.\n"
+             + "3. Movement is orthogonal; only the topmost piece(s) of a stack can move. You can drop some pieces along the way.\n"
+             + "4. Road Victory: create an unbroken path of your flats/caps connecting opposite edges.\n"
+             + "5. Flat Victory: if the board is full with no road victory, most visible flats wins.\n"
+             + "Have fun playing Tak!";
     }
 
     @Override
@@ -228,7 +228,6 @@ public class MainMenuScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        // Update the stage viewport
         stage.getViewport().update(width, height, true);
     }
 
@@ -239,22 +238,14 @@ public class MainMenuScreen implements Screen {
     }
 
     @Override
-    public void show() {
-        // Called when this screen becomes the current screen
-    }
+    public void show() {}
 
     @Override
-    public void hide() {
-        // Called when this screen is no longer the current screen
-    }
+    public void hide() {}
 
     @Override
-    public void pause() {
-        // Called when the application is paused
-    }
+    public void pause() {}
 
     @Override
-    public void resume() {
-        // Called when the application is resumed
-    }
+    public void resume() {}
 }

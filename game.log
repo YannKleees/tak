@@ -1481,3 +1481,718 @@
 2025-01-22T19:34:41.725375200 [INFO] [GameScreen]: Loaded NeuralNetwork from networks/actualnetwithReLu.txt
 2025-01-22T19:34:41.732325400 [INFO] [GameScreen]: Switched AI -> Minimax, depth=3, eval=NeuralNetwork file=actualnetwithReLu.txt
 2025-01-22T19:34:41.735005900 [INFO] [TakGame]: Replaced player GREEN with GREEN
+2025-01-22T19:39:59.792977300 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T19:52:57.733018 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T19:54:22.216451400 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T19:55:33.158991600 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T19:55:44.886698 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T19:56:16.807146100 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:00:09.649220 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:00:17.493545500 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:00:35.613002400 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:01:11.439645600 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:03:48.859773700 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:03:59.425152500 [INFO] [GameScreen]: Initialized Human vs Human: BLUE vs GREEN
+2025-01-22T20:06:25.388800700 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:12:00.002362900 [INFO] [IterativeNetVsHeuristicTrainer]: Initialized training summary log at training_summary.csv
+2025-01-22T20:12:00.002362900 [INFO] [IterativeNetVsHeuristicTrainer]: 
+=== Starting Iterative Net-vs-Heuristic Training ===
+2025-01-22T20:12:00.003362600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Round 1 / 3 ---
+2025-01-22T20:12:00.003362600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 1 / 10 (Net=BLUE) ---
+2025-01-22T20:12:00.233650800 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:00.235650300 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 2 / 10 (Net=BLUE) ---
+2025-01-22T20:12:00.660402200 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:00.661399500 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 3 / 10 (Net=BLUE) ---
+2025-01-22T20:12:00.834350400 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:00.834858 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 4 / 10 (Net=BLUE) ---
+2025-01-22T20:12:01.075665200 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:01.076661700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 5 / 10 (Net=BLUE) ---
+2025-01-22T20:12:01.160449100 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:01.161494600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 6 / 10 (Net=GREEN) ---
+2025-01-22T20:12:01.447727300 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:01.447727300 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 7 / 10 (Net=GREEN) ---
+2025-01-22T20:12:01.534739300 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:01.534739300 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 8 / 10 (Net=GREEN) ---
+2025-01-22T20:12:02.370012100 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:02.371053100 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 9 / 10 (Net=GREEN) ---
+2025-01-22T20:12:02.466300600 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:02.466300600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 10 / 10 (Net=GREEN) ---
+2025-01-22T20:12:02.791698800 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:02.797335900 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 1/3 Loss=1,0486
+2025-01-22T20:12:02.803513100 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 2/3 Loss=0,7659
+2025-01-22T20:12:02.808529300 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 3/3 Loss=0,7139
+2025-01-22T20:12:02.808529300 [INFO] [IterativeNetVsHeuristicTrainer]: Finished Round 1. AvgLoss=0,8428
+2025-01-22T20:12:02.916439300 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:03.022450900 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:03.107429600 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:03.107429600 [INFO] [IterativeNetVsHeuristicTrainer]: Validation Loss=1,9589
+2025-01-22T20:12:03.107429600 [INFO] [IterativeNetVsHeuristicTrainer]: WARNING: Potential overfitting (trainLoss << valLoss).
+2025-01-22T20:12:03.110006100 [INFO] [IterativeNetVsHeuristicTrainer]: Logged Round 1 Summary.
+2025-01-22T20:12:03.111013700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Round 2 / 3 ---
+2025-01-22T20:12:03.111013700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 1 / 10 (Net=BLUE) ---
+2025-01-22T20:12:04.288157500 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:04.288157500 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 2 / 10 (Net=BLUE) ---
+2025-01-22T20:12:04.377963400 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:04.377963400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 3 / 10 (Net=BLUE) ---
+2025-01-22T20:12:04.483543800 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:04.483543800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 4 / 10 (Net=BLUE) ---
+2025-01-22T20:12:04.579826500 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:04.580744100 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 5 / 10 (Net=BLUE) ---
+2025-01-22T20:12:04.714080 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:04.715014700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 6 / 10 (Net=GREEN) ---
+2025-01-22T20:12:04.751585200 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:04.752597700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 7 / 10 (Net=GREEN) ---
+2025-01-22T20:12:04.974507400 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:04.974507400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 8 / 10 (Net=GREEN) ---
+2025-01-22T20:12:05.065767300 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:05.066813600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 9 / 10 (Net=GREEN) ---
+2025-01-22T20:12:05.182549 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:05.183485700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 10 / 10 (Net=GREEN) ---
+2025-01-22T20:12:05.331818100 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:05.336919200 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 1/3 Loss=0,8905
+2025-01-22T20:12:05.341404600 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 2/3 Loss=0,7600
+2025-01-22T20:12:05.346776800 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 3/3 Loss=0,6817
+2025-01-22T20:12:05.346776800 [INFO] [IterativeNetVsHeuristicTrainer]: Finished Round 2. AvgLoss=0,7774
+2025-01-22T20:12:05.601781600 [INFO] [IterativeNetVsHeuristicTrainer]: Initialized training summary log at training_summary.csv
+2025-01-22T20:12:05.602811700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+=== Starting Iterative Net-vs-Heuristic Training ===
+2025-01-22T20:12:05.602811700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Round 1 / 3 ---
+2025-01-22T20:12:05.603756900 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 1 / 10 (Net=BLUE) ---
+2025-01-22T20:12:05.663470500 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:05.686378900 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:05.687364300 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 2 / 10 (Net=BLUE) ---
+2025-01-22T20:12:05.802414500 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:05.802414500 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 3 / 10 (Net=BLUE) ---
+2025-01-22T20:12:05.893712800 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:05.893712800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 4 / 10 (Net=BLUE) ---
+2025-01-22T20:12:06.082376900 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:06.083339800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 5 / 10 (Net=BLUE) ---
+2025-01-22T20:12:06.230049800 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:06.230049800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 6 / 10 (Net=GREEN) ---
+2025-01-22T20:12:06.324924100 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:06.324924100 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 7 / 10 (Net=GREEN) ---
+2025-01-22T20:12:06.390615300 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:06.390615300 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 8 / 10 (Net=GREEN) ---
+2025-01-22T20:12:06.504755400 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:06.504755400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 9 / 10 (Net=GREEN) ---
+2025-01-22T20:12:06.662271200 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:06.662271200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 10 / 10 (Net=GREEN) ---
+2025-01-22T20:12:06.755873300 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:06.759566500 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 1/3 Loss=1,3849
+2025-01-22T20:12:06.762490400 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 2/3 Loss=0,9298
+2025-01-22T20:12:06.765447700 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 3/3 Loss=1,4117
+2025-01-22T20:12:06.766474600 [INFO] [IterativeNetVsHeuristicTrainer]: Finished Round 1. AvgLoss=1,2422
+2025-01-22T20:12:06.874819600 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:07.017523800 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:07.066760600 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:07.128028200 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:07.128028200 [INFO] [IterativeNetVsHeuristicTrainer]: Validation Loss=0,7847
+2025-01-22T20:12:07.128028200 [INFO] [IterativeNetVsHeuristicTrainer]: WARNING: Potential underfitting (trainLoss >> valLoss).
+2025-01-22T20:12:07.129535300 [INFO] [IterativeNetVsHeuristicTrainer]: Logged Round 1 Summary.
+2025-01-22T20:12:07.129589100 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Round 2 / 3 ---
+2025-01-22T20:12:07.129589100 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 1 / 10 (Net=BLUE) ---
+2025-01-22T20:12:07.169810600 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:07.169810600 [INFO] [IterativeNetVsHeuristicTrainer]: Validation Loss=1,3137
+2025-01-22T20:12:07.170725800 [INFO] [IterativeNetVsHeuristicTrainer]: WARNING: Potential overfitting (trainLoss << valLoss).
+2025-01-22T20:12:07.170725800 [INFO] [IterativeNetVsHeuristicTrainer]: Logged Round 2 Summary.
+2025-01-22T20:12:07.171723600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Round 3 / 3 ---
+2025-01-22T20:12:07.171723600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 1 / 10 (Net=BLUE) ---
+2025-01-22T20:12:07.312059500 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:07.312971400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 2 / 10 (Net=BLUE) ---
+2025-01-22T20:12:07.624706 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:07.625613600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 3 / 10 (Net=BLUE) ---
+2025-01-22T20:12:07.773504200 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:07.774506 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 2 / 10 (Net=BLUE) ---
+2025-01-22T20:12:07.801841400 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:07.802752200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 4 / 10 (Net=BLUE) ---
+2025-01-22T20:12:07.944614200 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:07.944614200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 5 / 10 (Net=BLUE) ---
+2025-01-22T20:12:08.060931400 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:08.060931400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 3 / 10 (Net=BLUE) ---
+2025-01-22T20:12:08.200618 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:08.200618 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 4 / 10 (Net=BLUE) ---
+2025-01-22T20:12:08.386397800 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:08.386397800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 6 / 10 (Net=GREEN) ---
+2025-01-22T20:12:08.408225800 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:08.408225800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 5 / 10 (Net=BLUE) ---
+2025-01-22T20:12:08.459701600 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:08.460766 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 7 / 10 (Net=GREEN) ---
+2025-01-22T20:12:08.482121700 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:08.482121700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 6 / 10 (Net=GREEN) ---
+2025-01-22T20:12:08.689342400 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:08.689894800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 7 / 10 (Net=GREEN) ---
+2025-01-22T20:12:08.689894800 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:08.690902300 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 8 / 10 (Net=GREEN) ---
+2025-01-22T20:12:08.708173200 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:08.709683300 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 9 / 10 (Net=GREEN) ---
+2025-01-22T20:12:08.796898300 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:08.797907 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 10 / 10 (Net=GREEN) ---
+2025-01-22T20:12:08.823796400 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:08.823796400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 8 / 10 (Net=GREEN) ---
+2025-01-22T20:12:09.010909200 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:09.016869600 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 1/3 Loss=0,8694
+2025-01-22T20:12:09.021539500 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 2/3 Loss=0,9003
+2025-01-22T20:12:09.025532100 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 3/3 Loss=0,7025
+2025-01-22T20:12:09.026437300 [INFO] [IterativeNetVsHeuristicTrainer]: Finished Round 2. AvgLoss=0,8240
+2025-01-22T20:12:09.046277700 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:09.047278300 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 9 / 10 (Net=GREEN) ---
+2025-01-22T20:12:09.238546600 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:09.432971900 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:09.472577500 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:09.473486500 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 10 / 10 (Net=GREEN) ---
+2025-01-22T20:12:09.550134500 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:09.553141100 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:09.553141100 [INFO] [IterativeNetVsHeuristicTrainer]: Validation Loss=0,7699
+2025-01-22T20:12:09.553141100 [INFO] [IterativeNetVsHeuristicTrainer]: Train vs Val Loss are close => Possibly OK.
+2025-01-22T20:12:09.554142600 [INFO] [IterativeNetVsHeuristicTrainer]: Logged Round 2 Summary.
+2025-01-22T20:12:09.554142600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Round 3 / 3 ---
+2025-01-22T20:12:09.554142600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 1 / 10 (Net=BLUE) ---
+2025-01-22T20:12:09.554142600 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 1/3 Loss=1,0906
+2025-01-22T20:12:09.559688300 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 2/3 Loss=0,9668
+2025-01-22T20:12:09.565193100 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 3/3 Loss=0,9227
+2025-01-22T20:12:09.565193100 [INFO] [IterativeNetVsHeuristicTrainer]: Finished Round 3. AvgLoss=0,9933
+2025-01-22T20:12:09.754915400 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:09.940384500 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:09.941250100 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 2 / 10 (Net=BLUE) ---
+2025-01-22T20:12:09.965050500 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:09.965050500 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:09.965050500 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 3 / 10 (Net=BLUE) ---
+2025-01-22T20:12:10.162184200 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:10.162184200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 4 / 10 (Net=BLUE) ---
+2025-01-22T20:12:10.228058100 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:10.228058100 [INFO] [IterativeNetVsHeuristicTrainer]: Validation Loss=1,0039
+2025-01-22T20:12:10.229655800 [INFO] [IterativeNetVsHeuristicTrainer]: Train vs Val Loss are close => Possibly OK.
+2025-01-22T20:12:10.229655800 [INFO] [IterativeNetVsHeuristicTrainer]: Logged Round 3 Summary.
+2025-01-22T20:12:10.231684400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+=== Iterative Training Complete ===
+2025-01-22T20:12:10.243357700 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:10.244369 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 5 / 10 (Net=BLUE) ---
+2025-01-22T20:12:10.368410200 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:10.368410200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 6 / 10 (Net=GREEN) ---
+2025-01-22T20:12:10.604330900 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:10.604330900 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 7 / 10 (Net=GREEN) ---
+2025-01-22T20:12:10.708127500 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:10.708127500 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 8 / 10 (Net=GREEN) ---
+2025-01-22T20:12:10.835910800 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:10.836912 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 9 / 10 (Net=GREEN) ---
+2025-01-22T20:12:10.935554600 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:10.935554600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 10 / 10 (Net=GREEN) ---
+2025-01-22T20:12:11.204812400 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:11.209460400 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 1/3 Loss=0,9925
+2025-01-22T20:12:11.212851900 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 2/3 Loss=0,9827
+2025-01-22T20:12:11.216923700 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 3/3 Loss=0,8715
+2025-01-22T20:12:11.217870500 [INFO] [IterativeNetVsHeuristicTrainer]: Finished Round 3. AvgLoss=0,9489
+2025-01-22T20:12:11.333802400 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:11.449846300 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:11.560296900 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:12:11.560296900 [INFO] [IterativeNetVsHeuristicTrainer]: Validation Loss=1,6136
+2025-01-22T20:12:11.560296900 [INFO] [IterativeNetVsHeuristicTrainer]: WARNING: Potential overfitting (trainLoss << valLoss).
+2025-01-22T20:12:11.561297100 [INFO] [IterativeNetVsHeuristicTrainer]: Logged Round 3 Summary.
+2025-01-22T20:12:11.562296600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+=== Iterative Training Complete ===
+2025-01-22T20:12:13.852777 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:14.075314300 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:14.366076300 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:14.533282700 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:14.961191900 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:15.397232100 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:15.549022 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:15.702300 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:16.217431400 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:16.577377600 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:16.766034500 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:17.508769500 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:17.922631900 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:18.500677200 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:18.835955700 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:19.462823200 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:19.656512400 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:19.954875900 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:20.342015200 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:21.509484 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:22.165637600 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:22.556482500 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:23.203600100 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:23.703323700 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:24.256337600 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:24.356942800 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:25.206622500 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:25.852982200 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:26.041300800 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:26.342830 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:27.295718600 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:12:27.679766200 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:13:22.059351400 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:13:42.942790800 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:15:34.811812200 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:21:48.435237300 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:22:13.873185400 [INFO] [IterativeNetVsHeuristicTrainer]: Initialized training summary log at training_summary.csv
+2025-01-22T20:22:13.874185400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+=== Starting Iterative Net-vs-Heuristic Training ===
+2025-01-22T20:22:13.875187200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Round 1 / 3 ---
+2025-01-22T20:22:13.875693700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 1 / 10 (Net=BLUE) ---
+2025-01-22T20:22:14.645580600 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:22:14.648731300 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 2 / 10 (Net=BLUE) ---
+2025-01-22T20:22:14.785049200 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:22:14.785049200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 3 / 10 (Net=BLUE) ---
+2025-01-22T20:22:15.691800600 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:22:15.692805400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 4 / 10 (Net=BLUE) ---
+2025-01-22T20:22:15.961453 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:22:15.962362700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 5 / 10 (Net=BLUE) ---
+2025-01-22T20:22:16.441445300 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:22:16.442407400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 6 / 10 (Net=GREEN) ---
+2025-01-22T20:22:16.666189200 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:22:16.667200400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 7 / 10 (Net=GREEN) ---
+2025-01-22T20:22:16.780039200 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:22:16.780039200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 8 / 10 (Net=GREEN) ---
+2025-01-22T20:22:17.005704100 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:22:17.006711400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 9 / 10 (Net=GREEN) ---
+2025-01-22T20:22:17.454749100 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:22:17.455759800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 10 / 10 (Net=GREEN) ---
+2025-01-22T20:22:17.665316200 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:22:17.675976600 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 1/3 Loss=1,0012
+2025-01-22T20:22:17.685679600 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 2/3 Loss=1,0008
+2025-01-22T20:22:17.697340600 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 3/3 Loss=1,0014
+2025-01-22T20:22:17.697848400 [INFO] [IterativeNetVsHeuristicTrainer]: Finished Round 1. AvgLoss=1,0011
+2025-01-22T20:22:19.427154800 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:22:19.427154800 [INFO] [IterativeNetVsHeuristicTrainer]: Validation Loss=0,6512
+2025-01-22T20:22:19.427154800 [INFO] [IterativeNetVsHeuristicTrainer]: WARNING: Potential underfitting (trainLoss >> valLoss).
+2025-01-22T20:22:19.431282200 [INFO] [IterativeNetVsHeuristicTrainer]: Logged Round 1 Summary.
+2025-01-22T20:22:19.431789700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Round 2 / 3 ---
+2025-01-22T20:22:19.432398800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 1 / 10 (Net=BLUE) ---
+2025-01-22T20:22:19.589836 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:22:19.589836 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 2 / 10 (Net=BLUE) ---
+2025-01-22T20:22:19.920737500 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:22:19.920737500 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 3 / 10 (Net=BLUE) ---
+2025-01-22T20:22:20.069459200 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:22:20.070461 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 4 / 10 (Net=BLUE) ---
+2025-01-22T20:22:20.410057 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 5 / 10 (Net=BLUE) ---
+2025-01-22T20:22:20.528147300 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:22:20.528147300 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 6 / 10 (Net=GREEN) ---
+2025-01-22T20:22:20.624441900 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:22:20.624441900 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 7 / 10 (Net=GREEN) ---
+2025-01-22T20:22:21.255887900 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:22:21.256394100 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 8 / 10 (Net=GREEN) ---
+2025-01-22T20:22:21.345361 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:22:21.346360100 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 9 / 10 (Net=GREEN) ---
+2025-01-22T20:22:21.373744100 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:22:21.373744100 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 10 / 10 (Net=GREEN) ---
+2025-01-22T20:22:21.523797300 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:22:21.531822200 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 1/3 Loss=1,0013
+2025-01-22T20:22:21.541285400 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 2/3 Loss=1,0014
+2025-01-22T20:22:21.549286200 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 3/3 Loss=1,0013
+2025-01-22T20:22:21.549286200 [INFO] [IterativeNetVsHeuristicTrainer]: Finished Round 2. AvgLoss=1,0013
+2025-01-22T20:22:23.954961400 [INFO] [IterativeNetVsHeuristicTrainer]: Validation Loss=1,0000
+2025-01-22T20:22:23.955961800 [INFO] [IterativeNetVsHeuristicTrainer]: Train vs Val Loss are close => Possibly OK.
+2025-01-22T20:22:23.955961800 [INFO] [IterativeNetVsHeuristicTrainer]: Logged Round 2 Summary.
+2025-01-22T20:22:23.955961800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Round 3 / 3 ---
+2025-01-22T20:22:23.956960100 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 1 / 10 (Net=BLUE) ---
+2025-01-22T20:22:24.141920500 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:22:24.141920500 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 2 / 10 (Net=BLUE) ---
+2025-01-22T20:22:24.706070300 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:22:24.707072200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 3 / 10 (Net=BLUE) ---
+2025-01-22T20:22:25.271338600 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:22:25.272288400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 4 / 10 (Net=BLUE) ---
+2025-01-22T20:22:25.890489 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 5 / 10 (Net=BLUE) ---
+2025-01-22T20:22:26.061654500 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:22:26.062608200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 6 / 10 (Net=GREEN) ---
+2025-01-22T20:22:26.221054500 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:22:26.221840600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 7 / 10 (Net=GREEN) ---
+2025-01-22T20:22:26.316725100 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:22:26.316725100 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 8 / 10 (Net=GREEN) ---
+2025-01-22T20:22:26.335615700 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:22:26.335615700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 9 / 10 (Net=GREEN) ---
+2025-01-22T20:22:26.439599900 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:22:26.439599900 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 10 / 10 (Net=GREEN) ---
+2025-01-22T20:22:26.699670 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:22:26.707701600 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 1/3 Loss=1,0024
+2025-01-22T20:22:26.717798700 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 2/3 Loss=1,0023
+2025-01-22T20:22:26.726873200 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 3/3 Loss=1,0024
+2025-01-22T20:22:26.726873200 [INFO] [IterativeNetVsHeuristicTrainer]: Finished Round 3. AvgLoss=1,0024
+2025-01-22T20:22:27.575051 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:22:28.111959800 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:22:28.577729700 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:22:28.578755900 [INFO] [IterativeNetVsHeuristicTrainer]: Validation Loss=1,0000
+2025-01-22T20:22:28.578755900 [INFO] [IterativeNetVsHeuristicTrainer]: Train vs Val Loss are close => Possibly OK.
+2025-01-22T20:22:28.579753500 [INFO] [IterativeNetVsHeuristicTrainer]: Logged Round 3 Summary.
+2025-01-22T20:22:28.579753500 [INFO] [IterativeNetVsHeuristicTrainer]: 
+=== Iterative Training Complete ===
+2025-01-22T20:24:20.558964500 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:24:38.990719400 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:24:52.045799300 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:25:26.955076100 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:26:06.453552 [INFO] [IterativeNetVsHeuristicTrainer]: Initialized training summary log at training_summary.csv
+2025-01-22T20:26:06.455549100 [INFO] [IterativeNetVsHeuristicTrainer]: 
+=== Starting Iterative Net-vs-Heuristic Training ===
+2025-01-22T20:26:06.457548900 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Round 1 / 3 ---
+2025-01-22T20:26:06.457548900 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 1 / 10 (Net=BLUE) ---
+2025-01-22T20:26:07.778927900 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:07.781959600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 2 / 10 (Net=BLUE) ---
+2025-01-22T20:26:08.546794 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:08.548484700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 3 / 10 (Net=BLUE) ---
+2025-01-22T20:26:09.079851300 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:09.080778100 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 4 / 10 (Net=BLUE) ---
+2025-01-22T20:26:09.562580700 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:09.562580700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 5 / 10 (Net=BLUE) ---
+2025-01-22T20:26:09.656937600 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:09.656937600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 6 / 10 (Net=GREEN) ---
+2025-01-22T20:26:09.832903100 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:26:09.833855300 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 7 / 10 (Net=GREEN) ---
+2025-01-22T20:26:09.960544100 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:26:09.962561900 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 8 / 10 (Net=GREEN) ---
+2025-01-22T20:26:10.280074600 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:26:10.296049300 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 9 / 10 (Net=GREEN) ---
+2025-01-22T20:26:10.532750300 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:26:10.532750300 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 10 / 10 (Net=GREEN) ---
+2025-01-22T20:26:10.782266800 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:26:10.789265400 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 1/3 Loss=1,0286
+2025-01-22T20:26:10.798547500 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 2/3 Loss=0,8662
+2025-01-22T20:26:10.804563100 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 3/3 Loss=0,8383
+2025-01-22T20:26:10.805593800 [INFO] [IterativeNetVsHeuristicTrainer]: Finished Round 1. AvgLoss=0,9111
+2025-01-22T20:26:10.966976700 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:11.120724 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:11.270896900 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:11.271895700 [INFO] [IterativeNetVsHeuristicTrainer]: Validation Loss=0,7736
+2025-01-22T20:26:11.271895700 [INFO] [IterativeNetVsHeuristicTrainer]: Train vs Val Loss are close => Possibly OK.
+2025-01-22T20:26:11.280661700 [INFO] [IterativeNetVsHeuristicTrainer]: Logged Round 1 Summary.
+2025-01-22T20:26:11.281776700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Round 2 / 3 ---
+2025-01-22T20:26:11.281776700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 1 / 10 (Net=BLUE) ---
+2025-01-22T20:26:11.464621300 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:11.465628200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 2 / 10 (Net=BLUE) ---
+2025-01-22T20:26:11.655032800 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:11.655032800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 3 / 10 (Net=BLUE) ---
+2025-01-22T20:26:11.733263300 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:11.733263300 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 4 / 10 (Net=BLUE) ---
+2025-01-22T20:26:12.086305600 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:12.087307800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 5 / 10 (Net=BLUE) ---
+2025-01-22T20:26:12.331698600 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:12.332683300 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 6 / 10 (Net=GREEN) ---
+2025-01-22T20:26:12.443703600 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:26:12.444699800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 7 / 10 (Net=GREEN) ---
+2025-01-22T20:26:12.671807100 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:26:12.671807100 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 8 / 10 (Net=GREEN) ---
+2025-01-22T20:26:12.943449100 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:26:12.943449100 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 9 / 10 (Net=GREEN) ---
+2025-01-22T20:26:13.264587800 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:26:13.264587800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 10 / 10 (Net=GREEN) ---
+2025-01-22T20:26:13.375874600 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:26:13.379371700 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 1/3 Loss=1,0904
+2025-01-22T20:26:13.383373700 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 2/3 Loss=0,9722
+2025-01-22T20:26:13.389902800 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 3/3 Loss=0,9264
+2025-01-22T20:26:13.390909600 [INFO] [IterativeNetVsHeuristicTrainer]: Finished Round 2. AvgLoss=0,9963
+2025-01-22T20:26:13.566527800 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:13.751995600 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:13.918194400 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:13.919203600 [INFO] [IterativeNetVsHeuristicTrainer]: Validation Loss=1,3224
+2025-01-22T20:26:13.919203600 [INFO] [IterativeNetVsHeuristicTrainer]: WARNING: Potential overfitting (trainLoss << valLoss).
+2025-01-22T20:26:13.920204 [INFO] [IterativeNetVsHeuristicTrainer]: Logged Round 2 Summary.
+2025-01-22T20:26:13.921209400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Round 3 / 3 ---
+2025-01-22T20:26:13.921209400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 1 / 10 (Net=BLUE) ---
+2025-01-22T20:26:14.036757800 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:14.036757800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 2 / 10 (Net=BLUE) ---
+2025-01-22T20:26:14.153669 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:14.155133200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 3 / 10 (Net=BLUE) ---
+2025-01-22T20:26:14.374363800 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:14.380168400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 4 / 10 (Net=BLUE) ---
+2025-01-22T20:26:14.484192200 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:14.484192200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 5 / 10 (Net=BLUE) ---
+2025-01-22T20:26:14.694257500 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:14.695242500 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 6 / 10 (Net=GREEN) ---
+2025-01-22T20:26:15.172295800 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:26:15.173299500 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 7 / 10 (Net=GREEN) ---
+2025-01-22T20:26:15.441853700 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:26:15.500704300 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 8 / 10 (Net=GREEN) ---
+2025-01-22T20:26:15.568005800 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:26:15.568005800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 9 / 10 (Net=GREEN) ---
+2025-01-22T20:26:15.776030600 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:26:15.776030600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 10 / 10 (Net=GREEN) ---
+2025-01-22T20:26:15.962952300 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:26:15.968477300 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 1/3 Loss=1,0659
+2025-01-22T20:26:15.972379500 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 2/3 Loss=1,0006
+2025-01-22T20:26:15.975378500 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 3/3 Loss=0,9545
+2025-01-22T20:26:15.976386500 [INFO] [IterativeNetVsHeuristicTrainer]: Finished Round 3. AvgLoss=1,0070
+2025-01-22T20:26:16.110750300 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:16.237879600 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:16.367224400 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:26:16.367224400 [INFO] [IterativeNetVsHeuristicTrainer]: Validation Loss=1,4770
+2025-01-22T20:26:16.368542800 [INFO] [IterativeNetVsHeuristicTrainer]: WARNING: Potential overfitting (trainLoss << valLoss).
+2025-01-22T20:26:16.368542800 [INFO] [IterativeNetVsHeuristicTrainer]: Logged Round 3 Summary.
+2025-01-22T20:26:16.369784500 [INFO] [IterativeNetVsHeuristicTrainer]: 
+=== Iterative Training Complete ===
+2025-01-22T20:27:05.015035900 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:27:36.126413800 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:27:50.983443300 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:28:08.105136 [INFO] [GameScreen]: Loaded NeuralNet from networks/actualnetwithReLu.txt
+2025-01-22T20:28:08.118191800 [INFO] [GameScreen]: Switched AI -> Minimax, depth=3, eval=NeuralNetwork file=actualnetwithReLu.txt
+2025-01-22T20:28:08.122990200 [INFO] [TakGame]: Replaced player GREEN with GREEN
+2025-01-22T20:28:14.361470200 [INFO] [GameScreen]: Switched AI to RandomAI
+2025-01-22T20:28:14.362526400 [INFO] [TakGame]: Replaced player GREEN with GREEN
+2025-01-22T20:28:16.456516100 [INFO] [GameScreen]: Loaded NeuralNet from networks/actualnetwithReLu.txt
+2025-01-22T20:28:16.457519700 [INFO] [GameScreen]: Switched AI -> Minimax, depth=3, eval=NeuralNetwork file=actualnetwithReLu.txt
+2025-01-22T20:28:16.457519700 [INFO] [TakGame]: Replaced player GREEN with GREEN
+2025-01-22T20:28:19.290728100 [INFO] [GameScreen]: Switched AI -> Minimax, depth=3, eval=Heuristic
+2025-01-22T20:28:19.291687800 [INFO] [TakGame]: Replaced player GREEN with GREEN
+2025-01-22T20:28:58.205287500 [INFO] [GameScreen]: Initialized Human vs AI: BLUE vs GREEN
+2025-01-22T20:29:02.017900900 [INFO] [IterativeNetVsHeuristicTrainer]: Initialized training summary log at training_summary.csv
+2025-01-22T20:29:02.019901200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+=== Starting Iterative Net-vs-Heuristic Training ===
+2025-01-22T20:29:02.019901200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Round 1 / 3 ---
+2025-01-22T20:29:02.020900700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 1 / 10 (Net=BLUE) ---
+2025-01-22T20:29:03.123937300 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:03.127444 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 2 / 10 (Net=BLUE) ---
+2025-01-22T20:29:03.504136600 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:03.505137700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 3 / 10 (Net=BLUE) ---
+2025-01-22T20:29:03.861751 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:03.862750 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 4 / 10 (Net=BLUE) ---
+2025-01-22T20:29:04.170757700 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:04.175754200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 5 / 10 (Net=BLUE) ---
+2025-01-22T20:29:04.724885 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:04.724885 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 6 / 10 (Net=GREEN) ---
+2025-01-22T20:29:05.351990800 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:29:05.353034400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 7 / 10 (Net=GREEN) ---
+2025-01-22T20:29:05.447700300 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:29:05.448853400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 8 / 10 (Net=GREEN) ---
+2025-01-22T20:29:05.602157200 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:29:05.602157200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 9 / 10 (Net=GREEN) ---
+2025-01-22T20:29:05.785486600 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:29:05.786094700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 10 / 10 (Net=GREEN) ---
+2025-01-22T20:29:05.870134400 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:29:05.877590 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 1/3 Loss=1,1113
+2025-01-22T20:29:05.884668300 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 2/3 Loss=0,9303
+2025-01-22T20:29:05.890136700 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 3/3 Loss=0,8372
+2025-01-22T20:29:05.892138500 [INFO] [IterativeNetVsHeuristicTrainer]: Finished Round 1. AvgLoss=0,9596
+2025-01-22T20:29:06.076893400 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:06.320915900 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:06.470073400 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:06.471073800 [INFO] [IterativeNetVsHeuristicTrainer]: Validation Loss=1,3129
+2025-01-22T20:29:06.472082200 [INFO] [IterativeNetVsHeuristicTrainer]: WARNING: Potential overfitting (trainLoss << valLoss).
+2025-01-22T20:29:06.477582200 [INFO] [IterativeNetVsHeuristicTrainer]: Logged Round 1 Summary.
+2025-01-22T20:29:06.479595 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Round 2 / 3 ---
+2025-01-22T20:29:06.479595 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 1 / 10 (Net=BLUE) ---
+2025-01-22T20:29:06.568327400 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:06.568327400 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 2 / 10 (Net=BLUE) ---
+2025-01-22T20:29:06.702964700 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:06.702964700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 3 / 10 (Net=BLUE) ---
+2025-01-22T20:29:06.897006500 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:06.897514800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 4 / 10 (Net=BLUE) ---
+2025-01-22T20:29:07.067474700 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:07.068574700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 5 / 10 (Net=BLUE) ---
+2025-01-22T20:29:07.244779500 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:07.244779500 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 6 / 10 (Net=GREEN) ---
+2025-01-22T20:29:07.314355 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:29:07.314355 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 7 / 10 (Net=GREEN) ---
+2025-01-22T20:29:07.699235500 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:29:07.700286900 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 8 / 10 (Net=GREEN) ---
+2025-01-22T20:29:07.765428800 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:29:07.767057200 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 9 / 10 (Net=GREEN) ---
+2025-01-22T20:29:07.908576900 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:29:07.910575 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 10 / 10 (Net=GREEN) ---
+2025-01-22T20:29:08.031730700 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:29:08.034703400 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 1/3 Loss=1,0537
+2025-01-22T20:29:08.039519100 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 2/3 Loss=1,0131
+2025-01-22T20:29:08.043530400 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 3/3 Loss=0,9142
+2025-01-22T20:29:08.044547800 [INFO] [IterativeNetVsHeuristicTrainer]: Finished Round 2. AvgLoss=0,9937
+2025-01-22T20:29:08.170968100 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:08.315935900 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:08.498883300 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:08.500111 [INFO] [IterativeNetVsHeuristicTrainer]: Validation Loss=1,2956
+2025-01-22T20:29:08.500111 [INFO] [IterativeNetVsHeuristicTrainer]: WARNING: Potential overfitting (trainLoss << valLoss).
+2025-01-22T20:29:08.501240300 [INFO] [IterativeNetVsHeuristicTrainer]: Logged Round 2 Summary.
+2025-01-22T20:29:08.512891500 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Round 3 / 3 ---
+2025-01-22T20:29:08.514082100 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 1 / 10 (Net=BLUE) ---
+2025-01-22T20:29:08.679530600 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:08.680561800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 2 / 10 (Net=BLUE) ---
+2025-01-22T20:29:08.992927 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:08.993747900 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 3 / 10 (Net=BLUE) ---
+2025-01-22T20:29:09.200320900 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:09.201371600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 4 / 10 (Net=BLUE) ---
+2025-01-22T20:29:09.707386500 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:09.708451700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 5 / 10 (Net=BLUE) ---
+2025-01-22T20:29:09.885044800 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:10.095311700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 6 / 10 (Net=GREEN) ---
+2025-01-22T20:29:10.362052800 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:29:10.364409800 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 7 / 10 (Net=GREEN) ---
+2025-01-22T20:29:11.145675900 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:29:11.147315600 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 8 / 10 (Net=GREEN) ---
+2025-01-22T20:29:11.370946 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:29:11.371987700 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 9 / 10 (Net=GREEN) ---
+2025-01-22T20:29:11.515136300 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:29:11.515136300 [INFO] [IterativeNetVsHeuristicTrainer]: 
+--- Game 10 / 10 (Net=GREEN) ---
+2025-01-22T20:29:11.700901600 [INFO] [TakGame]: Player BLUE wins by road!
+2025-01-22T20:29:11.708649800 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 1/3 Loss=1,0828
+2025-01-22T20:29:11.713660300 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 2/3 Loss=1,0485
+2025-01-22T20:29:11.720452800 [INFO] [IterativeNetVsHeuristicTrainer]:   Epoch 3/3 Loss=1,0002
+2025-01-22T20:29:11.722467300 [INFO] [IterativeNetVsHeuristicTrainer]: Finished Round 3. AvgLoss=1,0438
+2025-01-22T20:29:11.903513600 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:12.069585 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:12.171904500 [INFO] [TakGame]: Player GREEN wins by road!
+2025-01-22T20:29:12.173191700 [INFO] [IterativeNetVsHeuristicTrainer]: Validation Loss=1,0327
+2025-01-22T20:29:12.173191700 [INFO] [IterativeNetVsHeuristicTrainer]: Train vs Val Loss are close => Possibly OK.
+2025-01-22T20:29:12.174230400 [INFO] [IterativeNetVsHeuristicTrainer]: Logged Round 3 Summary.
+2025-01-22T20:29:12.174576100 [INFO] [IterativeNetVsHeuristicTrainer]: 
+=== Iterative Training Complete ===
